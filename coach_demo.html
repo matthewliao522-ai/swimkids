@@ -1785,7 +1785,8 @@ function renderStudentTabs() {
         <div style="font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
         <div style="font-size:10px;color:var(--ink3);margin-top:1px">${SKILL_DATA[r.examLevel||m.examLevel].label}</div>
       </div>
-      <div style="font-size:10px;color:${statusColor};font-family:'JetBrains Mono',monospace;flex-shrink:0">${statusTxt}</div>`;
+      <div style="font-size:10px;color:${statusColor};font-family:'JetBrains Mono',monospace;flex-shrink:0">${statusTxt}</div>
+      ${r.pendingNotifyId ? `<div onclick="event.stopPropagation();cancelNotify('${m.id}')" style="font-size:9px;color:var(--signal);margin-left:4px;flex-shrink:0;cursor:pointer">取消通知</div>` : ''}`;
     tab.onclick = () => { saveNote(); currentStudentIdx = i; renderStudentTabs(); renderExamForm(); };
     el.appendChild(tab);
   });
@@ -1986,6 +1987,17 @@ function goPreview() {
   showScreen('preview');
 }
 
+async function cancelNotify(studentId) {
+  const r = examState[studentId];
+  if(!r?.pendingNotifyId) return;
+  const {error} = await SUPA.from('pending_notifications').delete().eq('id', r.pendingNotifyId);
+  if(!error) {
+    delete r.pendingNotifyId;
+    renderStudentTabs();
+    showToast('LINE 通知已取消','ok');
+  }
+}
+
 async function doSubmit() {
   const cls = CLASSES.find(c=>c.id===currentClassId);
   const m = cls.members[currentStudentIdx];
@@ -2013,8 +2025,12 @@ async function doSubmit() {
   if(error){showToast('儲存失敗：'+error.message,'warn'); r.submitted=false; return;}
   const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
   if(stu?.guardianId) {
-    const msg = `${stu.name} 的游泳測驗結果已出爐，請登入小泳士查看。`;
-    SUPA.functions.invoke('line-send-notify', {body:{guardian_id:stu.guardianId, message:msg}}).catch(()=>{});
+    const msg = `${stu.name} 的游泳測驗結果已出爐，請登入 Handle Power 小泳士系統查看。`;
+    const sendAt = new Date(Date.now() + 60*60*1000).toISOString();
+    const {data:notifData} = await SUPA.from('pending_notifications')
+      .insert({guardian_id:stu.guardianId, student_name:stu.name, message:msg, send_at:sendAt})
+      .select('id').single();
+    if(notifData?.id) examState[m.id].pendingNotifyId = notifData.id;
   }
   if(verdict==='pass') {
     const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
