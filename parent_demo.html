@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小泳士學習護照</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --ocean:#2680FF;--ocean-light:#EBF4FF;--ocean-mid:#96C8FF;--ocean-deep:#1257C0;
+  --sky:#F4F6F9;--white:#ffffff;
+  --slate:#1e293b;--slate2:#334155;--slate3:#64748b;--slate4:#94a3b8;
+  --slate5:#cbd5e1;--slate6:#e2e8f0;--slate7:#f1f5f9;--slate8:#f8fafc;
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;--green-light:#d1fae5;
+  --red:#C30017;--red-bg:#FFF0F0;--red-border:#FFCCD4;
+  --amber:#E8900F;--amber-bg:#FFF8EC;--amber-border:#FFECC8;
+  --ok:#059669;--warn:#f59e0b;--bad:#ef4444;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--slate);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── SHARED AUTH SHELL ── */
+.auth-shell{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:24px;
+  background:linear-gradient(160deg,#1257C0 0%,#2680FF 45%,#1A6CE8 100%);
+  position:relative;overflow:hidden;
+}
+.auth-shell::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg%20width%3D%2280%22%20height%3D%2280%22%20viewBox%3D%220%200%2080%2080%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%3E%3Cpolygon%20points%3D%2240%2C8%2056%2C24%2040%2C40%2024%2C24%22%20fill%3D%22white%22%20fill-opacity%3D%220.04%22%2F%3E%3Cpolygon%20points%3D%2240%2C40%2056%2C56%2040%2C72%2024%2C56%22%20fill%3D%22white%22%20fill-opacity%3D%220.04%22%2F%3E%3Cpolygon%20points%3D%220%2C24%2016%2C40%200%2C56%22%20fill%3D%22white%22%20fill-opacity%3D%220.025%22%2F%3E%3Cpolygon%20points%3D%2264%2C24%2080%2C40%2064%2C56%22%20fill%3D%22white%22%20fill-opacity%3D%220.025%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  background-repeat:repeat;
+}
+.wave-bg{position:absolute;bottom:0;left:0;right:0;height:200px;overflow:hidden;pointer-events:none}
+.wave-bg svg{width:100%;height:100%}
+
+.auth-card{
+  background:var(--white);border-radius:16px;padding:36px 28px;
+  width:100%;max-width:400px;position:relative;z-index:1;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  border-top:3px solid #2680FF;
+}
+@media(min-width:480px){.auth-card{padding:44px 40px}}
+
+.auth-logo{text-align:center;margin-bottom:24px}
+.auth-icon{
+  width:60px;height:60px;background:none;
+  border-radius:0;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 12px;
+}
+.auth-title{font-size:21px;font-weight:900;color:var(--slate);letter-spacing:-.5px}
+.auth-sub{font-size:12px;color:var(--slate3);margin-top:4px;line-height:1.5}
+
+/* steps indicator */
+.steps-row{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px}
+.step-node{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+  transition:all .25s;
+}
+.step-node.done{background:var(--ocean);color:#fff}
+.step-node.active{background:var(--slate);color:#fff;box-shadow:0 0 0 3px rgba(30,41,59,.15)}
+.step-node.todo{background:var(--slate6);color:var(--slate4)}
+.step-line{height:2px;width:32px;transition:background .25s;flex-shrink:0}
+.step-line.done{background:var(--ocean)}
+.step-line.todo{background:var(--slate6)}
+.step-lbl{font-size:9px;text-align:center;margin-top:3px;color:var(--slate4);white-space:nowrap}
+
+/* form elements */
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:500;color:var(--slate2);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
+.form-input{
+  width:100%;background:var(--slate7);border:1.5px solid var(--slate6);
+  border-radius:12px;padding:12px 14px;font-size:15px;
+  font-family:'Noto Sans TC',sans-serif;color:var(--slate);
+  transition:border .15s,box-shadow .15s;outline:none;
+}
+.form-input:focus{border-color:var(--ocean);box-shadow:0 0 0 3px rgba(14,116,144,.1);background:var(--white)}
+.form-input::placeholder{color:var(--slate4)}
+.form-input.input-ok{border-color:var(--ok);background:#f0fdf4}
+.form-input.input-err{border-color:var(--bad);background:#fff5f5}
+.input-wrap{position:relative}
+.input-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--slate4);
+  padding:4px;display:flex;align-items:center;
+}
+.input-eye:hover{color:var(--slate2)}
+.form-hint{font-size:11px;color:var(--slate3);margin-top:5px;line-height:1.4}
+.form-error{font-size:11px;color:var(--bad);margin-top:5px;display:none}
+.form-error.show{display:block}
+.form-ok{font-size:11px;color:var(--ok);margin-top:5px;display:none}
+.form-ok.show{display:block}
+
+/* password strength */
+.pwd-strength{margin-top:8px}
+.pwd-bars{display:flex;gap:4px;margin-bottom:5px}
+.pwd-bar{height:4px;flex:1;border-radius:2px;background:var(--slate6);transition:background .25s}
+.pwd-bar.ok{background:var(--ok)}
+.pwd-bar.warn{background:var(--warn)}
+.pwd-bar.bad{background:var(--bad)}
+.pwd-label{font-size:11px;font-weight:500}
+.pwd-label.ok{color:var(--ok)}
+.pwd-label.warn{color:var(--warn)}
+.pwd-label.bad{color:var(--bad)}
+
+/* checklist */
+.pwd-checklist{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.chk-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--slate4);transition:color .2s}
+.chk-item.chk-pass{color:var(--ok)}
+.chk-item .chk-dot{
+  width:14px;height:14px;border-radius:50%;flex-shrink:0;
+  background:var(--slate6);display:flex;align-items:center;justify-content:center;
+  font-size:8px;transition:all .2s;
+}
+.chk-item.chk-pass .chk-dot{background:var(--ok);color:#fff}
+
+/* buttons */
+.auth-btn{
+  width:100%;background:#2680FF;color:#fff;
+  border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:900;
+  font-family:'Noto Sans TC',sans-serif;cursor:pointer;
+  transition:background .15s,transform .15s;letter-spacing:.02em;
+  box-shadow:0 4px 20px rgba(38,128,255,.40);margin-top:6px;
+}
+.auth-btn:hover{background:#1A6CE8}
+.auth-btn:hover{opacity:.92}
+.auth-btn:active{transform:scale(.98)}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.auth-link{
+  background:none;border:none;color:var(--ocean);font-size:12px;
+  font-family:'Noto Sans TC',sans-serif;cursor:pointer;text-decoration:underline;
+  padding:0;
+}
+.auth-link:hover{color:var(--ocean-deep)}
+
+/* info banner */
+.info-banner{
+  background:var(--slate7);border:1px solid var(--slate6);
+  border-radius:10px;padding:11px 13px;margin-bottom:16px;font-size:11px;color:var(--slate3);
+  line-height:1.5;
+}
+.info-banner strong{color:var(--ocean)}
+.info-banner.success{background:var(--green-bg);border-color:var(--green-border);color:#065f46}
+
+/* OTP */
+.otp-row{display:flex;gap:8px;justify-content:center;margin:8px 0}
+.otp-input{
+  width:46px;height:54px;background:var(--slate7);border:1.5px solid var(--slate6);
+  border-radius:10px;text-align:center;font-size:22px;font-weight:700;
+  font-family:'DM Mono',monospace;color:var(--slate);outline:none;
+  transition:border .15s,box-shadow .15s;
+}
+.otp-input:focus{border-color:var(--ocean);box-shadow:0 0 0 3px rgba(14,116,144,.1);background:var(--white)}
+.otp-input.filled{border-color:var(--ok);background:#f0fdf4}
+.resend-row{text-align:center;font-size:12px;color:var(--slate3);margin-top:10px}
+.countdown{font-family:'DM Mono',monospace;color:var(--ocean);font-weight:500}
+
+/* divider */
+.auth-divider{display:flex;align-items:center;gap:10px;margin:14px 0}
+.auth-divider span{font-size:11px;color:var(--slate4);white-space:nowrap}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--slate6)}
+
+/* screens */
+.auth-screen{display:none}
+.auth-screen.active{display:block}
+
+/* ── APP ── */
+#app-page{display:none;min-height:100vh;background:var(--sky)}
+.app-header{
+  background:linear-gradient(135deg,#1257C0 0%,#2680FF 100%);
+  position:sticky;top:0;z-index:50;
+}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:13px 20px}
+.header-logo{display:flex;align-items:center;gap:9px}
+.header-logo-icon{width:30px;height:30px;background:rgba(255,255,255,.2);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.header-title{font-size:15px;font-weight:700;color:#fff}
+.logout-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer}
+.logout-btn:hover{background:rgba(255,255,255,.25)}
+
+.child-switcher{display:flex;gap:8px;padding:10px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(135deg,#1257C0 0%,#2680FF 100%)}
+.child-switcher::-webkit-scrollbar{display:none}
+.child-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;color:rgba(255,255,255,.8);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.child-pill.active{background:#fff;border-color:#fff;color:var(--ocean-deep);font-weight:700}
+
+.hero-band{background:linear-gradient(135deg,#1257C0 0%,#2680FF 100%);padding:0 20px 24px}
+.hero-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:14px;backdrop-filter:blur(10px)}
+.child-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#2680FF,#1257C0);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.child-name{font-size:19px;font-weight:900;color:#fff;letter-spacing:-.3px}
+.child-meta{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
+.hat-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff}
+.hat-y{background:#f59e0b}.hat-b{background:#3b82f6}.hat-r{background:#ef4444}.hat-k{background:#374151}.hat-s{background:#9ca3af}
+.badge-lv{font-size:10px;color:rgba(255,255,255,.65);margin-top:4px;text-align:center}
+
+.app-content{padding:18px 20px;max-width:600px;margin:0 auto}
+.section-title{font-size:11px;font-weight:700;color:var(--slate3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--slate6)}
+
+.level-progress-card{background:#fff;border-radius:16px;border:1px solid var(--slate6);padding:16px 18px;margin-bottom:18px}
+.lp-levels{display:flex;align-items:flex-start;overflow-x:auto;padding:8px 4px 8px;-webkit-overflow-scrolling:touch}
+.lp-levels::-webkit-scrollbar{display:none}
+.lp-item{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.lp-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;z-index:1;transition:transform .25s,box-shadow .25s;position:relative}
+.lp-dot svg{width:17px;height:17px;flex-shrink:0}
+.lp-dot.passed{color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.lp-dot.current{color:#fff;box-shadow:0 0 0 5px rgba(14,116,144,.18),0 4px 14px rgba(0,0,0,.18);transform:scale(1.16)}
+.lp-dot.locked{background:var(--slate6)!important;color:var(--slate4)}
+.lp-lbl{font-size:9px;color:var(--slate4);margin-top:4px;white-space:nowrap}
+.lp-dot.passed~.lp-lbl,.lp-dot.current~.lp-lbl{color:var(--ocean)}
+.lp-dot.current~.lp-lbl{font-weight:700}
+.lp-line{height:2px;width:14px;align-self:flex-start;margin-top:19px;flex-shrink:0}
+.lp-line.passed{background:var(--ocean)}.lp-line.locked{background:var(--slate6)}
+.lp-edu-tag{font-size:8px;font-weight:600;padding:1px 5px;border-radius:3px;margin-top:3px;letter-spacing:.02em;white-space:nowrap}
+.lp-edu-tag.etag-reached{background:rgba(14,116,144,.1);color:var(--ocean)}
+.lp-edu-tag.etag-current{background:var(--ocean);color:#fff}
+.lp-edu-tag.etag-future{background:var(--slate7);color:var(--slate4)}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.stat-card{background:#fff;border:1px solid var(--slate6);border-radius:14px;padding:12px;text-align:center}
+.stat-num{font-size:24px;font-weight:900;font-family:'DM Mono',monospace;line-height:1}
+.stat-lbl{font-size:10px;color:var(--slate3);margin-top:4px}
+
+.next-goal-card{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.ng-title{font-size:11px;font-weight:700;color:var(--ocean-deep);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.ng-items{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.ng-item{background:#fff;border:1px solid #bae6fd;border-radius:20px;padding:3px 10px;font-size:11px;color:var(--ocean-deep)}
+
+
+.exam-card{background:#fff;border:1px solid var(--slate6);border-radius:14px;overflow:hidden;margin-bottom:10px;transition:box-shadow .2s}
+.exam-card:hover{box-shadow:0 3px 14px rgba(0,0,0,.06)}
+.exam-header{display:flex;align-items:center;padding:13px 15px;cursor:pointer;gap:11px}
+.exam-date-block{width:42px;text-align:center;flex-shrink:0}
+.exam-month{font-size:10px;color:var(--slate3);font-family:'DM Mono',monospace}
+.exam-day{font-size:21px;font-weight:900;color:var(--slate);font-family:'DM Mono',monospace;line-height:1}
+.exam-year{font-size:9px;color:var(--slate4);font-family:'DM Mono',monospace}
+.exam-divider{width:1px;height:38px;background:var(--slate6);flex-shrink:0}
+.exam-info{flex:1;min-width:0}
+.exam-level{font-size:13px;font-weight:700;color:var(--slate)}
+.exam-class{font-size:11px;color:var(--slate3);margin-top:1px}
+.exam-coaches{font-size:10px;color:var(--slate4);margin-top:1px}
+.result-chip{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0}
+.chip-pass{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.chip-fail{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.chip-absent{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.expand-btn{width:22px;height:22px;background:var(--slate7);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s,background .15s}
+.exam-card.open .expand-btn{transform:rotate(180deg);background:var(--ocean-light)}
+.exam-body{display:none;border-top:1px solid var(--slate6)}
+.exam-card.open .exam-body{display:block}
+.skill-section{padding:12px 15px}
+.skill-section-title{font-size:10px;font-weight:700;color:var(--slate3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.skill-grid{display:flex;flex-direction:column;gap:4px}
+.skill-item-row{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:8px;font-size:12px}
+.skill-item-row.sk-pass{background:var(--green-bg)}
+.skill-item-row.sk-fail{background:var(--red-bg)}
+.sk-icon{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px}
+.sk-pass .sk-icon{background:var(--green);color:#fff}
+.sk-fail .sk-icon{background:var(--red);color:#fff}
+.sk-pass .sk-text{color:var(--green)}.sk-fail .sk-text{color:var(--red)}
+.exam-note-block{margin:0 15px 12px;padding:10px 13px;background:var(--slate7);border-radius:9px;border-left:3px solid var(--ocean)}
+.note-lbl{font-size:10px;color:var(--slate3);font-weight:700;margin-bottom:3px}
+.note-txt{font-size:12px;color:var(--slate2);line-height:1.6}
+.coach-row{display:grid;grid-template-columns:1fr 1fr;padding:8px 15px 12px;gap:8px}
+.coach-lbl{font-size:10px;color:var(--slate4);margin-bottom:1px}
+.coach-name{font-size:12px;font-weight:500;color:var(--slate2)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .3s ease forwards}
+.fu1{animation-delay:.04s;opacity:0}.fu2{animation-delay:.1s;opacity:0}.fu3{animation-delay:.16s;opacity:0}.fu4{animation-delay:.22s;opacity:0}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--slate5);border-radius:2px}
+
+
+/* ── LEVEL-UP OVERLAY ── */
+#levelup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s}
+#levelup-overlay.show{opacity:1;pointer-events:all}
+.lu-card{background:#fff;border-radius:28px;padding:36px 28px 28px;text-align:center;max-width:320px;width:calc(100% - 40px);position:relative;overflow:hidden}
+.lu-icon-big{font-size:64px;display:block;margin-bottom:12px;animation:luFloat 2s ease-in-out infinite alternate}
+@keyframes luFloat{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.lu-congrats{font-size:14px;font-weight:700;color:var(--ocean);letter-spacing:.06em;margin-bottom:4px}
+.lu-name{font-size:22px;font-weight:900;color:var(--slate);margin-bottom:6px}
+.lu-level-badge{display:inline-block;background:linear-gradient(135deg,var(--ocean),#1A6CE8);color:#fff;font-size:14px;font-weight:700;border-radius:20px;padding:5px 18px;margin-bottom:12px}
+.lu-sub{font-size:12px;color:var(--slate3);line-height:1.6;margin-bottom:22px}
+.lu-close-btn{width:100%;background:linear-gradient(135deg,var(--ocean),#1A6CE8);color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:opacity .15s}
+.lu-close-btn:hover{opacity:.88}
+/* confetti */
+.cf{position:absolute;border-radius:2px;animation:cfFall linear forwards;pointer-events:none}
+@keyframes cfFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(500px) rotate(720deg);opacity:0}}
+/* announcements */
+.ann-card{border-radius:14px;padding:14px 16px;margin-bottom:10px;border-left:4px solid transparent;background:var(--white);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.ann-card.type-exam{border-left-color:#2680FF;background:#EBF4FF}
+.ann-card.type-enroll{border-left-color:#059669;background:#ecfdf5}
+.ann-card.type-cancel{border-left-color:#dc2626;background:#fef2f2}
+.ann-card.type-general{border-left-color:#94a3b8;background:var(--slate7)}
+.ann-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-right:6px}
+.ann-badge.type-exam{background:#EBF4FF;color:#1257C0}
+.ann-badge.type-enroll{background:#d1fae5;color:#047857}
+.ann-badge.type-cancel{background:#fecaca;color:#b91c1c}
+.ann-badge.type-general{background:#e2e8f0;color:#475569}
+.ann-pin{font-size:10px;color:var(--amber);font-weight:700;margin-right:4px}
+.ann-title{font-size:14px;font-weight:700;color:var(--slate);margin:5px 0 3px}
+.ann-body{font-size:12px;color:var(--slate3);line-height:1.7;white-space:pre-wrap}
+.ann-date{font-size:11px;color:var(--slate4);font-family:'DM Mono',monospace}
+.ann-section-hd{font-size:11px;font-weight:700;color:var(--slate3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     AUTH SHELL
+══════════════════════════════ -->
+<div class="auth-shell" id="auth-shell">
+  <div class="wave-bg">
+    <svg viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill="rgba(255,255,255,0.05)" d="M0,100 C360,180 720,20 1080,100 C1260,140 1380,80 1440,100 L1440,200 L0,200 Z"/>
+      <path fill="rgba(255,255,255,0.04)" d="M0,140 C240,80 480,160 720,120 C960,80 1200,160 1440,120 L1440,200 L0,200 Z"/>
+    </svg>
+  </div>
+
+  <div class="auth-card">
+
+    <!-- LOGO（所有畫面共用） -->
+    <div class="auth-logo">
+      <div class="auth-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="60" height="60"><polygon points="60,4 116,34 116,86 60,116 4,86 4,34" fill="#2680FF"/><polygon points="60,4 116,34 88,49 60,19" fill="#FFA626"/><polygon points="60,116 4,86 32,71 60,101" fill="#C30017"/><polygon points="18,42 34,34 34,78 18,70" fill="white" opacity="0.95"/><polygon points="86,34 102,42 102,70 86,78" fill="white" opacity="0.95"/><polygon points="34,53 86,53 86,61 34,61" fill="white" opacity="0.95"/></svg></div>
+      <div style="font-size:10px;font-weight:700;color:#2680FF;letter-spacing:.14em;text-transform:uppercase;text-align:center;margin-bottom:4px">Handle Power · 恆動力</div>
+      <div class="auth-title">小泳士學習護照</div>
+      <div class="auth-sub" id="auth-sub">家長登入</div>
+    </div>
+
+    <!-- ── SCREEN A：選擇登入或首次啟用 ── -->
+    <div class="auth-screen active" id="sc-choice">
+      <div class="info-banner">
+        <strong>Demo 提示</strong><br>
+        已有帳號：手機 <strong>0912-345-678</strong>，密碼 <strong>Swim@2025!</strong><br>
+        首次啟用：點下方「首次啟用帳號」
+      </div>
+      <div class="form-group">
+        <label class="form-label">手機號碼</label>
+        <input class="form-input" type="tel" id="login-phone" placeholder="09XX-XXX-XXX" value="0912-345-678" oninput="formatPhone(this)">
+        <div class="form-error" id="phone-err">請輸入正確的手機號碼格式</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          密碼
+          <button class="auth-link" onclick="goForgot()" style="font-size:11px">忘記密碼？</button>
+        </label>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="login-pwd" placeholder="請輸入密碼" style="padding-right:44px">
+          <button class="input-eye" onclick="togglePwd('login-pwd',this)" type="button">
+            <svg width="17" height="17" id="eye-login" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="form-error" id="login-err">手機號碼或密碼錯誤，請重新輸入</div>
+      </div>
+      <button class="auth-btn" onclick="doLogin()">登入</button>
+      <div class="auth-divider"><span>或</span></div>
+      <button class="auth-btn" onclick="goActivate()" style="background:linear-gradient(135deg,#475569,#334155)">首次啟用帳號</button>
+      <div style="text-align:center;font-size:11px;color:var(--slate4);margin-top:14px">如有問題請洽游泳教練協助</div>
+    </div>
+
+    <!-- ── SCREEN B：首次啟用 - 填手機 ── -->
+    <div class="auth-screen" id="sc-activate">
+      <div class="info-banner">
+        教練已預先將您的手機號碼加入系統，請輸入手機號碼進行身份確認。
+      </div>
+      <div class="form-group">
+        <label class="form-label">手機號碼</label>
+        <input class="form-input" type="tel" id="act-phone" placeholder="09XX-XXX-XXX" oninput="formatPhone(this)">
+        <div class="form-error" id="act-phone-err"></div>
+      </div>
+      <button class="auth-btn" onclick="doActivatePhone()">發送驗證碼</button>
+      <div style="text-align:center;margin-top:12px">
+        <button class="auth-link" onclick="goBack('sc-choice')">← 返回登入</button>
+      </div>
+    </div>
+
+    <!-- ── SCREEN C：OTP 驗證 ── -->
+    <div class="auth-screen" id="sc-otp">
+      <div class="steps-row" id="steps-otp"></div>
+      <div class="info-banner success" id="otp-sent-msg">
+        驗證碼已發送至 <strong id="otp-phone-display"></strong><br>
+        <span style="font-size:10px">（Demo模式：請輸入 <strong>8888</strong>）</span>
+      </div>
+      <div style="font-size:13px;color:var(--slate2);margin-bottom:14px;text-align:center">請輸入 4 位數驗證碼</div>
+      <div class="otp-row">
+        <input class="otp-input" id="otp0" maxlength="1" oninput="otpNext(0)" onkeydown="otpKey(event,0)" type="tel">
+        <input class="otp-input" id="otp1" maxlength="1" oninput="otpNext(1)" onkeydown="otpKey(event,1)" type="tel">
+        <input class="otp-input" id="otp2" maxlength="1" oninput="otpNext(2)" onkeydown="otpKey(event,2)" type="tel">
+        <input class="otp-input" id="otp3" maxlength="1" oninput="otpNext(3)" onkeydown="otpKey(event,3)" type="tel">
+      </div>
+      <div class="form-error" id="otp-err" style="text-align:center">驗證碼錯誤，請重新輸入</div>
+      <div class="resend-row">
+        <span id="resend-txt">重新發送（<span class="countdown" id="countdown">60</span>）</span>
+        <button class="auth-link" id="resend-btn" onclick="resendOTP()" style="display:none">重新發送驗證碼</button>
+      </div>
+      <button class="auth-btn" onclick="doVerifyOTP()" style="margin-top:16px">驗證</button>
+      <div style="text-align:center;margin-top:12px">
+        <button class="auth-link" onclick="goBack('sc-activate')">← 重新輸入手機</button>
+      </div>
+    </div>
+
+    <!-- ── SCREEN D：設定密碼 ── -->
+    <div class="auth-screen" id="sc-setpwd">
+      <div class="steps-row" id="steps-setpwd"></div>
+      <div class="form-group">
+        <label class="form-label">設定新密碼</label>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="pwd1" placeholder="請設定密碼" style="padding-right:44px" oninput="checkPwdStrength()">
+          <button class="input-eye" onclick="togglePwd('pwd1',this)" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <!-- strength meter -->
+        <div class="pwd-strength" id="pwd-strength" style="display:none">
+          <div class="pwd-bars">
+            <div class="pwd-bar" id="bar0"></div>
+            <div class="pwd-bar" id="bar1"></div>
+            <div class="pwd-bar" id="bar2"></div>
+            <div class="pwd-bar" id="bar3"></div>
+          </div>
+          <span class="pwd-label" id="pwd-label-txt"></span>
+        </div>
+        <!-- checklist -->
+        <div class="pwd-checklist" id="pwd-checklist">
+          <div class="chk-item" id="chk-len"><div class="chk-dot">✓</div>至少 8 個字元</div>
+          <div class="chk-item" id="chk-upper"><div class="chk-dot">✓</div>含大寫字母</div>
+          <div class="chk-item" id="chk-lower"><div class="chk-dot">✓</div>含小寫字母</div>
+          <div class="chk-item" id="chk-num"><div class="chk-dot">✓</div>含數字</div>
+          <div class="chk-item" id="chk-sym"><div class="chk-dot">✓</div>含特殊符號</div>
+          <div class="chk-item" id="chk-12"><div class="chk-dot">✓</div>至少 12 字元（建議）</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">確認密碼</label>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="pwd2" placeholder="再次輸入密碼" style="padding-right:44px" oninput="checkPwdMatch()">
+          <button class="input-eye" onclick="togglePwd('pwd2',this)" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="form-error" id="pwd-match-err">兩次輸入的密碼不一致</div>
+        <div class="form-ok" id="pwd-match-ok">密碼確認一致 ✓</div>
+      </div>
+      <div class="form-error" id="pwd-submit-err"></div>
+      <button class="auth-btn" id="set-pwd-btn" onclick="doSetPassword()">完成設定，開始使用</button>
+    </div>
+
+    <!-- ── SCREEN E：忘記密碼 ── -->
+    <div class="auth-screen" id="sc-forgot">
+      <div class="info-banner">
+        輸入您的手機號碼，我們將發送驗證碼協助您重設密碼。
+      </div>
+      <div class="form-group">
+        <label class="form-label">手機號碼</label>
+        <input class="form-input" type="tel" id="forgot-phone" placeholder="09XX-XXX-XXX" oninput="formatPhone(this)">
+        <div class="form-error" id="forgot-err">此手機號碼未在系統中，請確認或聯繫教練</div>
+      </div>
+      <button class="auth-btn" onclick="doForgotPhone()">發送驗證碼</button>
+      <div style="text-align:center;margin-top:12px">
+        <button class="auth-link" onclick="goBack('sc-choice')">← 返回登入</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     APP PAGE
+══════════════════════════════ -->
+<div id="app-page">
+  <!-- 閒置警告 banner -->
+  <div id="idle-warn" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;background:#1e293b;color:#fff;padding:14px 20px;align-items:center;justify-content:space-between;gap:12px;font-size:13px;box-shadow:0 -4px 20px rgba(0,0,0,.3)">
+    <span>閒置即將自動登出，剩餘 <strong id="idle-countdown" style="color:#facc15;font-family:'DM Mono',monospace">30</strong> 秒</span>
+    <button onclick="resetIdleTimer()" style="background:#2680FF;border:none;color:#fff;border-radius:8px;padding:7px 16px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap">繼續使用</button>
+  </div>
+  <div class="app-header">
+    <div class="header-inner">
+      <div class="header-logo">
+        <div class="header-logo-icon" style="background:none;width:30px;height:30px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="30" height="30"><polygon points="60,4 116,34 116,86 60,116 4,86 4,34" fill="#2680FF"/><polygon points="60,4 116,34 88,49 60,19" fill="#FFA626"/><polygon points="60,116 4,86 32,71 60,101" fill="#C30017"/><polygon points="18,42 34,34 34,78 18,70" fill="white" opacity="0.95"/><polygon points="86,34 102,42 102,70 86,78" fill="white" opacity="0.95"/><polygon points="34,53 86,53 86,61 34,61" fill="white" opacity="0.95"/></svg></div>
+        <div><div style="display:flex;flex-direction:column"><div class="header-title" style="font-size:14px;font-weight:900">Handle Power</div><div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:-1px">小泳士學習護照</div></div></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">登出</button>
+    </div>
+    <div class="child-switcher" id="child-switcher"></div>
+    <div class="hero-band">
+      <div class="hero-card">
+        <div class="child-avatar" id="hero-avatar"></div>
+        <div style="flex:1;min-width:0">
+          <div class="child-name" id="hero-name"></div>
+          <div class="child-meta" id="hero-meta"></div>
+        </div>
+        <div style="text-align:center;flex-shrink:0">
+          <div class="hat-dot" id="hero-hat-dot"></div>
+          <div class="badge-lv" id="hero-badge-lv"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-content">
+    <div id="ann-section" style="margin-bottom:16px"></div>
+    <div class="section-title">學習進度</div>
+    <div class="level-progress-card fade-up fu1">
+      <div style="font-size:12px;color:var(--slate3);margin-bottom:10px">目前級數：<span id="lp-current-txt" style="color:var(--ocean);font-weight:700"></span></div>
+      <div class="lp-levels" id="lp-levels"></div>
+    </div>
+    <div class="stats-row fade-up fu2">
+      <div class="stat-card"><div class="stat-num" id="stat-total" style="color:var(--ocean)">0</div><div class="stat-lbl">已通過次數</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-pass" style="color:var(--green)">0</div><div class="stat-lbl">目前級數</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-rate" style="color:var(--ocean)">—</div><div class="stat-lbl">下一目標</div></div>
+    </div>
+    <div id="next-goal-section" class="fade-up fu3"></div>
+    <div class="section-title fade-up fu3">考試紀錄</div>
+    <div id="exam-list" class="fade-up fu4"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════
+// MOCK DATA
+// ════════════════════
+const HAT_MAP={1:'黃色布帽',2:'黃色布帽',3:'黃色布帽',4:'藍色布帽',5:'藍色布帽',6:'紅色布帽',7:'黑色膠帽',8:'黑色膠帽',9:'銀色膠帽',10:'銀色膠帽'};
+const HAT_CLS={1:'hat-y',2:'hat-y',3:'hat-y',4:'hat-b',5:'hat-b',6:'hat-r',7:'hat-k',8:'hat-k',9:'hat-s',10:'hat-s'};
+const HAT_COLORS={1:['#fcd34d','#f59e0b'],2:['#fcd34d','#f59e0b'],3:['#fcd34d','#f59e0b'],4:['#60a5fa','#2563eb'],5:['#60a5fa','#2563eb'],6:['#f87171','#dc2626'],7:['#6b7280','#1f2937'],8:['#6b7280','#1f2937'],9:['#cbd5e1','#64748b'],10:['#cbd5e1','#64748b']};
+const LP_CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const SKILL_DATA={
+  1:{label:'一級',desc:'水中閉氣 10 秒',items:[{pass:'頭入水',fail:'頭未入水'},{pass:'嘴巴未鼓',fail:'嘴巴鼓'},{pass:'悶氣達 10 秒',fail:'悶氣未達 10 秒'}]},
+  2:{label:'二級',desc:'韻律呼吸 10 次',items:[{pass:'嘴巴未鼓',fail:'嘴巴鼓'},{pass:'雙腳跳',fail:'單腳跳'},{pass:'鼻子吐氣嘴巴吸氣',fail:'鼻子未吐氣或嘴巴未吸氣'},{pass:'動作緩慢輕鬆',fail:'動作緊張'}]},
+  3:{label:'三級',desc:'蹬牆漂浮 5 公尺',items:[{pass:'蹬牆時保持水平面',fail:'蹬牆時往上或往下'},{pass:'漂浮時手腳伸直併攏',fail:'漂浮時手開、腳開'},{pass:'雙腳蹬牆（椅）',fail:'單腳蹬牆 或 未蹬'},{pass:'漂浮後可自行站立',fail:'漂浮後無法自行站立'},{pass:'動作輕鬆緩慢',fail:'動作緊張急促'}]},
+  4:{label:'四級',desc:'打水 8 公尺、仰漂站立',items:[{pass:'大腿帶小腿、腳伸直',fail:'彎腳 或 鋤頭腳'},{pass:'大腿律動性擺動',fail:'抖腳'},{pass:'動作輕鬆緩慢',fail:'腳僵硬'},{pass:'平穩的前進速度',fail:'節奏不穩'},{pass:'直線踢水',fail:'左彎 或 右彎'},{pass:'可自行仰漂',fail:'無法自行仰漂'},{pass:'仰漂身體平衡',fail:'仰漂身體未能平衡'},{pass:'仰漂可緩慢站立',fail:'仰漂站立動作急促'}]},
+  5:{label:'五級',desc:'自由式划手 12M、仰式打水 8M',items:[{pass:'手伸直、手掌推水',fail:'手未伸直 或 未推水'},{pass:'手指頭未開',fail:'手指頭打開'},{pass:'手掌划至大腿',fail:'手掌未划至大腿'},{pass:'掌心未翻掌',fail:'掌心翻掌'},{pass:'肩膀未卡肩',fail:'肩膀卡肩'},{pass:'仰式打水腳伸直',fail:'仰式打水腳彎曲'},{pass:'大腿律動性擺動',fail:'抖腳'},{pass:'仰式平穩地前進',fail:'節奏不穩'}]},
+  6:{label:'六級',desc:'自由式 25M 換氣、仰式划手 15M',items:[{pass:'轉頭換氣',fail:'抬頭換氣'},{pass:'有吸氣',fail:'未吸氣'},{pass:'前手延伸',fail:'前手下沉'},{pass:'頭先手後',fail:'轉頭慢'},{pass:'腳正常踢水',fail:'腳停下未踢水'},{pass:'仰式伸直推水',fail:'仰式手彎'},{pass:'仰式打水正常',fail:'仰式打水腳彎、腳沉'}]},
+  7:{label:'七級',desc:'捷仰各 25M、蛙式前進、踩水 30 秒',items:[{pass:'可標準完成自由式 25M',fail:'無法標準完成自由式'},{pass:'可標準完成仰式 25M',fail:'無法標準完成仰式'},{pass:'可立泳 30 秒',fail:'無法立泳 30 秒'},{pass:'蛙腳可勾腳',fail:'蛙腳無法勾腳'},{pass:'蛙腳可夾水',fail:'蛙腳切水'},{pass:'蛙腳有動力',fail:'蛙腳無動力'},{pass:'收小腿',fail:'收大腿'}]},
+  8:{label:'八級',desc:'捷仰蛙各 25M、踩水 60 秒',items:[{pass:'可標準完成自由式、仰式 25M',fail:'無法標準完成自由式、仰式'},{pass:'蛙手未停於胸前',fail:'蛙手停於胸前'},{pass:'換氣後漂浮',fail:'換氣後未漂浮'},{pass:'手前腳後',fail:'同手同腳'},{pass:'低頭漂浮',fail:'未低頭漂浮'},{pass:'可立泳 60 秒',fail:'不可立泳 60 秒'}]},
+  9:{label:'九級',desc:'捷仰蛙各 25M、蝶式 25M',items:[{pass:'可標準完成自由式、仰式、蛙式 25M',fail:'無法標準完成三式'},{pass:'單邊蝶手仰直無拖水',fail:'單邊蝶手拖水'},{pass:'單邊蝶手節奏正確連貫',fail:'蝶手節奏無連貫'},{pass:'蝶腳不彎曲',fail:'蝶腳彎曲'}]},
+  10:{label:'十級',desc:'連續游完 100M 混合式',items:[{pass:'可標準完成四式各 25M',fail:'無法標準完成四式'}]},
+};
+
+function venueName(id){ if(!id) return '—'; const e=Object.entries(VENUES_UUID_MAP).find(([,v])=>v===id); return e?e[0]:'—'; }
+
+const SUPA = supabase.createClient(
+  'https://mqkasrtaxkcchrqyornh.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xa2FzcnRheGtjY2hycXlvcm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA5MTksImV4cCI6MjA5MjYwNjkxOX0.TanYWbC8sQD99H_ylOaCO-WVCdbibB8OIo7xMaWFy-M'
+);
+let ANNS_DATA = [];
+let VENUES_UUID_MAP = {};
+let annsLoaded = false;
+
+async function loadAnnsFromSupa() {
+  const today = new Date().toISOString().slice(0,10);
+  const [{data: venues}, {data: anns}] = await Promise.all([
+    SUPA.from('venues').select('id,name'),
+    SUPA.from('announcements').select('*').lte('publish_date', today)
+  ]);
+  VENUES_UUID_MAP = {};
+  (venues||[]).forEach(v => { VENUES_UUID_MAP[v.name] = v.id; });
+  ANNS_DATA = (anns||[]).filter(a => !a.expire_date || a.expire_date >= today);
+  annsLoaded = true;
+}
+
+
+// 新增帳號暫存
+let pendingPhone = '';
+let pendingMode = 'activate'; // 'activate' | 'forgot'
+let countdownTimer = null;
+
+let currentAccount = null;
+let currentChildIdx = 0;
+
+// ════════════════════
+// UTILS
+// ════════════════════
+function formatPhone(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length > 10) v = v.slice(0,10);
+  if (v.length >= 8) v = v.slice(0,4)+'-'+v.slice(4,7)+'-'+v.slice(7);
+  else if (v.length >= 4) v = v.slice(0,4)+'-'+v.slice(4);
+  input.value = v;
+}
+function rawPhone(v) { return v.replace(/\D/g,''); }
+function dbPhone(raw) { return raw.slice(0,4)+'-'+raw.slice(4,7)+'-'+raw.slice(7); }
+
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  const isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  btn.querySelector('svg').innerHTML = isPass
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+function renderSteps(containerId, active) {
+  // active: 1=phone, 2=otp, 3=setpwd
+  const labels = ['輸入手機','驗證身份','設定密碼'];
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  labels.forEach((lbl, i) => {
+    const n = i+1;
+    const state = n < active ? 'done' : n === active ? 'active' : 'todo';
+    const col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;align-items:center';
+    col.innerHTML = `<div class="step-node ${state}">${n < active ? '✓' : n}</div>
+      <div class="step-lbl" style="${n<=active?'color:var(--slate2)':''}">${lbl}</div>`;
+    el.appendChild(col);
+    if (i < 2) {
+      const line = document.createElement('div');
+      line.className = 'step-line ' + (n < active ? 'done' : 'todo');
+      line.style.marginBottom = '16px';
+      el.appendChild(line);
+    }
+  });
+}
+
+// ════════════════════
+// PASSWORD CHECKER
+// ════════════════════
+const PWD_RULES = [
+  { id:'chk-len', test: p => p.length >= 8, label:'至少 8 個字元' },
+  { id:'chk-upper', test: p => /[A-Z]/.test(p), label:'含大寫字母' },
+  { id:'chk-lower', test: p => /[a-z]/.test(p), label:'含小寫字母' },
+  { id:'chk-num', test: p => /[0-9]/.test(p), label:'含數字' },
+  { id:'chk-sym', test: p => /[^A-Za-z0-9]/.test(p), label:'含特殊符號' },
+  { id:'chk-12', test: p => p.length >= 12, label:'至少 12 字元（建議）' },
+];
+
+function checkPwdStrength() {
+  const p = document.getElementById('pwd1').value;
+  const strength = document.getElementById('pwd-strength');
+  strength.style.display = p ? 'block' : 'none';
+  document.getElementById('pwd-checklist').style.display = p ? 'grid' : 'none';
+
+  const results = PWD_RULES.map(r => ({ ...r, ok: r.test(p) }));
+  results.forEach(r => {
+    const el = document.getElementById(r.id);
+    el.classList.toggle('chk-pass', r.ok);
+  });
+
+  // score: first 5 rules
+  const score = results.slice(0,5).filter(r => r.ok).length;
+  const bars = [document.getElementById('bar0'),document.getElementById('bar1'),document.getElementById('bar2'),document.getElementById('bar3')];
+  const lbl = document.getElementById('pwd-label-txt');
+  bars.forEach(b => b.className = 'pwd-bar');
+
+  if (score <= 1) {
+    bars[0].classList.add('bad');
+    lbl.textContent = '強度：過弱'; lbl.className = 'pwd-label bad';
+  } else if (score === 2) {
+    bars[0].classList.add('warn'); bars[1].classList.add('warn');
+    lbl.textContent = '強度：弱'; lbl.className = 'pwd-label warn';
+  } else if (score === 3) {
+    bars[0].classList.add('warn'); bars[1].classList.add('warn'); bars[2].classList.add('warn');
+    lbl.textContent = '強度：普通'; lbl.className = 'pwd-label warn';
+  } else if (score === 4) {
+    bars.forEach(b => b.classList.add('ok'));
+    lbl.textContent = '強度：良好'; lbl.className = 'pwd-label ok';
+  } else {
+    bars.forEach(b => b.classList.add('ok'));
+    lbl.textContent = '強度：強'; lbl.className = 'pwd-label ok';
+  }
+
+  checkPwdMatch();
+}
+
+function checkPwdMatch() {
+  const p1 = document.getElementById('pwd1').value;
+  const p2 = document.getElementById('pwd2').value;
+  if (!p2) {
+    document.getElementById('pwd-match-err').classList.remove('show');
+    document.getElementById('pwd-match-ok').classList.remove('show');
+    document.getElementById('pwd2').classList.remove('input-ok','input-err');
+    return;
+  }
+  const match = p1 === p2;
+  document.getElementById('pwd-match-err').classList.toggle('show', !match);
+  document.getElementById('pwd-match-ok').classList.toggle('show', match);
+  document.getElementById('pwd2').classList.toggle('input-ok', match);
+  document.getElementById('pwd2').classList.toggle('input-err', !match);
+}
+
+function isPasswordValid(p) {
+  return PWD_RULES.slice(0,5).every(r => r.test(p));
+}
+
+// ════════════════════
+// OTP
+// ════════════════════
+function otpNext(idx) {
+  const cur = document.getElementById('otp'+idx);
+  const val = cur.value.replace(/\D/g,'');
+  cur.value = val.slice(-1);
+  cur.classList.toggle('filled', !!cur.value);
+  if (cur.value && idx < 3) {
+    document.getElementById('otp'+(idx+1)).focus();
+  }
+  // auto verify if all filled
+  if ([0,1,2,3].every(i => document.getElementById('otp'+i).value)) {
+    setTimeout(doVerifyOTP, 200);
+  }
+}
+function otpKey(e, idx) {
+  if (e.key === 'Backspace' && !document.getElementById('otp'+idx).value && idx > 0) {
+    document.getElementById('otp'+(idx-1)).focus();
+  }
+}
+function clearOTP() {
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('otp'+i);
+    el.value = ''; el.classList.remove('filled');
+  });
+  document.getElementById('otp-err').classList.remove('show');
+}
+function startCountdown() {
+  let sec = 60;
+  clearInterval(countdownTimer);
+  document.getElementById('resend-txt').style.display = 'inline';
+  document.getElementById('resend-btn').style.display = 'none';
+  countdownTimer = setInterval(() => {
+    sec--;
+    const cd = document.getElementById('countdown');
+    if (cd) cd.textContent = sec;
+    if (sec <= 0) {
+      clearInterval(countdownTimer);
+      document.getElementById('resend-txt').style.display = 'none';
+      document.getElementById('resend-btn').style.display = 'inline';
+    }
+  }, 1000);
+}
+function resendOTP() {
+  clearOTP();
+  startCountdown();
+  // show toast
+  const msg = document.getElementById('otp-sent-msg');
+  const orig = msg.innerHTML;
+  msg.innerHTML += '<br><strong style="color:var(--ok)">✓ 已重新發送</strong>';
+  setTimeout(() => msg.innerHTML = orig, 2000);
+}
+
+// ════════════════════
+// AUTH FLOWS
+// ════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goBack(id) { showScreen(id); }
+
+function goActivate() {
+  pendingMode = 'activate';
+  document.getElementById('auth-sub').textContent = '首次啟用帳號';
+  document.getElementById('act-phone').value = '';
+  document.getElementById('act-phone-err').classList.remove('show');
+  showScreen('sc-activate');
+}
+
+function goForgot() {
+  pendingMode = 'forgot';
+  document.getElementById('auth-sub').textContent = '重設密碼';
+  document.getElementById('forgot-phone').value = '';
+  document.getElementById('forgot-err').classList.remove('show');
+  showScreen('sc-forgot');
+}
+
+async function doActivatePhone() {
+  const phone = rawPhone(document.getElementById('act-phone').value);
+  const err = document.getElementById('act-phone-err');
+  if (phone.length !== 10 || !phone.startsWith('09')) {
+    err.textContent = '請輸入正確的手機號碼格式（09XX-XXX-XXX）';
+    err.classList.add('show'); return;
+  }
+  const {data: g} = await SUPA.from('guardians').select('id,auth_id').eq('phone', dbPhone(phone)).maybeSingle();
+  if (!g) {
+    err.textContent = '此號碼尚未在系統中，請確認或聯繫教練';
+    err.classList.add('show'); return;
+  }
+  if (g.auth_id) {
+    err.textContent = '此號碼已完成帳號設定，請直接登入';
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+  pendingPhone = phone;
+  goToOTP();
+}
+
+async function doForgotPhone() {
+  const phone = rawPhone(document.getElementById('forgot-phone').value);
+  const err = document.getElementById('forgot-err');
+  const {data: g} = await SUPA.from('guardians').select('id,auth_id').eq('phone', dbPhone(phone)).maybeSingle();
+  if (!g || !g.auth_id) {
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+  pendingPhone = phone;
+  goToOTP();
+}
+
+function goToOTP() {
+  renderSteps('steps-otp', 2);
+  document.getElementById('otp-phone-display').textContent =
+    pendingPhone.slice(0,4)+'-'+pendingPhone.slice(4,7)+'-'+pendingPhone.slice(7);
+  clearOTP();
+  startCountdown();
+  document.getElementById('auth-sub').textContent = pendingMode==='forgot' ? '重設密碼' : '首次啟用帳號';
+  showScreen('sc-otp');
+  setTimeout(() => document.getElementById('otp0').focus(), 100);
+}
+
+function doVerifyOTP() {
+  const code = [0,1,2,3].map(i => document.getElementById('otp'+i).value).join('');
+  const err = document.getElementById('otp-err');
+  if (code !== '8888') { err.classList.add('show'); return; }
+  err.classList.remove('show');
+  clearInterval(countdownTimer);
+  renderSteps('steps-setpwd', 3);
+  document.getElementById('pwd1').value = '';
+  document.getElementById('pwd2').value = '';
+  document.getElementById('pwd-strength').style.display = 'none';
+  document.getElementById('pwd-checklist').style.display = 'none';
+  document.getElementById('pwd-match-err').classList.remove('show');
+  document.getElementById('pwd-match-ok').classList.remove('show');
+  document.getElementById('pwd-submit-err').classList.remove('show');
+  document.getElementById('auth-sub').textContent = '設定密碼';
+  showScreen('sc-setpwd');
+  setTimeout(() => document.getElementById('pwd1').focus(), 100);
+}
+
+async function doSetPassword() {
+  const p1 = document.getElementById('pwd1').value;
+  const p2 = document.getElementById('pwd2').value;
+  const err = document.getElementById('pwd-submit-err');
+
+  if (!isPasswordValid(p1)) {
+    err.textContent = '密碼不符合安全要求，請確認所有必要條件均已滿足';
+    err.classList.add('show'); return;
+  }
+  if (p1 !== p2) {
+    err.textContent = '兩次輸入的密碼不一致';
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+
+  const email = 'p' + pendingPhone + '@swimkids.app';
+
+  if (pendingMode === 'forgot') {
+    // 忘記密碼：重新登入後更新密碼
+    const {data: loginData, error: loginErr} = await SUPA.auth.signInWithPassword({email, password: p1});
+    if (loginErr) {
+      // 若舊密碼不知道，需要管理員在後台重設
+      err.textContent = '密碼重設失敗，請聯繫教練或管理員';
+      err.classList.add('show'); return;
+    }
+    const {error: updateErr} = await SUPA.auth.updateUser({password: p1});
+    if (updateErr) {
+      err.textContent = '密碼更新失敗：' + updateErr.message;
+      err.classList.add('show'); return;
+    }
+    await loadParentData(loginData.user.id);
+  } else {
+    // 首次啟用：建立 Supabase Auth 帳號
+    const {data, error} = await SUPA.auth.signUp({email, password: p1});
+    if (error) {
+      err.textContent = '建立帳號失敗：' + error.message;
+      err.classList.add('show'); return;
+    }
+    const userId = data.user?.id;
+    if (userId) {
+      await SUPA.from('guardians').update({auth_id: userId, status: 'active'}).eq('phone', dbPhone(pendingPhone));
+    }
+    await loadParentData(userId);
+  }
+
+  currentChildIdx = 0;
+  document.getElementById('auth-shell').style.display = 'none';
+  document.getElementById('app-page').style.display = 'block';
+  renderApp(true);
+  startIdleTimer();
+}
+
+async function doLogin() {
+  const phone = rawPhone(document.getElementById('login-phone').value);
+  const pwd = document.getElementById('login-pwd').value;
+  const err = document.getElementById('login-err');
+
+  const email = 'p' + phone + '@swimkids.app';
+  const {data, error} = await SUPA.auth.signInWithPassword({email, password: pwd});
+  if (error) {
+    err.classList.add('show');
+    document.getElementById('login-pwd').classList.add('input-err');
+    return;
+  }
+  err.classList.remove('show');
+  document.getElementById('login-pwd').classList.remove('input-err');
+  await loadParentData(data.user.id);
+  currentChildIdx = 0;
+  document.getElementById('auth-shell').style.display = 'none';
+  document.getElementById('app-page').style.display = 'block';
+  renderApp(true);
+  startIdleTimer();
+}
+
+async function doLogout() {
+  stopIdleTimer();
+  await SUPA.auth.signOut();
+  currentAccount = null;
+  document.getElementById('app-page').style.display = 'none';
+  document.getElementById('auth-shell').style.display = 'flex';
+  document.getElementById('auth-sub').textContent = '家長登入';
+  showScreen('sc-choice');
+  document.getElementById('login-pwd').value = '';
+  document.getElementById('login-err').classList.remove('show');
+}
+
+// ════════════════════
+// IDLE AUTO-LOGOUT
+// ════════════════════
+const IDLE_MS = 3 * 60 * 1000;
+const WARN_MS = 30 * 1000;
+let idleTimer = null, warnTimer = null, warnTick = null;
+
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  clearTimeout(warnTimer);
+  clearInterval(warnTick);
+  hideIdleWarn();
+  warnTimer = setTimeout(showIdleWarn, IDLE_MS - WARN_MS);
+  idleTimer = setTimeout(doLogout, IDLE_MS);
+}
+
+function startIdleTimer() {
+  ['click','touchstart','keydown','scroll'].forEach(ev =>
+    document.getElementById('app-page').addEventListener(ev, resetIdleTimer, {passive:true})
+  );
+  resetIdleTimer();
+}
+
+function stopIdleTimer() {
+  clearTimeout(idleTimer);
+  clearTimeout(warnTimer);
+  clearInterval(warnTick);
+  hideIdleWarn();
+  ['click','touchstart','keydown','scroll'].forEach(ev =>
+    document.getElementById('app-page').removeEventListener(ev, resetIdleTimer)
+  );
+}
+
+function showIdleWarn() {
+  let sec = 30;
+  document.getElementById('idle-countdown').textContent = sec;
+  document.getElementById('idle-warn').style.display = 'flex';
+  warnTick = setInterval(() => {
+    sec--;
+    const el = document.getElementById('idle-countdown');
+    if (el) el.textContent = sec;
+    if (sec <= 0) clearInterval(warnTick);
+  }, 1000);
+}
+
+function hideIdleWarn() {
+  const el = document.getElementById('idle-warn');
+  if (el) el.style.display = 'none';
+}
+
+// ════════════════════
+// APP RENDER
+// ════════════════════
+
+// 從考試紀錄動態算出最後一次通過的級數
+function getPassedLevel(child) {
+  const passed = child.exams
+    .filter(e => e.verdict === 'pass')
+    .sort((a, b) => b.date.localeCompare(a.date));
+  // 取通過的最高級數（最新通過的那次決定現在級數）
+  if (!passed.length) return child.currentLevel || 1;
+  return Math.max(...passed.map(e => e.level));
+}
+
+
+async function renderApp(showCelebration) {
+  renderChildSwitcher();
+  const child = currentAccount.children[currentChildIdx];
+  renderHero(child);
+  if (!annsLoaded) await loadAnnsFromSupa();
+  renderAnnouncements();
+  renderProgress(child);
+  renderStats(child);
+  renderNextGoal(child);
+  renderExamList(child);
+  if (showCelebration) {
+    setTimeout(() => showLevelUpCelebration(child), 600);
+  }
+}
+function renderChildSwitcher() {
+  const el = document.getElementById('child-switcher');
+  el.innerHTML = '';
+  el.style.display = currentAccount.children.length > 1 ? 'flex' : 'none';
+  currentAccount.children.forEach((c, i) => {
+    const p = document.createElement('div');
+    p.className = 'child-pill' + (i===currentChildIdx?' active':'');
+    p.textContent = c.name;
+    p.onclick = () => { currentChildIdx = i; renderApp(); };
+    el.appendChild(p);
+  });
+}
+function renderHero(child) {
+  const lv = getPassedLevel(child);
+  document.getElementById('hero-avatar').textContent = child.name[1]||child.name[0];
+  document.getElementById('hero-name').textContent = child.name;
+  document.getElementById('hero-meta').textContent = child.teachCoach + ' 教學';
+  const hd = document.getElementById('hero-hat-dot');
+  hd.className = 'hat-dot ' + HAT_CLS[lv];
+  hd.textContent = lv;
+  document.getElementById('hero-badge-lv').textContent = HAT_MAP[lv];
+}
+function renderProgress(child) {
+  const lv = getPassedLevel(child);
+  if (!lv || !SKILL_DATA[lv]) return;
+  const curEdu = getEduLevel(lv);
+  document.getElementById('lp-current-txt').textContent = SKILL_DATA[lv].label + '・' + HAT_MAP[lv] + '・教育部第 ' + curEdu + ' 級';
+  const el = document.getElementById('lp-levels');
+  el.innerHTML = '';
+  for (let i=1;i<=10;i++) {
+    const dot = document.createElement('div');
+    dot.className = 'lp-item';
+    const cls = i<lv?'passed':i===lv?'current':'locked';
+    const eduLv = getEduLevel(i);
+    const eduCls = eduLv < curEdu ? 'etag-reached' : eduLv === curEdu ? 'etag-current' : 'etag-future';
+    const [hc1,hc2] = HAT_COLORS[i];
+    const gradStyle = cls!=='locked' ? `background:linear-gradient(135deg,${hc1},${hc2})` : '';
+    const inner = cls==='passed' ? LP_CHECK_SVG : i;
+    dot.innerHTML = `<div class="lp-dot ${cls}" style="${gradStyle}">${inner}</div><div class="lp-lbl">${SKILL_DATA[i].label}</div><div class="lp-edu-tag ${eduCls}">教${eduLv}</div>`;
+    el.appendChild(dot);
+    if (i<10) {
+      const ln = document.createElement('div');
+      ln.className = 'lp-line '+(i<lv?'passed':'locked');
+      el.appendChild(ln);
+    }
+  }
+}
+function renderStats(child) {
+  const passedExams = child.exams.filter(e => e.verdict === 'pass');
+  const total = passedExams.length;
+  const lv = getPassedLevel(child);
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-pass').textContent = lv;
+  const rateEl = document.getElementById('stat-rate');
+  rateEl.textContent = lv < 10 ? (lv+1)+'級' : '最高級';
+  rateEl.style.color = 'var(--ocean)';
+}
+function renderNextGoal(child) {
+  const lv = getPassedLevel(child);
+  const el = document.getElementById('next-goal-section');
+  if (lv >= 10) { el.innerHTML = ''; return; }
+  const nextLv = lv + 1;
+  const sd = SKILL_DATA[nextLv];
+  let html = '';
+
+  // 下一目標卡片
+  const itemsHtml = `<div class="ng-items">${sd.items.map(it =>
+    `<div class="ng-item">${it.pass}</div>`
+  ).join('')}</div>`;
+
+  html += `<div class="next-goal-card">
+    <div class="ng-title">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      下一目標：${sd.label}（${HAT_MAP[nextLv]}）
+    </div>
+    <div style="font-size:11px;color:var(--ocean-deep);margin-bottom:8px">${sd.desc}</div>
+    ${itemsHtml}
+  </div>`;
+  el.innerHTML = html;
+}
+
+const EDU_LEVELS = [
+  { edu:1, hd:'1–2 級', min:1, max:2,
+    swim:'水中閉氣拾物 3 次、連續韻律呼吸 10 次',
+    rescue:'藉物漂浮 30 秒' },
+  { edu:2, hd:'3 級', min:3, max:3,
+    swim:'蹬牆漂浮 3 公尺後站立、打水前進 8 公尺',
+    rescue:'水母漂（閉氣）10 秒' },
+  { edu:3, hd:'4–6 級', min:4, max:6,
+    swim:'游泳前進 15 公尺（換氣 3 次以上）',
+    rescue:'水母漂 30 秒、仰漂或立泳 15 秒' },
+  { edu:4, hd:'7 級', min:7, max:7,
+    swim:'游泳前進 25 公尺（換氣 5 次以上）',
+    rescue:'著衣仰漂或立泳 30 秒後游 10 公尺上岸' },
+  { edu:5, hd:'8–10 級', min:8, max:10,
+    swim:'游泳前進 50 公尺（含轉身）',
+    rescue:'著衣仰漂 60 秒後脫衣游 10 公尺、拋送漂浮物 3–5 公尺' },
+];
+
+function getEduLevel(hdLevel) {
+  for (const e of EDU_LEVELS) {
+    if (hdLevel >= e.min && hdLevel <= e.max) return e.edu;
+  }
+  return 1;
+}
+
+function renderEduComparison(child) {
+  const lv = getPassedLevel(child);
+  const curEdu = getEduLevel(lv);
+  const el = document.getElementById('edu-comparison');
+  const checkSvg = `<svg class="edu-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const rows = EDU_LEVELS.map(e => {
+    const isReached = e.edu < curEdu;
+    const isCurrent = e.edu === curEdu;
+    const cls = isCurrent ? 'edu-current' : isReached ? 'edu-reached' : 'edu-future';
+    const nowBadge = isCurrent ? `<span class="edu-hd-now">目前達成</span>` : '';
+    const check = isReached ? checkSvg : '';
+    return `<div class="edu-row ${cls}">
+      <div class="edu-lv-badge">${e.edu}</div>
+      <div class="edu-body">
+        <div class="edu-hd-row">
+          <span class="edu-hd-name">教育部第 ${e.edu} 級</span>
+          <span class="edu-hd-map">恆動力 ${e.hd}</span>
+          ${nowBadge}
+        </div>
+        <div class="edu-skill"><span class="edu-skill-lbl">游泳</span>${e.swim}</div>
+        <div class="edu-rescue"><span class="edu-skill-lbl">自救</span>${e.rescue}</div>
+      </div>
+      ${check}
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="edu-compare-card">
+    <div class="edu-compare-hd" onclick="toggleEduCompare(this)">
+      <div class="edu-compare-ttl">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        教育部游泳能力對照（第 ${curEdu} 級）
+      </div>
+      <svg class="edu-compare-chevron open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="edu-compare-body">${rows}</div>
+  </div>`;
+}
+
+function toggleEduCompare(hd) {
+  const body = hd.nextElementSibling;
+  const chevron = hd.querySelector('.edu-compare-chevron');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  chevron.classList.toggle('open', !isOpen);
+}
+
+function renderExamList(child) {
+  const el = document.getElementById('exam-list');
+  el.innerHTML = '';
+
+  // 家長端只顯示通過的考試
+  const passedExams = child.exams
+    .filter(e => e.verdict === 'pass')
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  if (!passedExams.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px 20px">
+      <div style="font-size:32px;margin-bottom:12px">🏊</div>
+      <div style="color:var(--slate3);font-size:13px;font-weight:500">尚未通過任何考試</div>
+      <div style="color:var(--slate4);font-size:12px;margin-top:4px">繼續加油！</div>
+    </div>`;
+    return;
+  }
+
+  passedExams.forEach((exam, idx) => {
+    const sd = SKILL_DATA[exam.level];
+    const dp = exam.date.split('-');
+    // 只顯示達標項目（通過的考試只有達標，不顯示未達標）
+    const passItems = [];
+    if (sd) sd.items.forEach((item,i)=>{
+      if (exam.checks['p'+i]) passItems.push(item.pass);
+    });
+    let bodyHtml = '';
+    if (passItems.length) {
+      bodyHtml += `<div class="skill-section">
+        <div class="skill-section-title">通過項目</div>
+        <div class="skill-grid">`;
+      passItems.forEach(t => {
+        bodyHtml += `<div class="skill-item-row sk-pass"><div class="sk-icon">✓</div><div class="sk-text">${t}</div></div>`;
+      });
+      bodyHtml += `</div></div>`;
+    }
+    if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${exam.note}</div></div>`;
+    bodyHtml += `<div class="coach-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div><div class="coach-lbl">教學教練</div><div class="coach-name">${exam.teachCoach}</div></div>
+      <div><div class="coach-lbl">考試教練</div><div class="coach-name">${exam.examCoach}</div></div>
+      <div><div class="coach-lbl">考試場館</div><div class="coach-name" style="display:flex;align-items:center;gap:4px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--slate3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${venueName(exam.venueId)}
+      </div></div>
+    </div>`;
+
+    const card = document.createElement('div');
+    card.className = 'exam-card';
+    card.innerHTML = `<div class="exam-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="exam-date-block">
+        <div class="exam-month">${dp[1]}月</div>
+        <div class="exam-day">${parseInt(dp[2])}</div>
+        <div class="exam-year">${dp[0]}</div>
+      </div>
+      <div class="exam-divider"></div>
+      <div class="exam-info">
+        <div class="exam-level">${sd?sd.label:''} 通過 🎉</div>
+        <div class="exam-class">
+          <span>${exam.classId}</span>
+          <span style="margin:0 4px;color:var(--slate5)">·</span>
+          <span style="display:inline-flex;align-items:center;gap:3px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${venueName(exam.venueId)}
+          </span>
+        </div>
+        <div class="exam-coaches">${exam.teachCoach} 教學・${exam.examCoach} 監考</div>
+      </div>
+      <div class="result-chip chip-pass">通過</div>
+      <div class="expand-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </div>
+    <div class="exam-body">${bodyHtml}</div>`;
+    if (idx===0) card.classList.add('open');
+    el.appendChild(card);
+  });
+}
+
+// ════════════════════
+// BADGES
+// ════════════════════
+
+// ════════════════════
+// LEVEL-UP CELEBRATION
+// ════════════════════
+const CF_COLORS = ['#2680FF','#10b981','#f59e0b','#C30017','#8b5cf6','#FFA626','#3b82f6'];
+const HAT_ICONS = {'黃色布帽':'🟡','藍色布帽':'🔵','紅色布帽':'🔴','黑色膠帽':'⚫','銀色膠帽':'🥈'};
+
+function launchConfetti(container) {
+  for (let i=0;i<50;i++) {
+    const p = document.createElement('div');
+    const size = 6 + Math.random()*7;
+    p.className = 'cf';
+    p.style.cssText = `left:${Math.random()*100}%;width:${size}px;height:${size}px;background:${CF_COLORS[Math.floor(Math.random()*CF_COLORS.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.8+Math.random()*2}s;animation-delay:${Math.random()*.6}s`;
+    container.appendChild(p);
+    p.addEventListener('animationend', ()=>p.remove());
+  }
+}
+
+function showLevelUpCelebration(child) {
+  const lv = getPassedLevel(child);
+  const sd = SKILL_DATA[lv];
+  const hatName = HAT_MAP[lv];
+  const passCount = child.exams.filter(e=>e.verdict==='pass').length;
+  document.getElementById('lu-icon-big').textContent = HAT_ICONS[hatName] || '🏊';
+  document.getElementById('lu-child-name').textContent = `恭喜 ${child.name}！`;
+  document.getElementById('lu-level-text').textContent = `${sd.label} · ${hatName}`;
+  document.getElementById('lu-sub-text').textContent = `目前已累積 ${passCount} 次通過紀錄，繼續保持！`;
+  const overlay = document.getElementById('levelup-overlay');
+  overlay.classList.add('show');
+  launchConfetti(document.querySelector('.lu-card'));
+}
+
+function closeLevelUp() {
+  document.getElementById('levelup-overlay').classList.remove('show');
+}
+
+// enter key
+document.addEventListener('keydown', e => {
+  if (e.key!=='Enter') return;
+  const active = document.querySelector('.auth-screen.active');
+  if (!active) return;
+  if (active.id==='sc-choice') doLogin();
+  else if (active.id==='sc-activate') doActivatePhone();
+  else if (active.id==='sc-forgot') doForgotPhone();
+  else if (active.id==='sc-setpwd') doSetPassword();
+});
+
+// ════════════════════
+// SUPABASE DATA LOADER
+// ════════════════════
+async function loadParentData(authId) {
+  if (!annsLoaded) await loadAnnsFromSupa();
+
+  const {data: guardian} = await SUPA.from('guardians')
+    .select('id, name, phone').eq('auth_id', authId).single();
+  if (!guardian) return;
+
+  const {data: sg} = await SUPA.from('student_guardian')
+    .select('student_id').eq('guardian_id', guardian.id);
+  const studentIds = (sg||[]).map(r => r.student_id);
+
+  if (!studentIds.length) {
+    currentAccount = { guardian, children: [] };
+    return;
+  }
+
+  const [{data: students}, {data: coaches}, {data: exams}] = await Promise.all([
+    SUPA.from('students').select('id,name,level,teach_coach_id,default_venue_id').in('id', studentIds),
+    SUPA.from('coaches').select('id,name'),
+    SUPA.from('exams')
+      .select('id,student_id,exam_date,level,result,fail_items,note,teach_coach_id,exam_coach_id,venue_id')
+      .in('student_id', studentIds).order('exam_date', {ascending: false})
+  ]);
+
+  const coachMap = {};
+  (coaches||[]).forEach(c => { coachMap[c.id] = c.name; });
+
+  const children = (students||[]).map(s => {
+    const studentExams = (exams||[])
+      .filter(e => String(e.student_id) === String(s.id))
+      .map(e => {
+        const sd = SKILL_DATA[e.level];
+        const checks = {};
+        if (sd) {
+          const failSet = new Set(e.fail_items||[]);
+          sd.items.forEach((item, i) => {
+            if (failSet.has(item.fail)) checks['f'+i] = true;
+            else checks['p'+i] = true;
+          });
+        }
+        return {
+          id: e.id, date: e.exam_date, level: e.level, classId: '',
+          venueId: e.venue_id,
+          teachCoach: coachMap[e.teach_coach_id]||'',
+          examCoach: coachMap[e.exam_coach_id]||'',
+          verdict: e.result, note: e.note||'', checks
+        };
+      });
+    const vName = Object.entries(VENUES_UUID_MAP).find(([,id])=>id===s.default_venue_id)?.[0]||'';
+    return {
+      id: s.id, name: s.name, currentLevel: s.level,
+      teachCoach: coachMap[s.teach_coach_id]||'',
+      venueName: vName, exams: studentExams
+    };
+  });
+
+  currentAccount = { guardian, children };
+}
+
+// 頁面載入時自動還原已登入 session
+(async () => {
+  const {data: {session}} = await SUPA.auth.getSession();
+  if (session) {
+    await loadParentData(session.user.id);
+    if (currentAccount) {
+      document.getElementById('auth-shell').style.display = 'none';
+      document.getElementById('app-page').style.display = 'block';
+      await renderApp(false);
+      startIdleTimer();
+    }
+  }
+})();
+
+// ════════════════════
+// ANNOUNCEMENTS
+// ════════════════════
+const ANN_TYPE_LABEL = { exam:'考試預告', enroll:'報名開始', cancel:'停課通知', general:'一般公告' };
+function renderAnnouncements(){
+  const el = document.getElementById('ann-section');
+  if(!el) return;
+  const child = currentAccount?.children[currentChildIdx];
+  const childVenueUUID = child?.venueName ? VENUES_UUID_MAP[child.venueName] : null;
+  const filtered = ANNS_DATA
+    .filter(a => !a.venue_id || a.venue_id === childVenueUUID)
+    .sort((a,b)=>{
+      if(a.pinned!==b.pinned) return a.pinned?-1:1;
+      return (b.publish_date||'').localeCompare(a.publish_date||'');
+    });
+  if(!filtered.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="ann-section-hd">最新公告</div>` + filtered.map(a=>{
+    const type = a.type||'general';
+    const label = ANN_TYPE_LABEL[type]||'公告';
+    const dateStr = a.publish_date ? a.publish_date.replace(/-/g,'/') : '';
+    return `<div class="ann-card type-${type}">
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+        ${a.pinned?'<span class="ann-pin">📌</span>':''}
+        <span class="ann-badge type-${type}">${label}</span>
+        <span class="ann-date">${dateStr}</span>
+      </div>
+      <div class="ann-title">${a.title}</div>
+      ${a.content?`<div class="ann-body">${a.content}</div>`:''}
+    </div>`;
+  }).join('');
+}
+</script>
+
+<!-- ══ LEVEL-UP OVERLAY ══ -->
+<div id="levelup-overlay" onclick="closeLevelUp()">
+  <div class="lu-card" onclick="event.stopPropagation()">
+    <span class="lu-icon-big" id="lu-icon-big"></span>
+    <div class="lu-congrats">🎉 升級了！</div>
+    <div class="lu-name" id="lu-child-name"></div>
+    <div class="lu-level-badge" id="lu-level-text"></div>
+    <div class="lu-sub" id="lu-sub-text"></div>
+    <button class="lu-close-btn" onclick="closeLevelUp()">太棒了！繼續加油 💪</button>
+  </div>
+</div>
+
+</body>
+</html>

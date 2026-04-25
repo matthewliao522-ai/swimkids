@@ -1,0 +1,2796 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWIMKIDS · COACH</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  /* HP Tokens */
+  --brand:#2680FF;--brand-dk:#1A6CE8;--brand-lt:#EBF4FF;--brand-100:#C8E2FF;--brand-200:#96C8FF;--brand-700:#1257C0;
+  --gold:#FFA626;--gold-lt:#FFF8EC;--gold-100:#FFECC8;--gold-dk:#E8900F;
+  --signal:#C30017;--signal-lt:#FFF0F0;
+  --n50:#F8F9FA;--n100:#F1F3F5;--n200:#E9ECEF;--n300:#DEE2E6;--n400:#ADB5BD;
+  --n500:#6C757D;--n600:#495057;--n700:#343A40;--n800:#212529;--n900:#16191C;
+
+  /* Semantic */
+  --bg:var(--n50);--white:#ffffff;
+  --ink:var(--n900);--ink2:var(--n600);--ink3:var(--n500);--ink4:var(--n400);
+  --line:var(--n200);--line2:var(--n300);
+
+  /* Compat aliases — for inline JS styles that use old dark-theme vars */
+  --bg2:var(--white);--bg3:var(--n100);--bg4:var(--n200);
+  --border:var(--line);--border2:var(--line2);
+  --text:var(--ink);--text2:var(--ink2);--text3:var(--ink3);
+  --accent:var(--brand);--accent2:var(--brand-dk);
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
+  --red:var(--signal);--red-bg:var(--signal-lt);--red-border:#fecaca;
+  --yellow:var(--gold-dk);--orange:var(--gold);
+  --purple:#7c3aed;--purple-bg:#f5f3ff;
+  --hat-y:#92400e;--hat-b:var(--brand-700);--hat-r:#9f1239;--hat-k:var(--n700);--hat-s:var(--n500);
+
+  --sidebar-w:240px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);height:100vh;display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--n900);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;transition:width .2s ease,transform .25s;z-index:100}
+
+/* collapsed icon-only mode */
+.sidebar.collapsed{width:52px}
+.sidebar.collapsed .sb-label,
+.sidebar.collapsed .sb-badge-wrap,
+.sidebar.collapsed .sb-section,
+.sidebar.collapsed .sb-wordmark,
+.sidebar.collapsed .sb-wordmark-dot,
+.sidebar.collapsed .sb-wordmark-role,
+.sidebar.collapsed .sb-name,
+.sidebar.collapsed .sb-role,
+.sidebar.collapsed #sb-venue-list{display:none}
+.sidebar.collapsed .sb-logo{padding:12px 0}
+.sidebar.collapsed .sb-logo-row{justify-content:center}
+.sidebar.collapsed .sb-logo-mini{display:flex !important}
+.sidebar.collapsed .sb-item{justify-content:center;padding:10px 0}
+.sidebar.collapsed .sb-foot{justify-content:center;padding:12px 0}
+.sb-logo{padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-logo-row{display:flex;align-items:center;gap:10px}
+.sb-wordmark{font-family:'Noto Sans TC',sans-serif;font-size:15px;font-weight:900;color:#fff;letter-spacing:0.04em}
+.sb-wordmark-dot{font-size:15px;font-weight:400;color:rgba(255,255,255,.3);margin:0 5px}
+.sb-wordmark-role{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--green);letter-spacing:0.1em;text-transform:uppercase}
+.sb-badge-wrap{margin-top:4px}
+.sb-badge{display:inline-block;background:var(--green);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;padding:2px 7px;border-radius:4px;letter-spacing:.07em}
+.sb-section{padding:16px 20px 5px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;color:rgba(255,255,255,.25);letter-spacing:.12em;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.5);transition:all .15s;border-left:2px solid transparent}
+.sb-item:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.04)}
+.sb-item.active{color:#fff;background:rgba(38,128,255,.12);border-left-color:var(--brand)}
+.sb-item svg{width:14px;height:14px;flex-shrink:0}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
+.sb-av{width:28px;height:28px;border-radius:6px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-name{font-size:12px;color:rgba(255,255,255,.75);font-weight:500}
+.sb-role{font-size:10px;color:rgba(255,255,255,.3)}
+.menu-toggle{display:none;position:fixed;top:14px;left:14px;z-index:200;background:var(--n900);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px;cursor:pointer;color:#fff}
+.sb-toggle-btn{width:32px;height:32px;border-radius:6px;background:transparent;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink3);flex-shrink:0;transition:all .15s}
+.sb-toggle-btn:hover{background:var(--n100);color:var(--ink)}
+@media(max-width:768px){.sb-toggle-btn{display:none}}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:54px;background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;position:sticky;top:0;z-index:40}
+.topbar-title{font-size:14px;font-weight:700;color:var(--ink)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);background:var(--n100);padding:4px 10px;border-radius:6px;border:1px solid var(--line)}
+.content{flex:1;overflow-y:auto;padding:20px;display:flex;gap:18px;min-height:0}
+.content.exam-mode{overflow:hidden}
+
+/* ── BTN ── */
+.btn{padding:7px 14px;border-radius:6px;border:none;font-size:12px;font-family:'Noto Sans TC',sans-serif;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn svg{width:13px;height:13px}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dk)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#047857}
+.btn-danger{background:var(--signal);color:#fff}.btn-danger:hover{background:#8F0010}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--line2)}.btn-ghost:hover{background:var(--n100);color:var(--ink)}
+.btn-warn{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}.btn-warn:hover{background:var(--gold-100)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card-hd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
+.card-bd{padding:14px 16px}
+
+/* ── SCREENS ── */
+.screen{display:none;width:100%;animation:fadeIn .2s ease}
+.screen.active{display:flex;gap:18px}
+#screen-exam.active{flex:1;min-height:0;overflow:hidden}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── STATUS CHIPS ── */
+.status-chip{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:500}
+.chip-draft{background:var(--n100);color:var(--ink3);border:1px solid var(--line2)}
+.chip-ready{background:var(--brand-lt);color:var(--brand-700);border:1px solid var(--brand-100)}
+.chip-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.chip-absent{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}
+
+/* ── HAT TAGS ── */
+.hat-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;flex-shrink:0}
+.hat-y{background:#FFF8EC;color:#92400e;border:1px solid var(--gold-100)}
+.hat-b{background:var(--brand-lt);color:var(--brand-700);border:1px solid var(--brand-100)}
+.hat-r{background:var(--signal-lt);color:#9f1239;border:1px solid #fecdd3}
+.hat-k{background:var(--n100);color:var(--n700);border:1px solid var(--n300)}
+.hat-s{background:var(--n100);color:var(--n500);border:1px solid var(--n200)}
+
+/* ── AVATAR ── */
+.s-av{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.av-y{background:#FFF8EC;color:#92400e}
+.av-b{background:var(--brand-lt);color:var(--brand-700)}
+.av-r{background:var(--signal-lt);color:#9f1239}
+.av-k{background:var(--n100);color:var(--n700)}
+.av-s{background:var(--n100);color:var(--n500)}
+
+/* ── SEARCH & FILTER ── */
+.search-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.search-input{flex:1;background:var(--white);border:1px solid var(--line2);border-radius:6px;padding:7px 11px;font-size:12px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;outline:none;transition:border .15s}
+.search-input:focus{border-color:var(--brand);outline:3px solid var(--brand-lt)}
+.search-input::placeholder{color:var(--ink4)}
+select.filter-sel{background:var(--white);border:1px solid var(--line2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--ink2);font-family:'Noto Sans TC',sans-serif;cursor:pointer;outline:none}
+select.filter-sel:focus{border-color:var(--brand)}
+
+/* ── PREP SCREEN ── */
+.prep-layout{display:flex;gap:18px;width:100%}
+.prep-left{width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:14px}
+.prep-right{flex:1;display:flex;flex-direction:column;gap:14px}
+.class-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.class-card:hover{background:var(--n50);border-color:var(--line2)}
+.class-card.selected{border-color:var(--brand);background:var(--brand-lt)}
+.cc-code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brand);margin-bottom:3px}
+.cc-meta{font-size:12px;color:var(--ink2);margin-top:3px}
+.cc-members{font-size:11px;color:var(--ink3);margin-top:2px}
+
+/* ── STUDENT CHECK ROW ── */
+.student-check-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .1s;border:1px solid transparent}
+.student-check-row:hover{background:var(--n50)}
+.student-check-row.sel{border-color:var(--brand);background:var(--brand-lt)}
+.s-info{flex:1;min-width:0}
+.s-name{font-size:12px;font-weight:500;color:var(--ink)}
+.s-sub{font-size:10px;color:var(--ink3);margin-top:1px}
+.highlight{background:var(--gold-100);color:#92400e;border-radius:2px;padding:0 1px}
+.guardian-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--ink3);margin-top:1px}
+.guardian-tag svg{width:10px;height:10px;flex-shrink:0}
+
+/* ── FORM FIELDS ── */
+.form-field{margin-bottom:12px}
+.form-field label{display:block;font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:4px;letter-spacing:.02em}
+.form-field input,.form-field select{width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;outline:none;transition:border .15s}
+.form-field input:focus,.form-field select:focus{border-color:var(--brand);background:var(--white);outline:3px solid var(--brand-lt)}
+.form-field input::placeholder{color:var(--ink4)}
+.form-field.required label::after{content:' *';color:var(--signal)}
+.form-err{font-size:10px;color:var(--signal);margin-top:3px;display:none}
+.form-err.show{display:block}
+.section-divider{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);padding:10px 0 6px;border-top:1px solid var(--line);margin-top:4px;font-family:'JetBrains Mono',monospace;font-weight:500}
+.input-ok{border-color:var(--green) !important}
+.phone-status{font-size:10px;margin-top:3px}
+.phone-status.exists{color:var(--gold-dk)}
+.phone-status.free{color:var(--green)}
+
+/* ── DAY SCREEN ── */
+.exam-day-layout{display:flex;gap:18px;width:100%}
+.ed-left{width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:14px}
+.ed-right{flex:1;display:flex;flex-direction:column;gap:14px}
+.cls-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;cursor:pointer;transition:background .12s;border:1px solid transparent;margin-bottom:6px}
+.cls-row:hover{background:var(--n50)}
+.cls-row.active-cls{border-color:var(--brand);background:var(--brand-lt)}
+.cls-row.done-cls{opacity:.5}
+.pip{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.pip-done{background:var(--green)}
+.pip-next{background:var(--brand);box-shadow:0 0 5px var(--brand)}
+.pip-wait{background:var(--ink4)}
+
+/* ── EXAM SCREEN ── */
+.exam-layout{display:flex;gap:18px;width:100%;height:100%;min-height:0}
+.ex-left{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:100%}
+.ex-right{flex:1;display:flex;flex-direction:column;gap:0;min-width:0;min-height:0}
+
+.stud-tab{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all .12s;margin-bottom:5px}
+.stud-tab:hover{background:var(--n50)}
+.stud-tab.act{border-color:var(--brand);background:var(--brand-lt)}
+
+/* last exam panel */
+.last-exam-panel{background:var(--n50);border:1px solid var(--line2);border-radius:8px;padding:6px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lep-title{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--purple);flex-shrink:0;font-weight:500}
+.lep-date{font-size:11px;color:var(--ink2);font-family:'JetBrains Mono',monospace;flex-shrink:0;border-left:1px solid var(--line2);padding-left:10px}
+.lep-fail-items{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-left:1px solid var(--line2);padding-left:10px}
+.lep-fail-item{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--ink3)}
+.lep-fail-item::before{content:'✗';color:var(--signal);flex-shrink:0}
+
+/* exam form */
+.form-card{background:var(--white);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0}
+.lv-header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-shrink:0}
+.lv-name{font-size:15px;font-weight:700;color:var(--ink)}
+.lv-desc{font-size:11px;color:var(--ink2);margin-top:3px;line-height:1.5}
+.lv-changer{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.lv-changer label{font-size:10px;color:var(--ink3);white-space:nowrap}
+.lv-changer select{background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer}
+.lv-changer select:focus{outline:none;border-color:var(--brand)}
+
+.col-hdrs{display:grid;grid-template-columns:1fr 1fr;margin:10px 16px 6px;border-radius:6px;overflow:hidden}
+.col-h{padding:4px 10px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.04em;font-family:'JetBrains Mono',monospace}
+.col-h-p{background:var(--green-bg);color:var(--green)}
+.col-h-f{background:var(--signal-lt);color:var(--signal)}
+
+.skill-scroll{overflow-y:auto;padding:0 16px 8px;flex:1;min-height:0}
+.skill-dual{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:5px}
+.crit{display:flex;align-items:flex-start;gap:7px;padding:8px 10px;cursor:pointer;transition:background .1s}
+.crit:first-child{border-right:1px solid var(--line)}
+.crit:hover{background:var(--n50)}
+.crit.chk-p{background:var(--green-bg)}
+.crit.chk-f{background:var(--signal-lt)}
+.crit.was-fail{border-left:2px solid var(--gold-100)}
+.crit-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--ink4);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s;margin-top:1px}
+.crit-box.cp{background:var(--green);border-color:var(--green)}
+.crit-box.cf{background:var(--signal);border-color:var(--signal)}
+.crit-box svg{display:none}.crit-box.cp svg,.crit-box.cf svg{display:block}
+.crit-txt{font-size:11.5px;color:var(--ink2);line-height:1.4}
+.crit.chk-p .crit-txt{color:var(--green)}
+.crit.chk-f .crit-txt{color:var(--signal)}
+.was-fail-badge{font-size:9px;color:var(--gold-dk);background:var(--gold-100);border-radius:3px;padding:0 4px;margin-top:2px;display:inline-block;white-space:nowrap;font-weight:600}
+
+.verdict-section{padding:10px 16px;border-top:1px solid var(--line);flex-shrink:0}
+.verdict-row{display:flex;gap:8px;margin-bottom:8px}
+.vbtn{flex:1;padding:9px;border-radius:6px;border:1px solid var(--line2);background:var(--n50);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink3);font-family:'Noto Sans TC',sans-serif;transition:all .15s;text-align:center}
+.vbtn:hover{background:var(--n100);color:var(--ink)}
+.vbtn.vp{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.vbtn.vf{background:var(--signal-lt);border-color:var(--signal);color:var(--signal)}
+.vbtn.va{background:var(--gold-lt);border-color:var(--gold-100);color:var(--gold-dk)}
+
+.note-section{padding:0 16px 10px;flex-shrink:0}
+.note-label{font-size:10px;color:var(--ink3);margin-bottom:5px;font-weight:600}
+.note-ta{width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;resize:none;min-height:50px;outline:none}
+.note-ta:focus{border-color:var(--brand);background:var(--white);outline:3px solid var(--brand-lt)}
+
+.action-bar{padding:12px 16px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0}
+.prog-txt{font-size:11px;color:var(--ink3);font-family:'JetBrains Mono',monospace}
+
+/* ── PREVIEW ── */
+.preview-wrap{width:100%;display:flex;flex-direction:column;align-items:center}
+.preview-card{background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;width:100%;max-width:540px}
+.ph-hero{padding:20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px}
+.ph-av{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+.ph-name{font-size:18px;font-weight:700;color:var(--ink)}
+.ph-sub{font-size:11px;color:var(--ink2);margin-top:3px}
+.res-badge{margin-left:auto;padding:5px 14px;border-radius:4px;font-size:13px;font-weight:700;flex-shrink:0}
+.rb-pass{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.rb-fail{background:var(--signal-lt);color:var(--signal);border:1px solid #fecaca}
+.rb-abs{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}
+.rb-pend{background:var(--n100);color:var(--ink3);border:1px solid var(--line)}
+.ph-items{padding:12px 20px;border-bottom:1px solid var(--line)}
+.ph-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px}
+.ph-item:last-child{border-bottom:none}
+.it-tag{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;flex-shrink:0}
+.it-p{background:var(--green-bg);color:var(--green)}
+.it-f{background:var(--signal-lt);color:var(--signal)}
+.ph-coaches{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
+.pc{padding:10px 20px}
+.pc:first-child{border-right:1px solid var(--line)}
+.pc-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;font-weight:500}
+.pc-teach{color:var(--purple)}
+.pc-exam{color:var(--green)}
+.pc-name{font-size:13px;font-weight:500;color:var(--ink)}
+.ph-note{padding:10px 20px;font-size:12px;color:var(--ink2);border-bottom:1px solid var(--line)}
+.ph-actions{padding:14px 20px;display:flex;gap:8px}
+.warn-notice{margin:0 20px 14px;padding:9px 13px;background:var(--gold-lt);border:1px solid var(--gold-100);border-radius:8px;font-size:11px;color:var(--gold-dk)}
+.editable-notice{margin:0 20px 14px;padding:9px 13px;background:var(--brand-lt);border:1px solid var(--brand-100);border-radius:8px;font-size:11px;color:var(--brand-700)}
+
+.success-card{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:40px 32px;text-align:center;max-width:380px;margin:0 auto}
+.suc-icon{width:60px;height:60px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.suc-title{font-size:20px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.suc-sub{font-size:12px;color:var(--ink2);line-height:1.6}
+.suc-meta{margin:16px 0;padding:10px 14px;background:var(--n50);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink2);text-align:left;white-space:pre-line;border:1px solid var(--line)}
+
+/* ── MISC ── */
+.divider{height:1px;background:var(--line);margin:10px 0}
+.empty-state{text-align:center;padding:32px 16px;color:var(--ink3);font-size:13px}
+.tag-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--n300);border-radius:2px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--n800);border:1px solid var(--n700);border-radius:8px;padding:10px 20px;font-size:13px;color:#fff;box-shadow:0 4px 24px rgba(0,0,0,.2);z-index:999;transition:transform .25s,opacity .25s;opacity:0;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast-warn{border-color:var(--gold-100)!important;color:var(--gold-dk)!important;background:var(--gold-lt)!important}
+.toast-ok{border-color:var(--green-border)!important;color:var(--green)!important;background:var(--green-bg)!important}
+
+/* ── IMPORT MODAL ── */
+.im-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.im-backdrop.show{opacity:1;pointer-events:all}
+.im-modal{background:var(--white);border:1px solid var(--line2);border-radius:16px;width:100%;max-width:640px;margin:16px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.im-header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.im-title{font-size:14px;font-weight:700;color:var(--ink)}
+.im-body{padding:18px 20px;overflow-y:auto;flex:1}
+.im-footer{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+.im-drop{border:2px dashed var(--line2);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--n50)}
+.im-drop:hover,.im-drop.dragover{border-color:var(--brand);background:var(--brand-lt)}
+.im-drop input{display:none}
+.im-hint{font-size:11px;color:var(--ink3);margin-top:20px;line-height:1.7;background:var(--n50);border-radius:8px;padding:10px 14px;border:1px solid var(--line)}
+.im-hint code{font-family:'JetBrains Mono',monospace;color:var(--brand);font-size:11px}
+.im-cls-card{background:var(--n50);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.im-cls-hd{padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.im-cls-name{font-size:13px;font-weight:600;color:var(--ink);flex:1}
+.im-cls-meta{font-size:11px;color:var(--ink2)}
+.im-stu-row{display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid var(--line);font-size:12px}
+.im-stu-row:last-child{border-bottom:none}
+.im-stu-ok{color:var(--ink)}
+.im-stu-warn{color:var(--gold-dk)}
+.im-stu-err{color:var(--signal)}
+.im-err-box{background:var(--signal-lt);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--signal)}
+.im-summary{font-size:12px;color:var(--ink2);margin-bottom:12px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px}
+
+/* ── QUICK EXAM MODAL ── */
+.qe-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.qe-backdrop.show{opacity:1;pointer-events:all}
+.qe-modal{background:var(--white);border:1px solid var(--line2);border-radius:16px;padding:20px;width:100%;max-width:380px;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.qe-title{font-size:14px;font-weight:700;color:var(--ink)}
+.qe-sub{font-size:11px;color:var(--ink2);margin-top:2px}
+.qe-type-row{display:flex;gap:6px;margin-bottom:14px}
+.qe-type-btn{flex:1;padding:7px 6px;border-radius:6px;border:1px solid var(--line2);background:var(--n50);cursor:pointer;font-size:11px;font-family:'Noto Sans TC',sans-serif;color:var(--ink2);text-align:center;transition:all .15s;font-weight:500}
+.qe-type-btn:hover{background:var(--n100);color:var(--ink)}
+.qe-type-btn.active{background:var(--brand-lt);border-color:var(--brand);color:var(--brand)}
+.qe-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.qe-field label{display:block;font-size:10px;font-weight:700;color:var(--ink3);margin-bottom:4px;letter-spacing:.02em}
+.qe-field select{width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;outline:none;transition:border .15s}
+.qe-field select:focus{border-color:var(--brand);outline:3px solid var(--brand-lt)}
+
+/* ── RWD ── */
+@media(max-width:900px){
+  :root{--sidebar-w:200px}
+  .prep-left,.ed-left{width:260px}
+  .ex-left{width:220px}
+}
+@media(max-width:768px){
+  body{overflow:auto}
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-toggle{display:flex}
+  .main{overflow:auto}
+  .content{padding:14px;flex-direction:column}
+  .screen.active{flex-direction:column}
+  #screen-exam.active{overflow-y:auto;flex-direction:column}
+  .prep-layout,.exam-day-layout,.exam-layout{flex-direction:column}
+  .prep-left,.prep-right,.ed-left,.ed-right,.ex-left,.ex-right{width:100%}
+  .col-hdrs{margin:10px 12px 6px}
+  .skill-scroll{max-height:40vh;flex:none}
+  .lv-header{flex-direction:column;align-items:flex-start}
+  .verdict-row{flex-wrap:wrap}
+  .vbtn{min-width:80px}
+}
+@media(max-width:480px){
+  .topbar{padding:0 12px}
+  .content{padding:10px}
+  .skill-dual{grid-template-columns:1fr}
+  .crit:first-child{border-right:none;border-bottom:1px solid var(--line)}
+  .ph-coaches{grid-template-columns:1fr}
+  .pc:first-child{border-right:none;border-bottom:1px solid var(--line)}
+}
+.d-mobile{display:none}
+@media(max-width:768px){.d-mobile{display:block}}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="toggleSidebar()" aria-label="選單">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-logo-full">
+        <div>
+          <span class="sb-wordmark">SWIMKIDS</span>
+          <span class="sb-wordmark-dot">·</span>
+          <span class="sb-wordmark-role">COACH</span>
+        </div>
+        <div class="sb-badge-wrap"><span class="sb-badge">COACH PORTAL</span></div>
+      </div>
+      <div class="sb-logo-mini" style="display:none;width:28px;height:28px;background:var(--green);border-radius:6px;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace">SK</div>
+    </div>
+  </div>
+  <nav>
+    <div class="sb-section">考試管理</div>
+    <div class="sb-item active" id="nav-prep" onclick="showScreen('prep')" title="預建班管理">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="sb-label">預建班管理</span>
+    </div>
+    <div class="sb-item" id="nav-day" onclick="showScreen('day')" title="考試日主畫面">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="sb-label">考試日主畫面</span>
+    </div>
+    <div class="sb-item" id="nav-exam" onclick="showScreen('exam')" title="填寫評量表">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span class="sb-label">填寫評量表</span>
+    </div>
+    <div class="sb-section">學員管理</div>
+    <div class="sb-item" id="nav-students" onclick="showScreen('students')" title="學員資料管理">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="sb-label">學員資料管理</span>
+    </div>
+  </nav>
+  <div class="sb-section">場館</div>
+  <div id="sb-venue-list" style="padding:0 12px 8px"></div>
+
+  <div class="sb-foot">
+    <div class="sb-av">林</div>
+    <div>
+      <div class="sb-name">林主管</div>
+      <div class="sb-role">考試教練</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="sb-toggle-btn" onclick="toggleCollapse()" aria-label="收合選單">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div style="width:28px" class="d-mobile"></div>
+      <div class="topbar-title" id="topbar-title">預建班管理</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="date-badge"></div>
+    </div>
+  </div>
+  <div class="content" id="content-area">
+
+    <!-- ══ SCREEN: 預建班管理 ══ -->
+    <div class="screen active" id="screen-prep">
+      <div class="prep-layout">
+        <div class="prep-left">
+          <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div class="card-hd">
+              <div class="card-title">預建班清單</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" onclick="openImportModal()">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  匯入 Excel
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openNewClass()">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  新增
+                </button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line);flex-shrink:0">
+              <button id="prep-hide-done-btn" onclick="prepHideDone=!prepHideDone;renderPrepList()"
+                style="flex-shrink:0;padding:5px 10px;border-radius:6px;font-size:11px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;border:1px solid var(--line2);background:var(--n50);color:var(--ink3);white-space:nowrap">
+                顯示已完成
+              </button>
+            </div>
+            <div class="card-bd" style="padding:10px 12px;overflow-y:auto;flex:1;min-height:0">
+              <div id="prep-class-list"></div>
+            </div>
+          </div>
+        </div>
+        <div class="prep-right" id="prep-right-panel">
+          <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div class="card-hd">
+              <div class="card-title" id="prep-form-title">選擇或新增預建班</div>
+              <div id="prep-form-actions" style="display:flex;gap:6px"></div>
+            </div>
+            <div class="card-bd" id="prep-form-body" style="overflow-y:auto;flex:1;min-height:0">
+              <div class="empty-state">← 從左側選擇班級，或點擊「新增」建立新班</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN: 考試日主畫面 ══ -->
+    <div class="screen" id="screen-day">
+      <div class="exam-day-layout">
+        <div class="ed-left">
+          <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div class="card-hd">
+              <div class="card-title">班級清單</div>
+              <div id="day-progress" style="font-size:11px;color:var(--ink3);font-family:'JetBrains Mono',monospace"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);flex-shrink:0">
+              <input type="date" id="day-date-filter" onchange="renderDayScreen()"
+                style="flex:1;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--ink);font-family:'JetBrains Mono',monospace;outline:none;cursor:pointer">
+              <button id="day-hide-done-btn" onclick="dayHideDone=!dayHideDone;renderDayScreen()"
+                style="flex-shrink:0;padding:5px 10px;border-radius:6px;font-size:11px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;border:1px solid var(--line2);background:var(--n50);color:var(--ink3);white-space:nowrap">
+                顯示已完成
+              </button>
+            </div>
+            <div class="card-bd" style="padding:10px 12px;overflow-y:auto;flex:1;min-height:0" id="day-class-list"></div>
+          </div>
+        </div>
+        <div class="ed-right">
+          <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div class="card-hd">
+              <div class="card-title" id="day-selected-title">選擇班級開始考試</div>
+              <button class="btn btn-success btn-sm" id="day-start-btn" onclick="startExamFromDay()" style="display:none">開始考試 →</button>
+            </div>
+            <div class="card-bd" id="day-class-detail" style="overflow-y:auto;flex:1;min-height:0">
+              <div class="empty-state">← 從左側選擇要開考的班級</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN: 評量填寫 ══ -->
+    <div class="screen" id="screen-exam">
+      <div class="exam-layout">
+        <div class="ex-left">
+          <div class="card">
+            <div class="card-bd" style="padding:10px 12px">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brand);margin-bottom:2px" id="ex-code"></div>
+              <div style="font-size:13px;font-weight:500;color:var(--ink)" id="ex-label"></div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:2px" id="ex-date"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-bd" style="padding:10px 12px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--purple);margin-bottom:4px;font-weight:500">教學教練</div>
+                  <select id="teach-coach-sel" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:4px 6px;font-size:11px;font-family:'Noto Sans TC',sans-serif"></select>
+                </div>
+                <div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--green);margin-bottom:4px;font-weight:500">考試教練</div>
+                  <select id="exam-coach-sel" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:4px 6px;font-size:11px;font-family:'Noto Sans TC',sans-serif"></select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="flex:1">
+            <div class="card-hd">
+              <div class="card-title">學員</div>
+              <div style="font-size:10px;color:var(--ink3);font-family:'JetBrains Mono',monospace" id="ex-stu-progress"></div>
+            </div>
+            <div class="card-bd" style="padding:8px 10px" id="ex-stud-tabs"></div>
+          </div>
+        </div>
+        <div class="ex-right">
+          <div id="last-exam-ref" style="display:none"></div>
+          <div class="form-card">
+            <div class="lv-header">
+              <div>
+                <div class="lv-name" id="ex-lv-name"></div>
+                <div class="lv-desc" id="ex-lv-desc"></div>
+              </div>
+              <div class="lv-changer">
+                <label>更換考級：</label>
+                <select id="lv-changer-sel" onchange="changeLevel(this.value)"></select>
+              </div>
+            </div>
+            <div class="col-hdrs">
+              <div class="col-h col-h-p">正向動作（達標）</div>
+              <div class="col-h col-h-f">反面動作（未達標）</div>
+            </div>
+            <div class="skill-scroll" id="ex-skill-rows"></div>
+            <div class="verdict-section">
+              <div style="font-size:10px;color:var(--ink3);margin-bottom:6px;font-weight:600">整體考試結果</div>
+              <div class="verdict-row">
+                <button class="vbtn" id="vbtn-pass" onclick="setVerdict('pass')">通過</button>
+                <button class="vbtn" id="vbtn-fail" onclick="setVerdict('fail')">未通過</button>
+                <button class="vbtn" id="vbtn-abs" onclick="setVerdict('absent')">未出席</button>
+              </div>
+            </div>
+            <div class="note-section">
+              <div class="note-label">考試評語（選填）</div>
+              <textarea class="note-ta" id="ex-note" placeholder="考試當下的表現、建議..." oninput="saveNote();saveDraft()"></textarea>
+            </div>
+            <div class="action-bar">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="prog-txt" id="ex-prog"></div>
+                <div id="draft-saved-label" style="font-size:10px;color:var(--green);opacity:0;transition:opacity .4s;font-family:'JetBrains Mono',monospace">草稿已儲存</div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="showScreen('day')">← 返回</button>
+                <button class="btn btn-primary btn-sm" onclick="goPreview()">預覽送出 →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN: 預覽確認 ══ -->
+    <div class="screen" id="screen-preview" style="flex-direction:column;align-items:center">
+      <div style="width:100%;max-width:540px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <button class="btn btn-ghost btn-sm" onclick="showScreen('exam')">← 返回修改</button>
+          <div style="font-size:14px;font-weight:700;color:var(--ink)">送出確認</div>
+        </div>
+        <div class="preview-card" id="preview-card"></div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN: 送出完成 ══ -->
+    <div class="screen" id="screen-done" style="flex-direction:column;align-items:center;justify-content:center;min-height:60vh">
+      <div class="success-card">
+        <div class="suc-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="suc-title">送出成功</div>
+        <div class="suc-sub">考試結果已儲存<br>家長可立即查詢<br><span style="color:var(--brand);font-size:11px;margin-top:4px;display:block">※ 日後可在學員資料中修改考試結果</span></div>
+        <div class="suc-meta" id="suc-meta"></div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button class="btn btn-ghost btn-sm" onclick="nextStudent()">下一位學員</button>
+          <button class="btn btn-primary btn-sm" onclick="showScreen('day')">回考試日主畫面</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SCREEN: 學員資料管理 ══ -->
+    <div class="screen" id="screen-students">
+      <div class="prep-layout">
+        <div class="prep-left">
+          <div class="card">
+            <div class="card-hd">
+              <div class="card-title">學員清單 <span id="stu-count" style="color:var(--brand);font-family:'JetBrains Mono',monospace"></span></div>
+              <button class="btn btn-primary btn-sm" onclick="openNewStudent()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                新增學員
+              </button>
+            </div>
+            <div style="padding:10px 12px;border-bottom:1px solid var(--line)">
+              <div class="search-bar" style="margin-bottom:8px">
+                <input class="search-input" id="stu-search" placeholder="搜尋學員姓名、家長姓名或手機..." oninput="renderStudentList()">
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <select class="filter-sel" id="stu-hat-filter" onchange="renderStudentList()" style="flex:1">
+                  <option value="">全部泳帽</option>
+                  <option value="1">黃色布帽 1-3級</option>
+                  <option value="5">藍色布帽 4-5級</option>
+                  <option value="6">紅色布帽 6級</option>
+                  <option value="7">黑色膠帽 7-8級</option>
+                  <option value="9">銀色膠帽 9-10級</option>
+                </select>
+                <select class="filter-sel" id="stu-coach-filter" onchange="renderStudentList()" style="flex:1">
+                  <option value="">全部教練</option>
+                </select>
+                <select class="filter-sel" id="stu-venue-filter" onchange="renderStudentList()" style="flex:1">
+                  <option value="">全部場館</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-bd" style="padding:8px 10px;max-height:calc(100vh - 280px);overflow-y:auto" id="stu-list"></div>
+          </div>
+        </div>
+        <div class="prep-right">
+          <div class="card" style="flex:1">
+            <div class="card-hd">
+              <div class="card-title" id="stu-form-title">選擇或新增學員</div>
+              <div id="stu-form-actions" style="display:flex;gap:6px"></div>
+            </div>
+            <div class="card-bd" id="stu-form-body">
+              <div class="empty-state">← 從左側選擇學員，或點擊「新增學員」</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ IMPORT MODAL ══ -->
+<div class="im-backdrop" id="im-backdrop" onclick="if(event.target===this)closeImportModal()">
+  <div class="im-modal">
+    <div class="im-header">
+      <div class="im-title">匯入預建班 Excel</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeImportModal()" style="padding:3px 8px">✕</button>
+    </div>
+    <div class="im-body" id="im-body">
+      <div class="im-drop" id="im-drop" onclick="document.getElementById('im-file').click()"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="event.preventDefault();this.classList.remove('dragover');handleImportFile(event.dataTransfer.files[0])">
+        <input type="file" id="im-file" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this.files[0])">
+        <div style="font-size:28px;margin-bottom:8px">📂</div>
+        <div style="font-size:13px;font-weight:700;color:var(--ink)">點擊或拖曳 Excel 檔案至此</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:4px">支援 .xlsx、.xls、.csv</div>
+      </div>
+      <div class="im-hint">
+        <strong style="color:var(--ink2)">Excel 欄位格式（第一行為標題）：</strong><br>
+        <code>班級名稱</code>・<code>考試日期</code>（YYYY-MM-DD）・<code>場館</code>・<code>教學教練</code>・<code>考試教練</code>・<code>學員手機</code>・<code>學員姓名</code>・<code>家長姓名</code><br>
+        同班級名稱 ＋ 同考試日期 → 自動合併為同一班。學員以「手機 ＋ 姓名」比對，兄弟姐妹共用手機也能正確區分。
+      </div>
+    </div>
+    <div class="im-footer" id="im-footer">
+      <button class="btn btn-warn btn-sm" onclick="downloadSampleExcel()">⬇ 下載範本 Excel</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeImportModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUICK EXAM MODAL ══ -->
+<div class="qe-backdrop" id="qe-backdrop" onclick="if(event.target===this)closeQuickExam()">
+  <div class="qe-modal">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div class="qe-title">⚡ 直接開考</div>
+        <div class="qe-sub" id="qe-student-name"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeQuickExam()" style="padding:3px 8px">✕</button>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink3);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase;font-weight:500">考試類型</div>
+    <div class="qe-type-row">
+      <div class="qe-type-btn active" onclick="setQEType('general',this)">一般考試</div>
+      <div class="qe-type-btn" onclick="setQEType('makeup',this)">補考</div>
+      <div class="qe-type-btn" onclick="setQEType('early',this)">提前考</div>
+    </div>
+    <div class="qe-grid">
+      <div class="qe-field"><label>考試級數</label><select id="qe-level"></select></div>
+      <div class="qe-field"><label>場館</label><select id="qe-venue"></select></div>
+      <div class="qe-field"><label>教學教練</label><select id="qe-teach"></select></div>
+      <div class="qe-field"><label>考試教練</label><select id="qe-exam-coach"></select></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost btn-sm" onclick="closeQuickExam()">取消</button>
+      <button class="btn btn-success btn-sm" onclick="confirmQuickExam()">開始考試 →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+// DATA
+// ════════════════════════════════
+let COACHES = [];
+let EXAM_COACHES = [];
+let COACHES_DATA = [];
+let VENUES = [];
+
+const SUPA = supabase.createClient(
+  'https://mqkasrtaxkcchrqyornh.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xa2FzcnRheGtjY2hycXlvcm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA5MTksImV4cCI6MjA5MjYwNjkxOX0.TanYWbC8sQD99H_ylOaCO-WVCdbibB8OIo7xMaWFy-M'
+);
+
+async function loadAll() {
+  await loadVenues();
+  await loadCoaches();
+  await loadStudents();
+  await loadClasses();
+}
+
+async function loadVenues() {
+  const {data} = await SUPA.from('venues').select('*').eq('status','active').order('name');
+  VENUES = (data||[]).map(v=>({id:v.id, name:v.name, code:v.code}));
+  VENUE_NAME_MAP = {};
+  VENUES.forEach(v => { VENUE_NAME_MAP[v.name] = v.id; });
+}
+
+async function loadCoaches() {
+  const {data} = await SUPA.from('coaches').select('*').eq('status','active').order('name');
+  COACHES_DATA = data||[];
+  COACHES = COACHES_DATA.filter(c=>c.role==='teach').map(c=>c.name);
+  EXAM_COACHES = COACHES_DATA.filter(c=>c.role==='exam'||c.role==='supervisor').map(c=>c.name);
+  const tSel = document.getElementById('teach-coach-sel');
+  tSel.innerHTML = '';
+  COACHES.forEach(c => { const o=document.createElement('option'); o.textContent=c; tSel.appendChild(o); });
+  const eSel = document.getElementById('exam-coach-sel');
+  eSel.innerHTML = '';
+  EXAM_COACHES.forEach(c => { const o=document.createElement('option'); o.textContent=c; eSel.appendChild(o); });
+}
+
+async function loadStudents() {
+  const [{data:students},{data:exams}] = await Promise.all([
+    SUPA.from('students').select('*').order('name'),
+    SUPA.from('exams').select('id,student_id,exam_date,level,result,fail_items').order('exam_date',{ascending:false})
+  ]);
+  const stuIds = (students||[]).map(s=>s.id);
+  let guardianMap = {};
+  if(stuIds.length) {
+    const {data:sg} = await SUPA.from('student_guardian')
+      .select('student_id, guardians(id,name,phone,auth_id)').in('student_id',stuIds);
+    (sg||[]).forEach(r=>{if(r.guardians) guardianMap[r.student_id]=r.guardians;});
+  }
+  const examMap = {};
+  (exams||[]).forEach(e=>{
+    if(!examMap[e.student_id]) examMap[e.student_id]=[];
+    examMap[e.student_id].push({level:e.level, date:e.exam_date, verdict:e.result, failItems:e.fail_items||[]});
+  });
+  STUDENTS = (students||[]).map(s=>{
+    const coach = COACHES_DATA.find(c=>String(c.id)===String(s.teach_coach_id));
+    const guardian = guardianMap[s.id];
+    return {
+      id:s.id, name:s.name, level:s.level,
+      teachCoachId:s.teach_coach_id, teachCoach:coach?.name||'',
+      defaultVenueId:s.default_venue_id,
+      guardianName:guardian?.name||'', guardianPhone:guardian?.phone||'',
+      guardianActivated:!!(guardian?.auth_id),
+      examHistory:examMap[s.id]||[],
+    };
+  });
+}
+
+async function loadClasses() {
+  const {data:preps} = await SUPA.from('prep_classes')
+    .select('*').neq('status','done').order('class_date');
+  const classIds = (preps||[]).map(p=>p.id);
+  let enrollMap = {};
+  if(classIds.length) {
+    const {data:enr} = await SUPA.from('prep_enrollments')
+      .select('prep_class_id,student_id').in('prep_class_id',classIds);
+    (enr||[]).forEach(e=>{
+      if(!enrollMap[e.prep_class_id]) enrollMap[e.prep_class_id]=[];
+      enrollMap[e.prep_class_id].push(e.student_id);
+    });
+  }
+  CLASSES = (preps||[]).map(p=>{
+    const coach = COACHES_DATA.find(c=>String(c.id)===String(p.coach_id));
+    const memberIds = enrollMap[p.id]||[];
+    const members = memberIds.map(sid=>{
+      const s = STUDENTS.find(x=>String(x.id)===String(sid));
+      return s ? {...s, examLevel:s.level} : null;
+    }).filter(Boolean);
+    return {
+      id:p.id, code:p.code, label:p.code,
+      date:p.class_date, venueId:p.venue_id,
+      coachId:p.coach_id, teachCoach:coach?.name||'', examCoach:'',
+      classType:p.class_type||'', timeSlot:p.time_slot||'',
+      status:p.status, note:p.note||'', members,
+    };
+  });
+}
+const CLASS_TYPES = [
+  {value:'U', label:'U — 幼兒班'},
+  {value:'C', label:'C — 初階班'},
+  {value:'J', label:'J — 進階班'},
+];
+const TIME_SLOTS = [
+  {value:'A', label:'A'},
+  {value:'B', label:'B'},
+  {value:'C', label:'C'},
+  {value:'D', label:'D'},
+  {value:'Z', label:'Z'},
+  {value:'E', label:'E'},
+  {value:'F', label:'F'},
+  {value:'G', label:'G'},
+  {value:'H', label:'H'},
+  {value:'I', label:'I'},
+];
+function generateClassCode(venueId, date, classType, timeSlot) {
+  const v = VENUES.find(x=>String(x.id)===String(venueId));
+  if (!v || !date || !classType || !timeSlot) return null;
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${v.code}${year}${mm}${dd}${classType}${timeSlot}`;
+}
+function generateUniqueCode(venueId, date, classType, timeSlot) {
+  const base = generateClassCode(venueId, date, classType, timeSlot);
+  if (!base) return null;
+  if (!CLASSES.find(c => c.code === base)) return base;
+  let n = 2;
+  while (CLASSES.find(c => c.code === base + n)) n++;
+  return base + n;
+}
+function updateCodePreview() {
+  const venueId = document.getElementById('nc-venue')?.value;
+  const date    = document.getElementById('nc-date')?.value;
+  const ctype   = document.getElementById('nc-class-type')?.value;
+  const tslot   = document.getElementById('nc-time-slot')?.value;
+  const code = generateClassCode(venueId, date, ctype, tslot);
+  const el = document.getElementById('nc-code-preview');
+  if (el) el.textContent = code || '—';
+}
+function venueName(id){ const v=VENUES.find(x=>String(x.id)===String(id)); return v?v.name:'—'; }
+const HAT_MAP = {
+  1:'黃色布帽',2:'黃色布帽',3:'黃色布帽',
+  4:'藍色布帽',5:'藍色布帽',6:'紅色布帽',
+  7:'黑色膠帽',8:'黑色膠帽',
+  9:'銀色膠帽',10:'銀色膠帽'
+};
+const AV_MAP = {
+  1:'av-y',2:'av-y',3:'av-y',
+  4:'av-b',5:'av-b',6:'av-r',7:'av-k',8:'av-k',9:'av-s',10:'av-s'
+};
+const HT_MAP = {
+  1:'hat-y',2:'hat-y',3:'hat-y',
+  4:'hat-b',5:'hat-b',6:'hat-r',7:'hat-k',8:'hat-k',9:'hat-s',10:'hat-s'
+};
+
+const SKILL_DATA = {
+  1:{label:'一級',desc:'水中閉氣 10 秒',items:[
+    {pass:'頭入水',fail:'頭未入水'},
+    {pass:'嘴巴未鼓',fail:'嘴巴鼓'},
+    {pass:'悶氣達 10 秒',fail:'悶氣未達 10 秒'},
+  ]},
+  2:{label:'二級',desc:'韻律呼吸 10 次',items:[
+    {pass:'嘴巴未鼓',fail:'嘴巴鼓'},
+    {pass:'雙腳跳',fail:'單腳跳'},
+    {pass:'鼻子吐氣嘴巴吸氣',fail:'鼻子未吐氣或嘴巴未吸氣'},
+    {pass:'動作緩慢輕鬆',fail:'動作緊張'},
+  ]},
+  3:{label:'三級',desc:'蹬牆漂浮 5 公尺，能夠摸椅站立',items:[
+    {pass:'蹬牆時保持水平面',fail:'蹬牆時往上或往下'},
+    {pass:'漂浮時手腳伸直併攏',fail:'漂浮時手開、腳開'},
+    {pass:'雙腳蹬牆（椅）',fail:'單腳蹬牆 或 未蹬'},
+    {pass:'漂浮後可自行站立',fail:'漂浮後無法自行站立'},
+    {pass:'動作輕鬆緩慢',fail:'動作緊張急促'},
+  ]},
+  4:{label:'四級',desc:'打水 8 公尺、自行仰漂及站立',items:[
+    {pass:'大腿帶小腿、腳伸直',fail:'彎腳 或 鋤頭腳'},
+    {pass:'大腿律動性擺動',fail:'抖腳'},
+    {pass:'動作輕鬆緩慢',fail:'腳僵硬'},
+    {pass:'平穩的前進速度',fail:'節奏不穩'},
+    {pass:'直線踢水',fail:'左彎 或 右彎'},
+    {pass:'可自行仰漂',fail:'無法自行仰漂'},
+    {pass:'仰漂身體平衡',fail:'仰漂身體未能平衡'},
+    {pass:'仰漂可緩慢站立',fail:'仰漂站立動作急促'},
+  ]},
+  5:{label:'五級',desc:'自由式打水划手 12 公尺以上、仰式打水 8 公尺',items:[
+    {pass:'手伸直、手掌推水',fail:'手未伸直 或 未推水'},
+    {pass:'手指頭未開',fail:'手指頭打開'},
+    {pass:'手掌划至大腿',fail:'手掌未划至大腿（摸水、切水）'},
+    {pass:'掌心未翻掌',fail:'掌心翻掌'},
+    {pass:'肩膀未卡肩',fail:'肩膀卡肩'},
+    {pass:'仰式打水腳伸直',fail:'仰式打水腳彎曲'},
+    {pass:'大腿律動性擺動',fail:'抖腳'},
+    {pass:'仰式平穩地前進',fail:'節奏不穩'},
+    {pass:'直線踢水',fail:'左彎 或 右彎'},
+  ]},
+  6:{label:'六級',desc:'自由式 25 公尺（換氣三次以上）、仰式划手 15 公尺（可分解動作）',items:[
+    {pass:'轉頭換氣',fail:'抬頭換氣'},
+    {pass:'有吸氣',fail:'未吸氣'},
+    {pass:'前手延伸',fail:'前手下沉'},
+    {pass:'頭先手後',fail:'轉頭慢'},
+    {pass:'腳正常踢水',fail:'腳停下未踢水'},
+    {pass:'仰式伸直推水',fail:'仰式手彎（挖水、摸水、切水）'},
+    {pass:'仰式打水正常',fail:'仰式打水腳彎、腳沉'},
+  ]},
+  7:{label:'七級',desc:'捷式 25M、仰式 25M、蛙式小蛙前進、踩水 30 秒',items:[
+    {pass:'可標準完成自由式 25 公尺',fail:'無法標準完成自由式'},
+    {pass:'可標準完成仰式 25 公尺',fail:'無法標準完成仰式 25 公尺'},
+    {pass:'可立泳 30 秒',fail:'無法立泳 30 秒'},
+    {pass:'蛙腳可勾腳',fail:'蛙腳無法勾腳'},
+    {pass:'蛙腳可夾水',fail:'蛙腳切水'},
+    {pass:'蛙腳有動力',fail:'蛙腳無動力'},
+    {pass:'蛙腳膝蓋未開',fail:'膝蓋開'},
+    {pass:'收小腿',fail:'收大腿'},
+    {pass:'標準蛙腳',fail:'大蛙腳（膝蓋距離比腳踝距離開 或 三角蛙腳）'},
+  ]},
+  8:{label:'八級',desc:'平順游完捷仰各 25M、蛙式小蛙前進 25M、踩水 60 秒',items:[
+    {pass:'可標準完成自由式、仰式 25 公尺',fail:'無法標準完成自由式、仰式 25 公尺'},
+    {pass:'蛙手未停於胸前',fail:'蛙手停於胸前'},
+    {pass:'換氣後漂浮',fail:'換氣後未漂浮'},
+    {pass:'手前腳後',fail:'同手同腳'},
+    {pass:'低頭漂浮',fail:'未低頭漂浮'},
+    {pass:'蛙腳後無其他動作',fail:'蛙腳後自由腳或其他'},
+    {pass:'可立泳 60 秒',fail:'不可立泳 60 秒'},
+  ]},
+  9:{label:'九級',desc:'平順游完捷仰蛙各 25M、蝶式完成 25M、蝶腳脊背不可露出',items:[
+    {pass:'可標準完成自由式、仰式、蛙式 25 公尺',fail:'無法標準完成自由式、仰式、蛙式 25 公尺'},
+    {pass:'單邊蝶手仰直無拖水、頭先手後入水',fail:'單邊蝶手拖水、無頭先手後入水'},
+    {pass:'單邊蝶手節奏正確連貫',fail:'單邊蝶手節奏無連貫'},
+    {pass:'單邊蝶手入水時穩入手（無甩手）',fail:'單邊蝶手入水時甩手'},
+    {pass:'蝶腳不彎曲',fail:'蝶腳彎曲'},
+  ]},
+  10:{label:'十級',desc:'連續游完 100 公尺混合式',items:[
+    {pass:'可標準完成自由式、仰式、蛙式、蝶式各 25 公尺',fail:'無法標準完成自由式、仰式、蛙式、蝶式 25 公尺'},
+  ]},
+};
+
+const NAMES_FIRST = ['小明','小華','小芸','小宇','小蓉','小恩','小涵','小柔','小安','大為','俊傑','雅婷','怡君','志豪','淑芬','建國','美玲','宗翰','雅雯','冠宇','詩涵','品軒','宜庭','承翰','靜怡','家豪','佳蓉','彥廷','欣怡','冠廷'];
+const NAMES_LAST = ['王','李','張','陳','林','黃','吳','劉','蔡','鄭','許','謝','郭','洪','邱','曾','廖','賴','徐','周'];
+const PHONE_PRE = ['0912','0923','0934','0945','0956','0967','0978','0989','0911','0922'];
+const GUARDIAN_NAMES_LAST = ['王','李','張','陳','林','黃','吳','劉','蔡','鄭'];
+const GUARDIAN_NAMES_FIRST_M = ['志豪','建國','宗翰','彥廷','冠廷','承翰','家豪','俊傑','冠宇','品軒'];
+const GUARDIAN_NAMES_FIRST_F = ['美玲','雅婷','淑芬','雅雯','靜怡','佳蓉','欣怡','詩涵','宜庭','怡君'];
+
+function randGuardianName() {
+  const last = GUARDIAN_NAMES_LAST[Math.floor(Math.random()*GUARDIAN_NAMES_LAST.length)];
+  const firstPool = Math.random() > 0.5 ? GUARDIAN_NAMES_FIRST_M : GUARDIAN_NAMES_FIRST_F;
+  return last + firstPool[Math.floor(Math.random()*firstPool.length)];
+}
+
+function makeExamHistory(currentLevel) {
+  const history = [];
+  const count = Math.floor(Math.random() * 4) + 1;
+  let lv = Math.max(1, currentLevel - 1);
+  for (let i = 0; i < count; i++) {
+    const sd = SKILL_DATA[lv];
+    if (!sd) break;
+    const shouldPass = Math.random() < 0.3;
+    const failIdxs = [];
+    if (!shouldPass) {
+      const failCount = Math.floor(Math.random() * 3) + 1;
+      const shuffled = sd.items.map((_,j)=>j).sort(()=>Math.random()-0.5);
+      shuffled.slice(0, Math.min(failCount, sd.items.length)).forEach(j=>failIdxs.push(j));
+    }
+    const daysAgo = (count - i) * Math.floor(Math.random() * 60 + 30);
+    const d = new Date(Date.now() - daysAgo * 24 * 3600 * 1000);
+    const verdict = failIdxs.length === 0 ? 'pass' : 'fail';
+    history.push({
+      level: lv,
+      date: d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate(),
+      verdict,
+      failItems: failIdxs.map(j => sd.items[j].fail),
+    });
+    if (verdict === 'pass' && lv < currentLevel) lv++;
+  }
+  return history;
+}
+
+function getLastFailExam(examHistory) {
+  if (!examHistory || !examHistory.length) return null;
+  const sorted = [...examHistory].sort((a, b) => b.date.localeCompare(a.date));
+  return sorted.find(e => e.verdict === 'fail') || null;
+}
+
+function getStuckStatus(student) {
+  const history = (student.examHistory || [])
+    .filter(e => e.level === student.level)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  let consecFails = 0;
+  for (const e of history) {
+    if (e.verdict === 'pass') break;
+    consecFails++;
+  }
+  if (consecFails >= 3) return { type: 'stuck', count: consecFails };
+  if (consecFails === 2) return { type: 'warn', count: consecFails };
+  return null;
+}
+
+function randName(){ return NAMES_LAST[Math.floor(Math.random()*NAMES_LAST.length)] + NAMES_FIRST[Math.floor(Math.random()*NAMES_FIRST.length)]; }
+function randPhone(){ return PHONE_PRE[Math.floor(Math.random()*PHONE_PRE.length)] + '-' + String(Math.floor(Math.random()*900)+100) + '-' + String(Math.floor(Math.random()*900)+100); }
+
+let STUDENTS = [];
+let CLASSES = [];
+
+let examState = {};
+let currentClassId = null;
+let currentStudentIdx = 0;
+let prepSelectedId = null;
+let newClassSelectedStudents = [];
+
+// ════════════════════════════════
+// SCREEN NAV
+// ════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-'+name);
+  if (navEl) navEl.classList.add('active');
+  const titles = {prep:'預建班管理', day:'考試日主畫面', exam:'填寫評量表', preview:'送出確認', done:'送出完成', students:'學員資料管理'};
+  document.getElementById('topbar-title').textContent = titles[name]||'';
+  const content = document.getElementById('content-area');
+  if (content) content.classList.toggle('exam-mode', name==='exam');
+  if (name==='day') renderDayScreen();
+  if (name==='prep') renderPrepList();
+  if (name==='students') initStudentScreen();
+  if (name==='exam') { if (currentClassId) renderExamScreen(); else { showScreen('day'); return; } }
+  closeSidebar();
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); }
+function toggleCollapse(){
+  const sb=document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('sb-collapsed',sb.classList.contains('collapsed')?'1':'0');
+}
+
+// ════════════════════════════════
+// VENUE CHIPS HELPER
+// ════════════════════════════════
+function renderSidebarVenue() {
+  const el = document.getElementById('sb-venue-list');
+  if (!el) return;
+  el.innerHTML = '';
+  const items = [{id:0, name:'全部場館'}].concat(VENUES);
+  items.forEach(v => {
+    const active = currentVenueFilter === v.id;
+    const btn = document.createElement('div');
+    btn.style.cssText = `display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;cursor:pointer;font-size:12px;color:${active?'#fff':'rgba(255,255,255,.5)'};background:${active?'rgba(38,128,255,.18)':'transparent'};transition:all .15s;margin-bottom:2px`;
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="${active?'var(--brand)':'rgba(255,255,255,.3)'}" style="flex-shrink:0"><circle cx="12" cy="12" r="${active?5:3}"/></svg>${v.name}`;
+    btn.onmouseenter = () => { if (!active) btn.style.color='rgba(255,255,255,.85)'; };
+    btn.onmouseleave = () => { if (!active) btn.style.color='rgba(255,255,255,.5)'; };
+    btn.onclick = () => {
+      currentVenueFilter = v.id;
+      renderSidebarVenue();
+      renderPrepList();
+      renderDayScreen();
+    };
+    el.appendChild(btn);
+  });
+}
+
+// ════════════════════════════════
+// PREP SCREEN
+// ════════════════════════════════
+function renderPrepList() {
+
+  const hideDoneBtn = document.getElementById('prep-hide-done-btn');
+  if (hideDoneBtn) {
+    hideDoneBtn.textContent = prepHideDone ? '顯示已完成' : '隱藏已完成';
+    hideDoneBtn.style.background = prepHideDone ? 'var(--n50)' : 'var(--brand-lt)';
+    hideDoneBtn.style.color = prepHideDone ? 'var(--ink3)' : 'var(--brand-700)';
+    hideDoneBtn.style.borderColor = prepHideDone ? 'var(--line2)' : 'var(--brand-100)';
+  }
+
+  const el = document.getElementById('prep-class-list');
+  el.innerHTML = '';
+  let list = CLASSES.filter(c => !c.isQuickExam);
+  if (currentVenueFilter) list = list.filter(c => c.venueId === currentVenueFilter);
+  if (prepHideDone) list = list.filter(c => c.status !== 'done');
+  list.sort((a,b) => {
+    if (a.date < b.date) return -1;
+    if (a.date > b.date) return 1;
+    return (a.timeSlot||'').localeCompare(b.timeSlot||'');
+  });
+  if (!list.length) {
+    const hasDone = CLASSES.some(c => !c.isQuickExam && c.status === 'done' && (!currentVenueFilter || c.venueId === currentVenueFilter));
+    el.innerHTML = prepHideDone && hasDone
+      ? '<div class="empty-state">無待考班級<br><span style="font-size:11px;color:var(--ink3)">點「顯示已完成」查看</span></div>'
+      : '<div class="empty-state">尚無預建班</div>';
+    return;
+  }
+  list.forEach(cls => {
+    const chipCls = cls.status==='done'?'chip-done':cls.status==='ready'?'chip-ready':'chip-draft';
+    const chipTxt = cls.status==='done'?'已完成':cls.status==='ready'?'待考':'草稿';
+    const names = cls.members.slice(0,3).map(m=>m.name).join('、') + (cls.members.length>3?'…':'');
+    const d = document.createElement('div');
+    d.className = 'class-card' + (cls.id===prepSelectedId?' selected':'');
+    const cTypeMap={U:'幼兒',C:'初階',J:'進階'};
+    const cTimeMap={A:'A',B:'B',C:'C',D:'D',Z:'Z',E:'E',F:'F',G:'G',H:'H',I:'I'};
+    const classDesc=`${cTypeMap[cls.classType]||cls.classType}班 · ${cTimeMap[cls.timeSlot]||cls.timeSlot}`;
+    d.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="cc-code">${cls.code}</div>
+      <div class="status-chip ${chipCls}">${chipTxt}</div>
+    </div>
+    <div style="font-size:13px;font-weight:500;color:var(--ink)">${classDesc}</div>
+    <div class="cc-meta">${cls.date} · ${venueName(cls.venueId)} · 教學：${cls.teachCoach}</div>
+    <div class="cc-members">${cls.members.length} 位學員：${names}</div>`;
+    d.onclick = () => { prepSelectedId = cls.id; renderPrepList(); showPrepDetail(cls.id); };
+    el.appendChild(d);
+  });
+}
+
+function showPrepDetail(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  if (!cls) return;
+  document.getElementById('prep-form-title').textContent = cls.id + ' · ' + cls.label;
+  const acts = document.getElementById('prep-form-actions');
+  acts.innerHTML = '';
+  if (cls.status !== 'done') {
+    const b1 = document.createElement('button');
+    b1.className = 'btn btn-ghost btn-sm'; b1.textContent = '編輯';
+    b1.onclick = () => openEditClass(id);
+    acts.appendChild(b1);
+
+    const bDel = document.createElement('button');
+    bDel.className = 'btn btn-ghost btn-sm';
+    bDel.style.color = 'var(--signal)';
+    bDel.textContent = '刪除';
+    bDel.onclick = () => deletePrepClass(id);
+    acts.appendChild(bDel);
+  }
+  const b2 = document.createElement('button');
+  if (cls.status === 'done') {
+    b2.className = 'btn btn-ghost btn-sm'; b2.textContent = '重新開考';
+  } else {
+    b2.className = 'btn btn-success btn-sm'; b2.textContent = '開始考試 →';
+  }
+  b2.onclick = () => { startExam(id); };
+  acts.appendChild(b2);
+
+  const canEdit = cls.status !== 'done';
+  const body = document.getElementById('prep-form-body');
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <div>
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">考試場館</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink)">${venueName(cls.venueId)}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">教學教練</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink)">${cls.teachCoach}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:4px">考試教練</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink)">${cls.examCoach}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-bottom:8px">學員名單（<span id="detail-member-count">${cls.members.length}</span> 位）</div>
+    <div id="detail-members"></div>
+    ${canEdit ? `
+    <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span style="font-size:11px;font-weight:700;color:var(--brand)">快速加入學員</span>
+      </div>
+      <input id="detail-add-search" placeholder="搜尋姓名或手機..."
+        style="width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif;outline:none;margin-bottom:6px"
+        oninput="renderDetailAddPicker('${id}')">
+      <div id="detail-add-list" style="max-height:180px;overflow-y:auto"></div>
+    </div>` : ''}`;
+
+  renderDetailMembers(id);
+  if (canEdit) renderDetailAddPicker(id);
+}
+
+function renderDetailMembers(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  if (!cls) return;
+  const canEdit = cls.status !== 'done';
+  const ml = document.getElementById('detail-members');
+  if (!ml) return;
+  ml.innerHTML = '';
+  const countEl = document.getElementById('detail-member-count');
+  if (countEl) countEl.textContent = cls.members.length;
+  cls.members.forEach(m => {
+    const sd = SKILL_DATA[m.examLevel];
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;margin-bottom:5px';
+    row.innerHTML = `<div class="s-av ${AV_MAP[m.examLevel]}">${m.name[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--ink)">${m.name}</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:1px">
+          ${m.guardianName || '—'} · <span style="font-family:'JetBrains Mono',monospace">${m.guardianPhone || '—'}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <div style="text-align:right">
+          <div class="hat-tag ${HT_MAP[m.examLevel]}">${sd.label}・${HAT_MAP[m.examLevel]}</div>
+          <div style="font-size:10px;color:var(--ink3);margin-top:3px">教學：${m.teachCoach}</div>
+        </div>
+        ${canEdit ? `<button onclick="removeMemberFromClass('${id}','${m.id}')" title="移除"
+          style="width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);background:var(--n50);color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;line-height:1">×</button>` : ''}
+      </div>`;
+    ml.appendChild(row);
+  });
+}
+
+async function removeMemberFromClass(classId, studentId) {
+  const cls = CLASSES.find(c=>c.id===classId);
+  if (!cls) return;
+  const {error} = await SUPA.from('prep_enrollments')
+    .delete().eq('prep_class_id',classId).eq('student_id',studentId);
+  if(error){showToast('移除失敗：'+error.message,'warn');return;}
+  cls.members = cls.members.filter(m=>String(m.id)!==String(studentId));
+  renderDetailMembers(classId);
+  renderDetailAddPicker(classId);
+}
+
+async function deletePrepClass(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  if (!cls) return;
+  if (!confirm(`確定刪除「${cls.code}」？\n學員名單將一併清除，此動作無法復原。`)) return;
+  const {data:exams} = await SUPA.from('exams').select('id').eq('prep_class_id', id).limit(1);
+  if (exams && exams.length > 0) {
+    showToast('此班已有考試紀錄，無法刪除','warn');
+    return;
+  }
+  await SUPA.from('prep_enrollments').delete().eq('prep_class_id', id);
+  const {error} = await SUPA.from('prep_classes').delete().eq('id', id);
+  if (error) { showToast('刪除失敗：'+error.message,'warn'); return; }
+  CLASSES = CLASSES.filter(c=>c.id!==id);
+  prepSelectedId = null;
+  document.getElementById('prep-form-title').textContent = '選擇一個班級';
+  document.getElementById('prep-form-actions').innerHTML = '';
+  document.getElementById('prep-form-body').innerHTML = '<div style="padding:40px;text-align:center;color:var(--ink3);font-size:13px">請從左側選擇班級</div>';
+  renderPrepList();
+  showToast('已刪除 '+cls.code,'ok');
+}
+
+function renderDetailAddPicker(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  if (!cls) return;
+  const list = document.getElementById('detail-add-list');
+  if (!list) return;
+  const q = (document.getElementById('detail-add-search')?.value||'').toLowerCase().trim();
+  const existingIds = new Set(cls.members.map(m=>m.id));
+  let candidates = STUDENTS.filter(s => !existingIds.has(s.id));
+  if (q) candidates = candidates.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    (s.guardianPhone||'').replace(/-/g,'').includes(q.replace(/-/g,''))
+  );
+  list.innerHTML = '';
+  if (!q && !candidates.length) {
+    list.innerHTML = '<div style="font-size:11px;color:var(--ink3);padding:4px 0">所有學員已在名單中</div>';
+    return;
+  }
+  if (!q) { list.innerHTML = '<div style="font-size:11px;color:var(--ink3);padding:4px 0">輸入姓名或手機搜尋</div>'; return; }
+  if (!candidates.length) { list.innerHTML = '<div style="font-size:11px;color:var(--ink3);padding:4px 0">找不到學員</div>'; return; }
+  candidates.slice(0, 20).forEach(s => {
+    const sd = SKILL_DATA[s.level];
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;margin-bottom:4px;cursor:pointer;transition:background .12s';
+    row.innerHTML = `<div class="s-av ${AV_MAP[s.level]}" style="width:28px;height:28px;font-size:11px">${s.name[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;color:var(--ink)">${s.name}</div>
+        <div style="font-size:10px;color:var(--ink3)">${s.guardianPhone||'—'}</div>
+      </div>
+      <div class="hat-tag ${HT_MAP[s.level]}" style="font-size:9px">${sd.label}</div>
+      <button style="padding:3px 9px;border-radius:5px;border:1px solid var(--brand-100);background:var(--brand-lt);color:var(--brand-700);font-size:11px;font-family:'Noto Sans TC',sans-serif;cursor:pointer">加入</button>`;
+    row.querySelector('button').onclick = async (e) => {
+      e.stopPropagation();
+      const {error} = await SUPA.from('prep_enrollments').insert({prep_class_id:id, student_id:s.id});
+      if(error){showToast('加入失敗：'+error.message,'warn');return;}
+      cls.members.push({...s, examLevel: s.level});
+      document.getElementById('detail-add-search').value = '';
+      renderDetailMembers(id);
+      renderDetailAddPicker(id);
+    };
+    list.appendChild(row);
+  });
+}
+
+function openNewClass() {
+  prepSelectedId = null;
+  renderPrepList();
+  newClassSelectedStudents = [];
+  document.getElementById('prep-form-title').textContent = '新增預建班';
+  document.getElementById('prep-form-actions').innerHTML = '';
+  renderNewClassForm();
+}
+
+function renderNewClassForm() {
+  const body = document.getElementById('prep-form-body');
+  const today = new Date().toISOString().slice(0,10);
+  const defaultVenue = VENUES[0];
+  const defaultCode = generateClassCode(defaultVenue.id, today, 'U', 'A') || '—';
+  body.innerHTML = `
+    <div style="background:var(--n50);border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:10px;color:var(--ink3);flex-shrink:0">班級編號</span>
+      <span id="nc-code-preview" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--brand);letter-spacing:.04em">${defaultCode}</span>
+      <span style="font-size:10px;color:var(--ink4)">（依場館 / 日期 / 班別 / 時段自動產生）</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">考試日期 <span style="color:var(--signal)">*</span></div>
+        <input id="nc-date" type="date" value="${today}" onchange="updateCodePreview()" style="width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--ink)">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">班別 <span style="color:var(--signal)">*</span></div>
+        <select id="nc-class-type" onchange="updateCodePreview()" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif">
+          ${CLASS_TYPES.map(t=>`<option value="${t.value}">${t.label}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">時段 <span style="color:var(--signal)">*</span></div>
+        <select id="nc-time-slot" onchange="updateCodePreview()" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif">
+          ${TIME_SLOTS.map(t=>`<option value="${t.value}">${t.label}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">備註（選填）</div>
+        <input id="nc-label" type="text" placeholder="例：暑期第一梯" style="width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;outline:none">
+        <div id="nc-label-err" style="font-size:10px;color:var(--signal);margin-top:3px;display:none">請輸入班級名稱</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">考試場館</div>
+        <select id="nc-venue" onchange="updateCodePreview()" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif">
+          ${VENUES.map(v=>`<option value="${v.id}">${v.name}（${v.code}）</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">教學教練</div>
+        <select id="nc-teach" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif">
+          ${COACHES.map(c=>`<option>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">考試教練</div>
+        <select id="nc-exam" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif">
+          ${EXAM_COACHES.map(c=>`<option>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-bottom:8px">選取學員 <span id="nc-sel-count" style="color:var(--brand);font-weight:600">0</span> 位已選</div>
+    <div class="search-bar">
+      <input class="search-input" id="nc-search" placeholder="搜尋姓名、家長或電話..." oninput="renderStudentPicker()">
+      <select class="filter-sel" id="nc-hat-filter" onchange="renderStudentPicker()">
+        <option value="">全部泳帽</option>
+        <option value="1">黃色布帽 1-3級</option>
+        <option value="5">藍色布帽 4-5級</option>
+        <option value="6">紅色布帽 6級</option>
+        <option value="7">黑色膠帽 7-8級</option>
+        <option value="9">銀色膠帽 9-10級</option>
+      </select>
+      <select class="filter-sel" id="nc-venue-filter" onchange="renderStudentPicker()">
+        <option value="">全部場館</option>
+        ${VENUES.map(v=>`<option value="${v.id}">${v.name}</option>`).join('')}
+      </select>
+    </div>
+    <div id="nc-student-list" style="max-height:300px;overflow-y:auto"></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="renderPrepList();document.getElementById('prep-form-body').innerHTML='<div class=\\'empty-state\\'>← 從左側選擇班級，或點擊「新增」建立新班</div>'">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveNewClass()">儲存草稿</button>
+    </div>`;
+  renderStudentPicker();
+}
+
+function renderStudentPicker() {
+  const q = (document.getElementById('nc-search')?.value||'').toLowerCase();
+  const hatF = document.getElementById('nc-hat-filter')?.value||'';
+  const venueF = document.getElementById('nc-venue-filter')?.value||'';
+  const list = document.getElementById('nc-student-list');
+  if (!list) return;
+  list.innerHTML = '';
+  let filtered = STUDENTS.filter(s => {
+    const matchQ = !q || s.name.toLowerCase().includes(q) || (s.guardianPhone||'').replace(/-/g,'').includes(q.replace(/-/g,'')) || (s.guardianName||'').toLowerCase().includes(q);
+    let matchHat = true;
+    if (hatF) {
+      const hv = parseInt(hatF);
+      if (hv===1) matchHat = s.level <= 4;
+      else if (hv===5) matchHat = s.level === 5;
+      else if (hv===6) matchHat = s.level === 6;
+      else if (hv===7) matchHat = s.level >= 7 && s.level <= 8;
+      else if (hv===9) matchHat = s.level >= 9;
+    }
+    const matchVenue = !venueF || String(s.defaultVenueId) === venueF;
+    return matchQ && matchHat && matchVenue;
+  });
+  filtered.slice(0, 50).forEach(s => {
+    const isSel = newClassSelectedStudents.includes(s.id);
+    const sd = SKILL_DATA[s.level];
+    let nameHtml = s.name;
+    if (q && s.name.toLowerCase().includes(q)) {
+      const idx = s.name.toLowerCase().indexOf(q);
+      nameHtml = s.name.slice(0,idx)+'<span class="highlight">'+s.name.slice(idx,idx+q.length)+'</span>'+s.name.slice(idx+q.length);
+    }
+    const row = document.createElement('div');
+    row.className = 'student-check-row' + (isSel?' sel':'');
+    row.innerHTML = `<input type="checkbox" ${isSel?'checked':''} style="width:14px;height:14px;accent-color:var(--brand);flex-shrink:0">
+      <div class="s-av ${AV_MAP[s.level]}">${s.name[0]}</div>
+      <div class="s-info">
+        <div class="s-name">${nameHtml}</div>
+        <div class="s-sub">${s.guardianName || ''} · ${s.guardianPhone}
+          ${s.guardianActivated ? '<span style="font-size:9px;background:var(--green-bg);color:var(--green);border-radius:3px;padding:0 4px;margin-left:4px">已啟用</span>' : ''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+        <div class="hat-tag ${HT_MAP[s.level]}">${sd.label}</div>
+        <div style="font-size:9px;color:var(--ink3);background:var(--n100);border-radius:3px;padding:1px 5px">${venueName(s.defaultVenueId)||'未指定'}</div>
+      </div>`;
+    row.onclick = () => {
+      if (newClassSelectedStudents.includes(s.id)) newClassSelectedStudents = newClassSelectedStudents.filter(x=>x!==s.id);
+      else newClassSelectedStudents.push(s.id);
+      document.getElementById('nc-sel-count').textContent = newClassSelectedStudents.length;
+      renderStudentPicker();
+    };
+    list.appendChild(row);
+  });
+  if (filtered.length > 50) {
+    const more = document.createElement('div');
+    more.style.cssText = 'text-align:center;padding:8px;font-size:11px;color:var(--ink3)';
+    more.textContent = '顯示前 50 筆，請縮小搜尋範圍';
+    list.appendChild(more);
+  }
+  const count = document.getElementById('nc-sel-count');
+  if (count) count.textContent = newClassSelectedStudents.length;
+}
+
+async function saveNewClass() {
+  const errEl = document.getElementById('nc-label-err');
+  if(errEl) errEl.style.display='none';
+  if (!newClassSelectedStudents.length) { showToast('請至少選取一位學員','warn'); return; }
+  const venueId = document.getElementById('nc-venue').value;
+  const date    = document.getElementById('nc-date').value;
+  const ctype   = document.getElementById('nc-class-type').value;
+  const tslot   = document.getElementById('nc-time-slot').value;
+  const code = generateUniqueCode(venueId, date, ctype, tslot);
+  if (!code) { showToast('請確認場館、日期、班別及時段','warn'); return; }
+  const teachCoachName = document.getElementById('nc-teach').value;
+  const coachObj = COACHES_DATA.find(c=>c.name===teachCoachName);
+  const {data:inserted, error} = await SUPA.from('prep_classes').insert({
+    code, venue_id:venueId, coach_id:coachObj?.id||null,
+    class_date:date, class_type:ctype, time_slot:tslot, status:'draft',
+    note: document.getElementById('nc-label')?.value.trim()||null,
+  }).select('id').single();
+  if(error){showToast('建立班級失敗：'+error.message,'warn');return;}
+  const enrRows = newClassSelectedStudents.map(sid=>({prep_class_id:inserted.id, student_id:sid}));
+  if(enrRows.length) await SUPA.from('prep_enrollments').insert(enrRows);
+  await loadClasses();
+  prepSelectedId = inserted.id;
+  renderPrepList();
+  showPrepDetail(inserted.id);
+  showToast('班級已建立','ok');
+}
+
+function openEditClass(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  if (!cls) return;
+  newClassSelectedStudents = cls.members.map(m=>m.id);
+  document.getElementById('prep-form-title').textContent = '編輯 ' + cls.id;
+  const body = document.getElementById('prep-form-body');
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">班級名稱</div>
+        <input id="nc-label" type="text" value="${cls.label}" style="width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--ink);font-family:'Noto Sans TC',sans-serif">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">考試日期</div>
+        <input id="nc-date" type="date" value="${cls.date}" style="width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--ink)">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">考試場館</div>
+        <select id="nc-venue" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif">
+          ${VENUES.map(v=>`<option value="${v.id}" ${v.id===cls.venueId?'selected':''}>${v.name}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">教學教練</div>
+        <select id="nc-teach" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif">
+          ${COACHES.map(c=>`<option ${c===cls.teachCoach?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:5px">考試教練</div>
+        <select id="nc-exam" style="width:100%;background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif">
+          ${EXAM_COACHES.map(c=>`<option ${c===cls.examCoach?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-bottom:8px">學員名單 <span id="nc-sel-count" style="color:var(--brand);font-weight:600">${newClassSelectedStudents.length}</span> 位已選</div>
+    <div class="search-bar">
+      <input class="search-input" id="nc-search" placeholder="搜尋姓名、家長或電話..." oninput="renderStudentPicker()">
+      <select class="filter-sel" id="nc-hat-filter" onchange="renderStudentPicker()">
+        <option value="">全部泳帽</option>
+        <option value="1">黃色布帽 1-3級</option>
+        <option value="5">藍色布帽 4-5級</option>
+        <option value="6">紅色布帽 6級</option>
+        <option value="7">黑色膠帽 7-8級</option>
+        <option value="9">銀色膠帽 9-10級</option>
+      </select>
+      <select class="filter-sel" id="nc-venue-filter" onchange="renderStudentPicker()">
+        <option value="">全部場館</option>
+        ${VENUES.map(v=>`<option value="${v.id}">${v.name}</option>`).join('')}
+      </select>
+    </div>
+    <div id="nc-student-list" style="max-height:260px;overflow-y:auto"></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="showPrepDetail('${id}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEditClass('${id}')">儲存</button>
+    </div>`;
+  renderStudentPicker();
+}
+
+async function saveEditClass(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  if (!cls) return;
+  const venueId = document.getElementById('nc-venue').value;
+  const date = document.getElementById('nc-date').value;
+  const teachCoachName = document.getElementById('nc-teach').value;
+  const coachObj = COACHES_DATA.find(c=>c.name===teachCoachName);
+  const newStatus = cls.status==='draft' ? 'ready' : cls.status;
+  const {error} = await SUPA.from('prep_classes').update({
+    venue_id:venueId, class_date:date,
+    coach_id:coachObj?.id||null, status:newStatus,
+    note:document.getElementById('nc-label')?.value.trim()||null,
+  }).eq('id',id);
+  if(error){showToast('更新失敗：'+error.message,'warn');return;}
+  // sync enrollments: delete all then re-insert
+  await SUPA.from('prep_enrollments').delete().eq('prep_class_id',id);
+  const enrRows = newClassSelectedStudents.map(sid=>({prep_class_id:id, student_id:sid}));
+  if(enrRows.length) await SUPA.from('prep_enrollments').insert(enrRows);
+  await loadClasses();
+  renderPrepList();
+  showPrepDetail(id);
+  showToast('班級已更新','ok');
+}
+
+// ════════════════════════════════
+// DAY SCREEN
+// ════════════════════════════════
+let daySelectedClassId = null;
+let dayHideDone = true;
+let prepHideDone = true;
+let currentVenueFilter = 0;
+
+function renderDayScreen() {
+  const list = document.getElementById('day-class-list');
+  list.innerHTML = '';
+  const today = new Date();
+  const todayStr = today.getFullYear()+'-'+(today.getMonth()+1).toString().padStart(2,'0')+'-'+today.getDate().toString().padStart(2,'0');
+
+  // 初始化日期選擇器
+  const dateInput = document.getElementById('day-date-filter');
+  if (dateInput && !dateInput.value) dateInput.value = todayStr;
+  const filterDate = dateInput ? dateInput.value : '';
+
+  // 更新隱藏已完成按鈕文字
+  const hideDoneBtn = document.getElementById('day-hide-done-btn');
+  if (hideDoneBtn) {
+    hideDoneBtn.textContent = dayHideDone ? '顯示已完成' : '隱藏已完成';
+    hideDoneBtn.style.background = dayHideDone ? 'var(--n50)' : 'var(--brand-lt)';
+    hideDoneBtn.style.color = dayHideDone ? 'var(--ink3)' : 'var(--brand-700)';
+    hideDoneBtn.style.borderColor = dayHideDone ? 'var(--line2)' : 'var(--brand-100)';
+  }
+
+  let visibleClasses = CLASSES.filter(c => !c.isQuickExam);
+  if (filterDate) visibleClasses = visibleClasses.filter(c => c.date === filterDate);
+  if (currentVenueFilter) visibleClasses = visibleClasses.filter(c => c.venueId === currentVenueFilter);
+  const displayClasses = dayHideDone ? visibleClasses.filter(c => c.status !== 'done') : visibleClasses;
+
+  const allForDate = CLASSES.filter(c => !c.isQuickExam
+    && (!filterDate || c.date === filterDate)
+    && (!currentVenueFilter || c.venueId === currentVenueFilter));
+  const done = allForDate.filter(c => c.status === 'done').length;
+  document.getElementById('day-progress').textContent = done + ' / ' + allForDate.length + ' 完成';
+
+  if (!displayClasses.length) {
+    const msg = dayHideDone && allForDate.some(c => c.status === 'done')
+      ? '<div class="empty-state">所有班級已完成考試 🎉<br><span style="font-size:11px;color:var(--ink3)">點「顯示已完成」查看紀錄</span></div>'
+      : '<div class="empty-state">此日期無班級</div>';
+    list.innerHTML = msg;
+    return;
+  }
+
+  displayClasses.forEach(cls => {
+    const isToday = cls.date === todayStr;
+    const isPast = cls.date < todayStr;
+    const pipCls = cls.status==='done'?'pip-done': isToday ?'pip-next':'pip-wait';
+    const names = cls.members.slice(0,3).map(m=>m.name).join('、')+(cls.members.length>3?'…':'');
+    const chipCls = cls.status==='done'?'chip-done':cls.status==='ready'?'chip-ready':'chip-draft';
+    const chipTxt = cls.status==='done'?'已完成':cls.status==='ready'?'待考':'草稿';
+    const doneCount = cls.status==='done' ? cls.members.length : cls.members.filter(m=>examState[m.id]?.submitted).length;
+    const progressTxt = cls.status==='draft' ? '' : `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${doneCount===cls.members.length?'var(--green)':'var(--brand)'}"> · ${doneCount}/${cls.members.length} 完成</span>`;
+    const row = document.createElement('div');
+    row.className = 'cls-row' + (cls.id===daySelectedClassId?' active-cls':'') + (cls.status==='done'?' done-cls':'');
+    if (isPast && cls.status!=='done') row.style.opacity = '0.6';
+    const dayTypeMap={U:'幼兒',C:'初階',J:'進階'};
+    const dayTimeMap={A:'A',B:'B',C:'C',D:'D',Z:'Z',E:'E',F:'F',G:'G',H:'H',I:'I'};
+    const dayDesc=`${dayTypeMap[cls.classType]||cls.classType}班 · ${dayTimeMap[cls.timeSlot]||cls.timeSlot}`;
+    row.innerHTML = `<div class="pip ${pipCls}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brand)">${cls.code}</div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink);margin-top:1px">${dayDesc}</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:2px">${venueName(cls.venueId)} · ${cls.members.length} 位${progressTxt}</div>
+      </div>
+      <div class="status-chip ${chipCls}">${chipTxt}</div>`;
+    row.onclick = () => { daySelectedClassId = cls.id; renderDayScreen(); renderDayDetail(cls.id); };
+    list.appendChild(row);
+  });
+}
+
+function renderDayDetail(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  const dtTypeMap={U:'幼兒',C:'初階',J:'進階'};
+  const dtTimeMap={A:'A',B:'B',C:'C',D:'D',Z:'Z',E:'E',F:'F',G:'G',H:'H',I:'I'};
+  document.getElementById('day-selected-title').textContent = cls.code + ' · ' + (dtTypeMap[cls.classType]||cls.classType) + '班 · ' + (dtTimeMap[cls.timeSlot]||cls.timeSlot);
+  const btn = document.getElementById('day-start-btn');
+  btn.style.display = 'inline-flex';
+  const body = document.getElementById('day-class-detail');
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3)">考試日期</div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink);margin-top:3px">${cls.date}</div>
+      </div>
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3)">考試場館</div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink);margin-top:3px">${venueName(cls.venueId)}</div>
+      </div>
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3)">教學教練</div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink);margin-top:3px">${cls.teachCoach}</div>
+      </div>
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3)">考試教練</div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink);margin-top:3px">${cls.examCoach}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-bottom:8px">學員（${cls.members.length} 位）</div>
+    <div>${cls.members.map(m=>{
+      const sd = SKILL_DATA[m.examLevel];
+      const lf = getLastFailExam(m.examHistory);
+      const lastFailHtml = lf ? `<div style="font-size:10px;color:var(--ink3)">上次未過：${lf.date}</div>` : '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px">
+        <div class="s-av ${AV_MAP[m.examLevel]}">${m.name[0]}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500;color:var(--ink)">${m.name}</div>
+          <div style="font-size:11px;color:var(--ink3)">${sd.label} · ${HAT_MAP[m.examLevel]}</div>
+        </div>
+        ${lastFailHtml}
+      </div>`;
+    }).join('')}</div>`;
+}
+
+function startExamFromDay() {
+  if (!daySelectedClassId) return;
+  startExam(daySelectedClassId);
+}
+
+// ════════════════════════════════
+// EXAM SCREEN
+// ════════════════════════════════
+// ── 評量表草稿 ──
+function saveDraft() {
+  if (!currentClassId) return;
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  if (!cls) return;
+  const slice = {};
+  cls.members.forEach(m => { if (examState[m.id]) slice[m.id] = examState[m.id]; });
+  localStorage.setItem('swim_exam_draft_' + currentClassId, JSON.stringify(slice));
+  const el = document.getElementById('draft-saved-label');
+  if (el) { el.textContent = '草稿已儲存'; el.style.opacity = '1'; setTimeout(()=>{ el.style.opacity = '0'; }, 1800); }
+}
+function restoreDraft(classId) {
+  try {
+    const raw = localStorage.getItem('swim_exam_draft_' + classId);
+    if (!raw) return false;
+    Object.assign(examState, JSON.parse(raw));
+    return true;
+  } catch(e) { return false; }
+}
+function clearDraft(classId) {
+  localStorage.removeItem('swim_exam_draft_' + classId);
+}
+
+function startExam(classId) {
+  currentClassId = classId;
+  currentStudentIdx = 0;
+  const cls = CLASSES.find(c=>c.id===classId);
+  cls.members.forEach(m => {
+    if (!examState[m.id]) {
+      examState[m.id] = { checks:{}, verdict:null, note:'', examLevel: m.examLevel };
+    }
+  });
+  const hadDraft = restoreDraft(classId);
+  if (hadDraft) showToast('已載入上次草稿', 'ok');
+  document.getElementById('teach-coach-sel').value = cls.teachCoach || COACHES[0] || '';
+  document.getElementById('exam-coach-sel').value = cls.examCoach || EXAM_COACHES[0] || '';
+  renderExamScreen();
+  showScreen('exam');
+}
+
+function renderExamScreen() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const exTypeMap={U:'幼兒',C:'初階',J:'進階'};
+  const exTimeMap={A:'A',B:'B',C:'C',D:'D',Z:'Z',E:'E',F:'F',G:'G',H:'H',I:'I'};
+  document.getElementById('ex-code').textContent = cls.code;
+  document.getElementById('ex-label').textContent = `${exTypeMap[cls.classType]||cls.classType}班 · ${exTimeMap[cls.timeSlot]||cls.timeSlot}`;
+  document.getElementById('ex-date').textContent = cls.date + ' · ' + venueName(cls.venueId);
+  renderStudentTabs();
+  renderExamForm();
+}
+
+function renderStudentTabs() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const el = document.getElementById('ex-stud-tabs');
+  el.innerHTML = '';
+  cls.members.forEach((m, i) => {
+    const r = examState[m.id] || {};
+    const sd = SKILL_DATA[r.examLevel || m.examLevel];
+    const total = sd.items.length;
+    const checked = Object.keys(r.checks||{}).length;
+    const statusTxt = r.submitted ? '✓' : r.verdict==='absent' ? '未出席' : r.verdict ? '待送出' : checked>0?(checked+'/'+total):'待填';
+    const statusColor = r.submitted?'var(--green)':r.verdict==='absent'?'var(--gold-dk)':r.verdict?'var(--brand)':'var(--ink3)';
+    const tab = document.createElement('div');
+    tab.className = 'stud-tab' + (i===currentStudentIdx?' act':'');
+    tab.innerHTML = `<div class="s-av ${AV_MAP[r.examLevel||m.examLevel]}">${m.name[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:1px">${SKILL_DATA[r.examLevel||m.examLevel].label}</div>
+      </div>
+      <div style="font-size:10px;color:${statusColor};font-family:'JetBrains Mono',monospace;flex-shrink:0">${statusTxt}</div>`;
+    tab.onclick = () => { saveNote(); currentStudentIdx = i; renderStudentTabs(); renderExamForm(); };
+    el.appendChild(tab);
+  });
+  const done = cls.members.filter(m => examState[m.id]?.submitted).length;
+  document.getElementById('ex-stu-progress').textContent = done + '/' + cls.members.length;
+}
+
+function renderExamForm() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls.members[currentStudentIdx];
+  const r = examState[m.id];
+  const examLv = r.examLevel || m.examLevel;
+  const sd = SKILL_DATA[examLv];
+  document.getElementById('ex-lv-name').textContent = sd.label + '・' + HAT_MAP[examLv];
+  document.getElementById('ex-lv-desc').textContent = sd.desc;
+  const sel = document.getElementById('lv-changer-sel');
+  sel.innerHTML = '';
+  for (let lv=1; lv<=10; lv++) {
+    const opt = document.createElement('option');
+    opt.value = lv;
+    opt.textContent = SKILL_DATA[lv].label + (lv===m.level?' ★':'');
+    if (lv === examLv) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  const lastRef = document.getElementById('last-exam-ref');
+  const lastFail = getLastFailExam(m.examHistory);
+  const stuckSt = getStuckStatus(m);
+  let refHtml = '';
+  if (stuckSt) {
+    const isStuck = stuckSt.type === 'stuck';
+    refHtml += `<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:8px;margin-bottom:8px;${isStuck?'background:var(--signal-lt);border:1px solid var(--red-border)':'background:var(--gold-lt);border:1px solid var(--gold-100)'}">
+      <span style="font-size:16px">${isStuck?'🔴':'⚠️'}</span>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:${isStuck?'var(--signal)':'var(--gold-dk)'}">${isStuck?'卡關學員':'警示學員'} — 同一級已失敗 ${stuckSt.count} 次</div>
+        <div style="font-size:10px;color:${isStuck?'#9f1239':'#92400e'};margin-top:1px">${isStuck?'請考官評估是否需要額外輔導再安排考試':'請留意本次考試結果'}</div>
+      </div>
+    </div>`;
+  }
+  if (lastFail && lastFail.failItems && lastFail.failItems.length > 0) {
+    refHtml += `<div class="last-exam-panel">
+      <div class="lep-title">上次未通過（${SKILL_DATA[lastFail.level]?.label || ''}）</div>
+      <div class="lep-date">考試日期：${lastFail.date}</div>
+      <div class="lep-fail-items">${lastFail.failItems.map(f=>`<div class="lep-fail-item">${f}</div>`).join('')}</div>
+    </div>`;
+  }
+  if (refHtml) {
+    lastRef.style.display = 'block';
+    lastRef.innerHTML = refHtml;
+  } else {
+    lastRef.style.display = 'none';
+  }
+  const rows = document.getElementById('ex-skill-rows');
+  rows.innerHTML = '';
+  const lastFailItems = lastFail?.failItems || [];
+  sd.items.forEach((item, i) => {
+    const pk='p'+i, fk='f'+i;
+    const pChk = r.checks[pk], fChk = r.checks[fk];
+    const wasFailF = lastFailItems.some(f => f === item.fail);
+    const div = document.createElement('div');
+    div.className = 'skill-dual';
+    div.innerHTML = `
+      <div class="crit${pChk?' chk-p':''}" id="cp${i}" onclick="toggleCrit('p',${i})">
+        <div class="crit-box${pChk?' cp':''}">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
+        </div>
+        <div><div class="crit-txt">${item.pass}</div></div>
+      </div>
+      <div class="crit${fChk?' chk-f':''}${wasFailF?' was-fail':''}" id="cf${i}" onclick="toggleCrit('f',${i})">
+        <div class="crit-box${fChk?' cf':''}">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
+        </div>
+        <div>
+          <div class="crit-txt">${item.fail}</div>
+          ${wasFailF?'<div class="was-fail-badge">上次未達標</div>':''}
+        </div>
+      </div>`;
+    rows.appendChild(div);
+  });
+  setVerdict(r.verdict);
+  document.getElementById('ex-note').value = r.note || '';
+  updateProgress();
+}
+
+function toggleCrit(type, i) {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls?.members[currentStudentIdx];
+  if (!m) return;
+  if (!examState[m.id]) examState[m.id] = { checks:{}, verdict:null, note:'', examLevel: m.examLevel };
+  const r = examState[m.id];
+  const key = type+i;
+  if (r.checks[key]) delete r.checks[key]; else r.checks[key] = true;
+  const el = document.getElementById((type==='p'?'cp':'cf')+i);
+  const box = el.querySelector('.crit-box');
+  const chk = !!r.checks[key];
+  el.classList.toggle(type==='p'?'chk-p':'chk-f', chk);
+  box.classList.toggle(type==='p'?'cp':'cf', chk);
+  renderStudentTabs();
+  updateProgress();
+  saveDraft();
+}
+
+function changeLevel(lv) {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls.members[currentStudentIdx];
+  const r = examState[m.id];
+  r.examLevel = parseInt(lv);
+  r.checks = {};
+  r.verdict = null;
+  m.examLevel = parseInt(lv);
+  renderExamForm();
+  renderStudentTabs();
+}
+
+function setVerdict(v) {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls.members[currentStudentIdx];
+  examState[m.id].verdict = v;
+  document.getElementById('vbtn-pass').className = 'vbtn' + (v==='pass'?' vp':'');
+  document.getElementById('vbtn-fail').className = 'vbtn' + (v==='fail'?' vf':'');
+  document.getElementById('vbtn-abs').className = 'vbtn' + (v==='absent'?' va':'');
+  renderStudentTabs();
+  saveDraft();
+}
+
+function saveNote() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  if (!cls) return;
+  const m = cls.members[currentStudentIdx];
+  if (m && examState[m.id]) examState[m.id].note = document.getElementById('ex-note').value;
+}
+
+function updateProgress() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls.members[currentStudentIdx];
+  const r = examState[m.id];
+  const sd = SKILL_DATA[r.examLevel||m.examLevel];
+  const total = sd.items.length;
+  const scored = sd.items.filter((_,i) => r.checks['p'+i] || r.checks['f'+i]).length;
+  document.getElementById('ex-prog').textContent = scored + ' / ' + total + ' 項已評分';
+}
+
+// ════════════════════════════════
+// PREVIEW
+// ════════════════════════════════
+function goPreview() {
+  saveNote();
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls.members[currentStudentIdx];
+  const r = examState[m.id];
+  if (!r.verdict) {
+    showToast('請先選擇考試結果（通過 / 未通過 / 未出席）', 'warn');
+    document.querySelector('.verdict-section').scrollIntoView({behavior:'smooth', block:'nearest'});
+    return;
+  }
+  const examLv = r.examLevel || m.examLevel;
+  const sd = SKILL_DATA[examLv];
+  const teachCoach = document.getElementById('teach-coach-sel').value;
+  const examCoach = document.getElementById('exam-coach-sel').value;
+  const pCount = sd.items.filter((_,i)=>r.checks['p'+i]).length;
+  const fCount = sd.items.filter((_,i)=>r.checks['f'+i]).length;
+  const verdict = r.verdict;
+  const rbCls = verdict==='pass'?'rb-pass':verdict==='fail'?'rb-fail':verdict==='absent'?'rb-abs':'rb-pend';
+  const rbTxt = verdict==='pass'?'通過':verdict==='fail'?'未通過':verdict==='absent'?'未出席':'尚未判定';
+  const itemsHtml = sd.items.map((item,i) => {
+    const p=r.checks['p'+i], f=r.checks['f'+i];
+    if (!p&&!f) return '';
+    return `<div class="ph-item">
+      ${p?`<span class="it-tag it-p">達標</span><span style="color:var(--ink2)">${item.pass}</span>`:''}
+      ${f?`<span class="it-tag it-f">未達標</span><span style="color:var(--ink2)">${item.fail}</span>`:''}
+    </div>`;
+  }).filter(Boolean).join('');
+  document.getElementById('preview-card').innerHTML = `
+    <div class="ph-hero">
+      <div class="ph-av ${AV_MAP[examLv]}">${m.name[0]}</div>
+      <div>
+        <div class="ph-name">${m.name}</div>
+        <div class="ph-sub">${sd.label}・${HAT_MAP[examLv]}${pCount||fCount?' · 達標 '+pCount+' / 未達標 '+fCount+' 項':''}</div>
+        <div class="ph-sub" style="color:var(--brand);margin-top:2px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${venueName(cls.venueId)}
+        </div>
+      </div>
+      <div class="res-badge ${rbCls}">${rbTxt}</div>
+    </div>
+    ${itemsHtml?`<div class="ph-items">${itemsHtml}</div>`:''}
+    <div class="ph-coaches">
+      <div class="pc"><div class="pc-lbl pc-teach">教學教練</div><div class="pc-name">${teachCoach}</div></div>
+      <div class="pc"><div class="pc-lbl pc-exam">考試教練</div><div class="pc-name">${examCoach}</div></div>
+    </div>
+    ${r.note?`<div class="ph-note"><span style="color:var(--ink);font-weight:500">評語：</span>${r.note}</div>`:''}
+    <div class="editable-notice">※ 送出後仍可在學員資料中修改考試結果</div>
+    <div class="warn-notice">送出後家長即可查詢，請確認資料無誤。</div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" onclick="showScreen('exam')">← 返回修改</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-success btn-sm" onclick="doSubmit()">確認送出</button>
+    </div>`;
+  showScreen('preview');
+}
+
+async function doSubmit() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls.members[currentStudentIdx];
+  const r = examState[m.id];
+  r.submitted = true;
+  const examLv = r.examLevel || m.examLevel;
+  const sd = SKILL_DATA[examLv];
+  const verdict = r.verdict;
+  const vtxt = verdict==='pass'?'通過':verdict==='fail'?'未通過':verdict==='absent'?'未出席':'未判定';
+  const failItems = verdict==='pass' ? [] : Object.keys(r.checks)
+    .filter(k=>k.startsWith('f'))
+    .map(k=>sd?.items?.[parseInt(k.slice(1))]?.fail||k);
+  const today = new Date();
+  const dateStr = today.getFullYear()+'-'+(today.getMonth()+1).toString().padStart(2,'0')+'-'+today.getDate().toString().padStart(2,'0');
+  const teachCoachObj = COACHES_DATA.find(c=>c.name===cls.teachCoach);
+  const examCoachObj = COACHES_DATA.find(c=>c.name===cls.examCoach);
+  const {error} = await SUPA.from('exams').insert({
+    student_id:m.id, exam_date:dateStr, level:examLv,
+    result:verdict, fail_items:failItems, note:r.note||'',
+    teach_coach_id:teachCoachObj?.id||null,
+    exam_coach_id:examCoachObj?.id||null,
+    venue_id:cls.venueId,
+    prep_class_id:cls.isQuickExam?null:cls.id,
+  });
+  if(error){showToast('儲存失敗：'+error.message,'warn'); r.submitted=false; return;}
+  if(verdict==='pass') {
+    const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
+    if(stu && examLv>=stu.level) {
+      await SUPA.from('students').update({level:examLv}).eq('id',m.id);
+      stu.level = examLv;
+    }
+  }
+  const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
+  if(stu) {
+    if(!stu.examHistory) stu.examHistory=[];
+    stu.examHistory.unshift({level:examLv, date:dateStr, verdict, failItems});
+  }
+  const allDone = cls.members.every(m2=>examState[m2.id]?.submitted);
+  if(allDone) {
+    if(!cls.isQuickExam) await SUPA.from('prep_classes').update({status:'done'}).eq('id',cls.id);
+    cls.status='done'; clearDraft(currentClassId); renderDayScreen();
+  }
+  renderStudentTabs();
+  showToast('✓ '+m.name+' · '+vtxt,'ok');
+  nextStudent();
+}
+
+function nextStudent() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  let nextIdx = -1;
+  for (let i = currentStudentIdx + 1; i < cls.members.length; i++) {
+    if (!examState[cls.members[i].id]?.submitted) { nextIdx = i; break; }
+  }
+  if (nextIdx >= 0) {
+    currentStudentIdx = nextIdx;
+    renderExamScreen();
+    showScreen('exam');
+  } else {
+    showScreen('day');
+  }
+}
+
+// ════════════════════════════════
+// TOAST
+// ════════════════════════════════
+function downloadSampleExcel() {
+  // 從現有 demo 學員取前 8 位，分成 2 班，帶入真實手機號碼
+  const today = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const nextWeek = new Date(today.getTime() + 7 * 24 * 3600 * 1000);
+  const d1 = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  const d2 = `${nextWeek.getFullYear()}-${pad(nextWeek.getMonth()+1)}-${pad(nextWeek.getDate())}`;
+
+  const sample = [];
+  const group1 = STUDENTS.slice(0, 4);
+  const group2 = STUDENTS.slice(4, 7);
+
+  group1.forEach(s => sample.push({
+    '場館': '台北館',
+    '客戶姓名': s.guardianName,
+    '學員姓名': s.name,
+    '客戶電話': s.guardianPhone.replace(/-/g,''),
+    '班級名稱': 'Demo測試班A',
+    '考試日期': d1,
+    '班別': 'U',
+    '時段': 'A',
+    '教學教練': '陳教練',
+    '考試教練': '林主管',
+  }));
+  group2.forEach(s => sample.push({
+    '場館': '新竹館',
+    '客戶姓名': s.guardianName,
+    '學員姓名': s.name,
+    '客戶電話': s.guardianPhone.replace(/-/g,''),
+    '班級名稱': 'Demo測試班B',
+    '考試日期': d2,
+    '班別': 'C',
+    '時段': 'B',
+    '教學教練': '王教練',
+    '考試教練': '王主管',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(sample);
+  ws['!cols'] = [
+    {wch:10},{wch:10},{wch:10},{wch:14},{wch:18},{wch:12},{wch:6},{wch:6},{wch:10},{wch:10}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '預建班資料');
+  XLSX.writeFile(wb, 'swimkids_import_sample.xlsx');
+  showToast('範本已下載，可直接匯入測試', 'ok');
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' toast-'+type : '');
+  requestAnimationFrame(() => t.classList.add('show'));
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ════════════════════════════════
+// INIT
+// ════════════════════════════════
+async function init() {
+  const d = new Date();
+  document.getElementById('date-badge').textContent =
+    d.getFullYear()+'/'+(d.getMonth()+1)+'/'+(d.getDate());
+  if(localStorage.getItem('sb-collapsed')==='1'){
+    document.getElementById('sidebar')?.classList.add('collapsed');
+  }
+  document.getElementById('prep-class-list').innerHTML =
+    '<div style="text-align:center;padding:30px 16px;color:var(--ink3);font-size:12px">載入中…</div>';
+  await loadAll();
+  renderSidebarVenue();
+  renderPrepList();
+}
+
+// ════════════════════════════════
+// STUDENT MANAGEMENT SCREEN
+// ════════════════════════════════
+let selectedStudentId = null;
+let studentMode = 'view';
+
+function initStudentScreen() {
+  const coachSel = document.getElementById('stu-coach-filter');
+  if (coachSel && coachSel.options.length === 1) {
+    COACHES.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      coachSel.appendChild(opt);
+    });
+  }
+  const venueSel = document.getElementById('stu-venue-filter');
+  if (venueSel && venueSel.options.length === 1) {
+    VENUES.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.id; opt.textContent = v.name;
+      venueSel.appendChild(opt);
+    });
+  }
+  selectedStudentId = null;
+  renderStudentList();
+  document.getElementById('stu-form-body').innerHTML = '<div class="empty-state">← 從左側選擇學員，或點擊「新增學員」</div>';
+  document.getElementById('stu-form-title').textContent = '選擇或新增學員';
+  document.getElementById('stu-form-actions').innerHTML = '';
+}
+
+function renderStudentList() {
+  const q = (document.getElementById('stu-search')?.value || '').toLowerCase().replace(/-/g,'');
+  const hatF = document.getElementById('stu-hat-filter')?.value || '';
+  const coachF = document.getElementById('stu-coach-filter')?.value || '';
+  const venueF = document.getElementById('stu-venue-filter')?.value || '';
+  const list = document.getElementById('stu-list');
+  if (!list) return;
+  let filtered = STUDENTS.filter(s => {
+    const nameMatch = !q || s.name.toLowerCase().includes(q);
+    const guardianNameMatch = !q || (s.guardianName||'').toLowerCase().includes(q);
+    const phoneMatch = !q || (s.guardianPhone||'').replace(/-/g,'').includes(q);
+    const matchQ = nameMatch || guardianNameMatch || phoneMatch;
+    let matchHat = true;
+    if (hatF) {
+      const hv = parseInt(hatF);
+      if (hv===1) matchHat = s.level <= 4;
+      else if (hv===5) matchHat = s.level === 5;
+      else if (hv===6) matchHat = s.level === 6;
+      else if (hv===7) matchHat = s.level >= 7 && s.level <= 8;
+      else if (hv===9) matchHat = s.level >= 9;
+    }
+    const matchCoach = !coachF || s.teachCoach === coachF;
+    const matchVenue = !venueF || String(s.defaultVenueId) === venueF;
+    return matchQ && matchHat && matchCoach && matchVenue;
+  });
+  document.getElementById('stu-count').textContent = filtered.length + '/' + STUDENTS.length;
+  list.innerHTML = '';
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:20px">找不到符合的學員</div>';
+    return;
+  }
+  filtered.forEach(s => {
+    const sd = SKILL_DATA[s.level];
+    const isSelected = s.id === selectedStudentId;
+    const vName = venueName(s.defaultVenueId);
+    const row = document.createElement('div');
+    row.className = 'student-check-row' + (isSelected ? ' sel' : '');
+    row.style.cssText = 'cursor:pointer;margin-bottom:4px';
+    row.innerHTML = `
+      <div class="s-av ${AV_MAP[s.level]}">${s.name[0]}</div>
+      <div class="s-info" style="flex:1;min-width:0">
+        <div class="s-name">${s.name}</div>
+        <div class="s-sub" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span>${s.guardianName || '—'}</span>
+          <span>·</span>
+          <span style="font-family:'JetBrains Mono',monospace">${s.guardianPhone || '—'}</span>
+        </div>
+        <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span class="hat-tag ${HT_MAP[s.level]}">${sd.label}</span>
+          <span style="font-size:9px;background:var(--brand-lt);color:var(--brand-700);border-radius:3px;padding:1px 5px">${vName}</span>
+          ${(()=>{ const st=getStuckStatus(s); if(!st) return ''; if(st.type==='stuck') return `<span style="font-size:9px;background:var(--signal-lt);color:var(--signal);border:1px solid var(--red-border);border-radius:3px;padding:1px 6px;font-weight:700">卡關 ${st.count}次</span>`; return `<span style="font-size:9px;background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100);border-radius:3px;padding:1px 6px;font-weight:700">警示 ${st.count}次</span>`; })()}
+          ${s.guardianActivated
+            ? '<span style="font-size:9px;background:var(--green-bg);color:var(--green);border-radius:3px;padding:1px 5px">帳號已啟用</span>'
+            : '<span style="font-size:9px;background:var(--n100);color:var(--ink3);border-radius:3px;padding:1px 5px">待家長啟用</span>'}
+        </div>
+      </div>`;
+    row.onclick = () => { selectedStudentId = s.id; renderStudentList(); showStudentDetail(s.id); };
+    list.appendChild(row);
+  });
+}
+
+function showStudentDetail(id) {
+  const s = STUDENTS.find(x => x.id === id);
+  if (!s) return;
+  studentMode = 'view';
+  document.getElementById('stu-form-title').textContent = s.name;
+  const acts = document.getElementById('stu-form-actions');
+  acts.innerHTML = `
+    <button class="btn btn-warn btn-sm" onclick="openQuickExam('${id}')">⚡ 直接開考</button>
+    <button class="btn btn-ghost btn-sm" onclick="openEditStudent('${id}')">編輯</button>`;
+  const sd = SKILL_DATA[s.level];
+  document.getElementById('stu-form-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:16px">
+      <div class="s-av ${AV_MAP[s.level]}" style="width:48px;height:48px;font-size:18px;font-weight:700;border-radius:8px">${s.name[0]}</div>
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--ink)">${s.name}</div>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:6px">
+          <span class="hat-tag ${HT_MAP[s.level]}" style="font-size:11px;padding:2px 9px">${sd.label}・${HAT_MAP[s.level]}</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px;font-weight:500">家長資訊</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:3px">家長姓名</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink)">${s.guardianName || '—'}</div>
+      </div>
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:3px">家長手機</div>
+        <div style="font-size:13px;font-weight:500;color:var(--ink);font-family:'JetBrains Mono',monospace">${s.guardianPhone || '—'}</div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;border-radius:8px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;
+      ${s.guardianActivated
+        ? 'background:var(--green-bg);border:1px solid var(--green-border)'
+        : 'background:var(--n50);border:1px solid var(--line2)'}">
+      <div>
+        <div style="font-size:11px;font-weight:500;color:${s.guardianActivated ? 'var(--green)' : 'var(--ink3)'}">
+          ${s.guardianActivated ? '家長帳號已啟用' : '家長尚未啟用帳號'}
+        </div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:2px">
+          ${s.guardianActivated ? '家長可登入查詢考試紀錄' : '家長需用上方手機號碼自行啟用'}
+        </div>
+      </div>
+      ${!s.guardianActivated
+        ? `<button class="btn btn-ghost btn-sm" onclick="simulateActivate('${id}')" style="font-size:10px">模擬啟用</button>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+      }
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px;font-weight:500">教學資訊</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:3px">教學教練</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink)">${s.teachCoach}</div>
+      </div>
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:3px">目前級數</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink)">${sd.label}</div>
+      </div>
+      <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
+        <div style="font-size:10px;color:var(--ink3);margin-bottom:3px">預設場館</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink)">${venueName(s.defaultVenueId)}</div>
+      </div>
+    </div>
+    ${s.examHistory && s.examHistory.length ? `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px;font-weight:500">考試歷史（${s.examHistory.length} 筆）</div>
+    <div style="background:var(--n50);border-radius:8px;overflow:hidden;border:1px solid var(--line)">
+      ${[...s.examHistory].sort((a,b)=>b.date.localeCompare(a.date)).map((e,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;${i>0?'border-top:1px solid var(--line)':''}">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink3);flex-shrink:0;width:72px">${e.date}</div>
+        <div style="font-size:11px;font-weight:500;color:var(--ink);flex-shrink:0">${SKILL_DATA[e.level]?.label||''}</div>
+        <div style="font-size:11px;color:${e.verdict==='pass'?'var(--green)':e.verdict==='absent'?'var(--ink3)':'var(--signal)'};flex-shrink:0">${e.verdict==='pass'?'✓ 通過':e.verdict==='absent'?'— 缺考':'✗ 未通過'}</div>
+        ${e.verdict==='fail' && e.failItems?.length ? `<div style="font-size:10px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">未達標：${e.failItems.slice(0,2).join('、')}${e.failItems.length>2?'…':''}</div>` : '<div style="flex:1"></div>'}
+      </div>`).join('')}
+    </div>` : ''}`;
+}
+
+function simulateActivate(id) {
+  const s = STUDENTS.find(x => String(x.id) === String(id));
+  if (s) { s.guardianActivated = true; showStudentDetail(id); renderStudentList(); }
+}
+
+function openNewStudent() {
+  selectedStudentId = null;
+  studentMode = 'new';
+  renderStudentList();
+  document.getElementById('stu-form-title').textContent = '新增學員';
+  document.getElementById('stu-form-actions').innerHTML = '';
+  renderStudentForm(null);
+}
+
+function openEditStudent(id) {
+  studentMode = 'edit';
+  renderStudentForm(id);
+}
+
+function renderStudentForm(id) {
+  const s = id ? STUDENTS.find(x => x.id === id) : null;
+  document.getElementById('stu-form-title').textContent = s ? '編輯 · ' + s.name : '新增學員';
+  document.getElementById('stu-form-actions').innerHTML = '';
+  const body = document.getElementById('stu-form-body');
+  body.innerHTML = `
+    <div class="section-divider" style="border-top:none;padding-top:0;margin-top:0">學員資料</div>
+    <div class="form-field required">
+      <label>學員姓名</label>
+      <input id="sf-name" type="text" placeholder="請輸入學員姓名" value="${s?.name || ''}">
+      <div class="form-err" id="sf-name-err">請輸入學員姓名</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-field required">
+        <label>目前級數</label>
+        <select id="sf-level">
+          ${[1,2,3,4,5,6,7,8,9,10].map(lv =>
+            `<option value="${lv}" ${(s?.level||1)===lv?'selected':''}>${SKILL_DATA[lv].label}・${HAT_MAP[lv]}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <div class="form-field required">
+        <label>教學教練</label>
+        <select id="sf-coach">
+          ${COACHES.map(c => `<option ${s?.teachCoach===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>預設場館</label>
+      <select id="sf-venue">
+        <option value="">未指定</option>
+        ${VENUES.map(v => `<option value="${v.id}" ${s?.defaultVenueId===v.id?'selected':''}>${v.name}</option>`).join('')}
+      </select>
+      <div style="font-size:10px;color:var(--ink3);margin-top:3px">學員可跨館上課考試，此為主要上課場館</div>
+    </div>
+    <div class="section-divider">家長資料</div>
+    <div class="form-field required">
+      <label>家長姓名</label>
+      <input id="sf-guardian-name" type="text" placeholder="請輸入家長姓名" value="${s?.guardianName || ''}">
+      <div class="form-err" id="sf-gname-err">請輸入家長姓名</div>
+    </div>
+    <div class="form-field required">
+      <label>家長手機號碼（作為登入帳號）</label>
+      <input id="sf-guardian-phone" type="tel" placeholder="09XX-XXX-XXX"
+        value="${s?.guardianPhone || ''}"
+        oninput="formatSfPhone(this);checkPhoneAvailable(this.value,'${id||''}')">
+      <div class="form-err" id="sf-phone-err">請輸入正確的手機號碼（09XX-XXX-XXX）</div>
+      <div class="phone-status" id="sf-phone-status"></div>
+    </div>
+    <div class="info-box" style="background:var(--brand-lt);border:1px solid var(--brand-100);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:11px;color:var(--brand-700)">
+      家長手機號碼為登入帳號。填寫後，家長可自行用此號碼啟用帳號並查詢考試紀錄。
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="${s ? `showStudentDetail('${id}')` : `document.getElementById('stu-form-body').innerHTML='<div class=\\'empty-state\\'>← 從左側選擇學員，或點擊「新增學員」</div>'`}">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveStudent('${id||'null'}')">${s ? '儲存修改' : '建立學員'}</button>
+    </div>`;
+}
+
+function formatSfPhone(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length > 10) v = v.slice(0,10);
+  if (v.length >= 8) v = v.slice(0,4)+'-'+v.slice(4,7)+'-'+v.slice(7);
+  else if (v.length >= 4) v = v.slice(0,4)+'-'+v.slice(4);
+  input.value = v;
+}
+
+function checkPhoneAvailable(phone, excludeId) {
+  const raw = phone.replace(/-/g,'');
+  const statusEl = document.getElementById('sf-phone-status');
+  if (!statusEl || raw.length < 10) { if(statusEl) statusEl.textContent=''; return; }
+  const existing = STUDENTS.find(s => s.guardianPhone.replace(/-/g,'') === raw && String(s.id) !== String(excludeId));
+  if (existing) {
+    statusEl.textContent = `⚠ 此號碼已登記為 ${existing.name} 的家長（${existing.guardianName}）`;
+    statusEl.className = 'phone-status exists';
+  } else {
+    statusEl.textContent = '✓ 此號碼可使用';
+    statusEl.className = 'phone-status free';
+  }
+}
+
+async function saveStudent(id) {
+  const name = document.getElementById('sf-name').value.trim();
+  const guardianName = document.getElementById('sf-guardian-name').value.trim();
+  const guardianPhone = document.getElementById('sf-guardian-phone').value.trim();
+  const level = parseInt(document.getElementById('sf-level').value);
+  const teachCoachName = document.getElementById('sf-coach').value;
+  const venueVal = document.getElementById('sf-venue').value;
+  let valid = true;
+  if (!name) { document.getElementById('sf-name-err').classList.add('show'); valid = false; }
+  else document.getElementById('sf-name-err').classList.remove('show');
+  if (!guardianName) { document.getElementById('sf-gname-err').classList.add('show'); valid = false; }
+  else document.getElementById('sf-gname-err').classList.remove('show');
+  const rawPhone = guardianPhone.replace(/-/g,'');
+  if (rawPhone.length !== 10 || !rawPhone.startsWith('09')) {
+    document.getElementById('sf-phone-err').classList.add('show'); valid = false;
+  } else document.getElementById('sf-phone-err').classList.remove('show');
+  if (!valid) return;
+  const coachObj = COACHES_DATA.find(c=>c.name===teachCoachName);
+  if (id && id !== 'null') {
+    const {error} = await SUPA.from('students').update({
+      name, level,
+      default_venue_id: venueVal||null,
+      teach_coach_id: coachObj?.id||null,
+    }).eq('id',id);
+    if(error){showToast('更新失敗：'+error.message,'warn');return;}
+    const stu = STUDENTS.find(x=>String(x.id)===String(id));
+    if(stu){ stu.name=name; stu.level=level; stu.teachCoach=teachCoachName; stu.defaultVenueId=venueVal||null; }
+    selectedStudentId = id;
+    renderStudentList();
+    showStudentDetail(id);
+  } else {
+    const {data:newS, error:se} = await SUPA.from('students').insert({
+      name, level, initial_level:level,
+      default_venue_id:venueVal||null,
+      teach_coach_id:coachObj?.id||null,
+    }).select('id').single();
+    if(se){showToast('建立失敗：'+se.message,'warn');return;}
+    const phone = guardianPhone;
+    const {data:gData} = await SUPA.from('guardians').select('id').eq('phone',rawPhone.replace(/^(\d{4})(\d{3})(\d{3})$/,'$1-$2-$3')).maybeSingle();
+    let guardianId = gData?.id;
+    if(!guardianId){
+      const {data:newG} = await SUPA.from('guardians').insert({name:guardianName,phone}).select('id').single();
+      if(newG) guardianId = newG.id;
+    }
+    if(guardianId) await SUPA.from('student_guardian').insert({student_id:newS.id, guardian_id:guardianId});
+    const newStu = {id:newS.id,name,level,teachCoach:teachCoachName,teachCoachId:coachObj?.id||null,defaultVenueId:venueVal||null,guardianName,guardianPhone:phone,guardianActivated:false,examHistory:[]};
+    STUDENTS.unshift(newStu);
+    selectedStudentId = newS.id;
+    renderStudentList();
+    showStudentDetail(newS.id);
+  }
+  showToast(id&&id!=='null'?'學員資料已更新':'學員已建立','ok');
+}
+
+// ════════════════════════════════
+// IMPORT EXCEL
+// ════════════════════════════════
+let importParsed = [];
+
+function openImportModal() {
+  importParsed = [];
+  const prevFile = document.getElementById('im-file');
+  if (prevFile) prevFile.value = '';
+  document.getElementById('im-body').innerHTML = `
+    <div class="im-drop" id="im-drop" onclick="document.getElementById('im-file').click()"
+      ondragover="event.preventDefault();this.classList.add('dragover')"
+      ondragleave="this.classList.remove('dragover')"
+      ondrop="event.preventDefault();this.classList.remove('dragover');handleImportFile(event.dataTransfer.files[0])">
+      <input type="file" id="im-file" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this.files[0])">
+      <div style="font-size:28px;margin-bottom:8px">📂</div>
+      <div style="font-size:13px;font-weight:700;color:var(--ink)">點擊或拖曳 Excel 檔案至此</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">支援 .xlsx、.xls、.csv</div>
+    </div>
+    <div class="im-hint">
+      <strong style="color:var(--ink2)">Excel 欄位格式（第一行為標題）：</strong><br>
+      <code>班級名稱</code>・<code>考試日期</code>（YYYY-MM-DD）・<code>場館</code>・<code>教學教練</code>・<code>考試教練</code>・<code>學員手機</code>・<code>學員姓名</code><br>
+      同班級名稱 ＋ 同考試日期 → 自動合併為同一班。
+    </div>`;
+  document.getElementById('im-footer').innerHTML = `
+    <button class="btn btn-warn btn-sm" onclick="downloadSampleExcel()">⬇ 下載範本 Excel</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeImportModal()">取消</button>`;
+  document.getElementById('im-backdrop').classList.add('show');
+}
+
+function closeImportModal() { document.getElementById('im-backdrop').classList.remove('show'); }
+
+function handleImportFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      parseImportRows(rows);
+    } catch(err) {
+      showImportError('檔案讀取失敗：' + err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+let VENUE_NAME_MAP = {};
+
+function parseExcelDate(val) {
+  if (val === null || val === undefined || val === '') return '';
+  // Excel serial number (number type)
+  if (typeof val === 'number') {
+    const d = XLSX.SSF.parse_date_code(val);
+    if (!d) return '';
+    const mm = String(d.m).padStart(2,'0');
+    const dd = String(d.d).padStart(2,'0');
+    return `${d.y}-${mm}-${dd}`;
+  }
+  // JS Date object
+  if (val instanceof Date) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth()+1).padStart(2,'0');
+    const d = String(val.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  // String — normalise separators (/ or . → -)
+  const s = String(val).trim().replace(/[\/\.]/g, '-');
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // DD-MM-YYYY or MM-DD-YYYY heuristic: if first segment > 31 treat as YYYY
+  const parts = s.split('-');
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+  }
+  return s;
+}
+
+function parseImportRows(rows) {
+  if (!rows.length) { showImportError('檔案沒有資料'); return; }
+  const first = rows[0];
+  const phoneCol     = first['客戶電話']  !== undefined ? '客戶電話'  : '學員手機';
+  const guardianCol  = first['客戶姓名']  !== undefined ? '客戶姓名'  : '家長姓名';
+  const COL = { name:'班級名稱', date:'考試日期', venue:'場館', classType:'班別', timeSlot:'時段', teach:'教學教練', exam:'考試教練', phone:phoneCol, stuName:'學員姓名', guardianName:guardianCol };
+  const errors = [];
+  const classMap = {};
+  const classOrder = [];
+  rows.forEach((row, i) => {
+    const rowNum = i + 2;
+    const name   = String(row[COL.name]  || '').trim();
+    const date   = parseExcelDate(row[COL.date]);
+    const venue     = String(row[COL.venue]     || '').trim();
+    const classType = String(row[COL.classType] || '').trim().toUpperCase();
+    const timeSlot  = String(row[COL.timeSlot]  || '').trim().toUpperCase();
+    const teach  = String(row[COL.teach] || '').trim();
+    const exam   = String(row[COL.exam]  || '').trim();
+    let phone = String(row[COL.phone] || '').replace(/\D/g,'');
+    if (phone.length === 9 && phone.startsWith('9')) phone = '0' + phone;
+    const stuName = String(row[COL.stuName] || '').trim();
+    const guardianName = String(row[COL.guardianName] || '').trim();
+    if (!name)         { errors.push(`第 ${rowNum} 行：缺少班級名稱`); return; }
+    if (!date)         { errors.push(`第 ${rowNum} 行：缺少考試日期`); return; }
+    if (!phone)        { errors.push(`第 ${rowNum} 行（${name}）：缺少學員手機`); return; }
+    if (!guardianName) { errors.push(`第 ${rowNum} 行（${stuName||name}）：缺少家長姓名`); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { errors.push(`第 ${rowNum} 行：日期格式錯誤，請用 YYYY-MM-DD`); return; }
+    if (phone.length !== 10 || !phone.startsWith('09')) { errors.push(`第 ${rowNum} 行（${name}）：手機格式錯誤（${phone}）`); return; }
+    const key = name + '|' + date;
+    if (!classMap[key]) {
+      const venueId = VENUE_NAME_MAP[venue] || null;
+      classMap[key] = { name, date, venue, venueId, classType, timeSlot, teach, exam, students: [], key };
+      classOrder.push(key);
+    }
+    const formattedPhone = phone.slice(0,4)+'-'+phone.slice(4,7)+'-'+phone.slice(7);
+    const phoneMatches = STUDENTS.filter(s => s.guardianPhone.replace(/\D/g,'') === phone);
+    let matched = null;
+    if (phoneMatches.length > 0 && stuName) {
+      // 電話 + 學員姓名都符合 → 同一人
+      matched = phoneMatches.find(s => s.name === stuName) || null;
+      // 電話相同但姓名不同 → 手足，matched 保持 null，後續自動新建
+    } else if (phoneMatches.length === 1 && !stuName) {
+      matched = phoneMatches[0];
+    }
+    // 繼承家長資訊（手足新建時用）
+    const familyInfo = phoneMatches[0] || null;
+    classMap[key].students.push({ phone: formattedPhone, stuName, guardianName, matched, rawPhone: phone, familyInfo });
+  });
+  if (!classOrder.length && !errors.length) {
+    showImportError('檔案內沒有可解析的資料，請確認欄位標題正確。');
+    return;
+  }
+  renderImportPreview(classOrder.map(k => classMap[k]), errors);
+}
+
+function renderImportPreview(classes, errors) {
+  const body = document.getElementById('im-body');
+  let html = '';
+  if (errors.length) {
+    html += `<div class="im-err-box"><strong>⚠ 發現 ${errors.length} 個問題，請修正後重新上傳：</strong><ul style="margin:6px 0 0 14px">${errors.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
+  }
+  const totalCls = classes.length;
+  const okStudents = classes.reduce((n,c) => n + c.students.filter(s=>s.matched).length, 0);
+  const missingStudents = classes.reduce((n,c) => n + c.students.filter(s=>!s.matched).length, 0);
+  html += `<div class="im-summary">共 <strong>${totalCls}</strong> 個班、<strong>${okStudents}</strong> 位學員比對成功${missingStudents ? `、<span style="color:var(--brand)">${missingStudents} 位將新建</span>` : ''}</div>`;
+  classes.forEach(cls => {
+    const okCount = cls.students.filter(s=>s.matched).length;
+    const warnCount = cls.students.filter(s=>!s.matched).length;
+    const venueHtml = cls.venueId ? cls.venue : `<span style="color:var(--gold-dk)">${cls.venue||'未填'} ⚠</span>`;
+    html += `<div class="im-cls-card">
+      <div class="im-cls-hd">
+        <div>
+          <div class="im-cls-name">${cls.name}</div>
+          <div class="im-cls-meta">${cls.date} · ${venueHtml} · ${cls.teach} · ${cls.exam}</div>
+        </div>
+        <div style="font-size:11px;color:var(--ink3);flex-shrink:0">${okCount} 位比對 ${warnCount?`<span style="color:var(--brand)">+${warnCount} 新建</span>`:''}</div>
+      </div>`;
+    cls.students.forEach(s => {
+      if (s.matched) {
+        html += `<div class="im-stu-row im-stu-ok">
+          <div class="s-av ${AV_MAP[s.matched.level]}" style="width:24px;height:24px;font-size:10px">${s.matched.name[0]}</div>
+          <span style="flex:1">${s.matched.name}</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--ink3)">${s.phone}</span>
+          <span class="hat-tag ${HT_MAP[s.matched.level]}">${SKILL_DATA[s.matched.level].label}</span>
+        </div>`;
+      } else {
+        const isSibling = !!s.familyInfo;
+        const newLabel = s.stuName
+          ? `${isSibling ? '手足新建' : '新建學員'}「${s.stuName}」`
+          : '新建學員（無姓名）';
+        html += `<div class="im-stu-row im-stu-warn" style="background:var(--brand-lt);border-color:var(--brand-100)">
+          <span style="width:24px;text-align:center;color:var(--brand)">＋</span>
+          <div style="flex:1;min-width:0">
+            <div style="color:var(--brand)">${newLabel}</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:1px">家長：${s.guardianName || '—'}</div>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--ink3)">${s.phone}</span>
+          <span style="font-size:10px;color:var(--brand)">新建</span>
+        </div>`;
+      }
+    });
+    html += `</div>`;
+  });
+  body.innerHTML = html;
+  importParsed = classes;
+  const hasOk = classes.some(c => c.students.length > 0) && errors.length === 0;
+  document.getElementById('im-footer').innerHTML = `
+    <button class="btn btn-ghost btn-sm" onclick="openImportModal()">← 重新上傳</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeImportModal()">取消</button>
+    ${hasOk ? `<button class="btn btn-success btn-sm" onclick="confirmImport()">確認匯入 ${totalCls} 個班</button>` : ''}`;
+}
+
+function showImportError(msg) {
+  document.getElementById('im-body').innerHTML = `
+    <div class="im-err-box">${msg}</div>
+    <button class="btn btn-ghost btn-sm" onclick="openImportModal()">← 重新上傳</button>`;
+}
+
+async function confirmImport() {
+  let added = 0;
+  let newStudents = 0;
+  for(const cls of importParsed) {
+    const venueId = cls.venueId || VENUES[0]?.id;
+    const coachName = cls.teach || COACHES[0];
+    const coachObj = COACHES_DATA.find(c=>c.name===coachName);
+    const examCoachName = cls.exam || EXAM_COACHES[0];
+    const ctype = cls.classType||'C';
+    const tslot = cls.timeSlot||'A';
+    const exists = CLASSES.find(c=>c.note===cls.name && c.classDate===cls.date);
+    if(exists) continue;
+    const code = generateUniqueCode(venueId, cls.date, ctype, tslot) || cls.name;
+    const members = [];
+    for(const s of cls.students) {
+      let stuId = s.matched?.id;
+      if(!stuId) {
+        // create student + guardian
+        const {data:newStu, error:se} = await SUPA.from('students').insert({
+          name:s.stuName||'未命名',
+          level:1, initial_level:1,
+          default_venue_id:venueId||null,
+          teach_coach_id:coachObj?.id||null,
+        }).select('id').single();
+        if(se){showToast('學員建立失敗：'+se.message,'warn');continue;}
+        stuId = newStu.id;
+        // guardian
+        const phone = s.rawPhone.replace(/\D/g,'').replace(/^(\d{4})(\d{3})(\d{3})$/,'$1-$2-$3');
+        const {data:gData} = await SUPA.from('guardians').select('id').eq('phone',phone).maybeSingle();
+        let guardianId = gData?.id;
+        if(!guardianId) {
+          const {data:newG,error:ge} = await SUPA.from('guardians').insert({name:s.guardianName||'家長',phone}).select('id').single();
+          if(!ge) guardianId = newG.id;
+        }
+        if(guardianId) await SUPA.from('student_guardian').insert({student_id:stuId, guardian_id:guardianId});
+        newStudents++;
+        const newStuObj = {id:stuId,name:s.stuName||'未命名',level:1,teachCoach:coachName,defaultVenueId:venueId,guardianName:s.guardianName||'',guardianPhone:phone,guardianActivated:false,examHistory:[]};
+        STUDENTS.push(newStuObj);
+      }
+      members.push(stuId);
+    }
+    if(!members.length) continue;
+    const {data:inserted, error:ce} = await SUPA.from('prep_classes').insert({
+      code, venue_id:venueId, coach_id:coachObj?.id||null,
+      class_date:cls.date, class_type:ctype, time_slot:tslot, status:'ready',
+      note: cls.name||null,
+    }).select('id').single();
+    if(ce){showToast('班級建立失敗：'+ce.message,'warn');continue;}
+    const enrRows = members.map(sid=>({prep_class_id:inserted.id, student_id:sid}));
+    await SUPA.from('prep_enrollments').insert(enrRows);
+    added++;
+  }
+  closeImportModal();
+  await loadClasses();
+  if(added>0) {
+    renderPrepList();
+    const msg = newStudents>0 ? `成功匯入 ${added} 個班級，新建 ${newStudents} 位學員` : `成功匯入 ${added} 個班級`;
+    showToast(msg,'ok');
+  } else {
+    renderPrepList();
+    showToast('沒有新班級被匯入（可能全部已存在）','warn');
+  }
+}
+
+// ════════════════════════════════
+// QUICK EXAM
+// ════════════════════════════════
+let quickExamStudentId = null;
+let quickExamType = 'general';
+
+function openQuickExam(studentId) {
+  const s = STUDENTS.find(x => x.id === studentId);
+  if (!s) return;
+  quickExamStudentId = studentId;
+  quickExamType = 'general';
+  document.getElementById('qe-student-name').textContent = s.name + '・' + SKILL_DATA[s.level].label + '・' + HAT_MAP[s.level];
+  document.querySelectorAll('.qe-type-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  const lvSel = document.getElementById('qe-level');
+  lvSel.innerHTML = '';
+  for (let lv=1; lv<=10; lv++) {
+    const opt = document.createElement('option');
+    opt.value = lv;
+    opt.textContent = SKILL_DATA[lv].label + (lv===s.level?' ★ 目前':'');
+    if (lv === s.level) opt.selected = true;
+    lvSel.appendChild(opt);
+  }
+  const vSel = document.getElementById('qe-venue');
+  vSel.innerHTML = '';
+  VENUES.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.id; opt.textContent = v.name;
+    if (v.id === s.defaultVenueId) opt.selected = true;
+    vSel.appendChild(opt);
+  });
+  const tSel = document.getElementById('qe-teach');
+  tSel.innerHTML = '';
+  COACHES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.textContent = c;
+    if (c === s.teachCoach) opt.selected = true;
+    tSel.appendChild(opt);
+  });
+  const eSel = document.getElementById('qe-exam-coach');
+  eSel.innerHTML = '';
+  EXAM_COACHES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.textContent = c;
+    eSel.appendChild(opt);
+  });
+  document.getElementById('qe-backdrop').classList.add('show');
+}
+
+function setQEType(type, btn) {
+  quickExamType = type;
+  document.querySelectorAll('.qe-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const s = STUDENTS.find(x => x.id === quickExamStudentId);
+  if (!s) return;
+  const lvSel = document.getElementById('qe-level');
+  if (type === 'early' && s.level < 10) lvSel.value = s.level + 1;
+  else lvSel.value = s.level;
+}
+
+function closeQuickExam() { document.getElementById('qe-backdrop').classList.remove('show'); }
+
+function confirmQuickExam() {
+  const s = STUDENTS.find(x => x.id === quickExamStudentId);
+  if (!s) return;
+  const examLv  = parseInt(document.getElementById('qe-level').value);
+  const venueId = document.getElementById('qe-venue').value;
+  const teachCoach = document.getElementById('qe-teach').value;
+  const examCoach  = document.getElementById('qe-exam-coach').value;
+  const typeLabel = { general:'', makeup:'【補考】', early:'【提前考】' }[quickExamType] || '';
+  const today = new Date();
+  const dateStr = today.getFullYear()+'-'+(today.getMonth()+1).toString().padStart(2,'0')+'-'+today.getDate().toString().padStart(2,'0');
+  const tempId = 'QE-' + Date.now();
+  CLASSES.push({
+    id: tempId,
+    label: typeLabel + s.name + ' 個別考試',
+    date: dateStr,
+    venueId, teachCoach, examCoach,
+    status: 'ready',
+    isQuickExam: true,
+    members: [{ ...s, examLevel: examLv }]
+  });
+  closeQuickExam();
+  startExam(tempId);
+}
+
+init();
+</script>
+</body>
+</html>

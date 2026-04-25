@@ -1,0 +1,3126 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小泳士 · 後台管理系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#F4F6F9;--white:#ffffff;--panel:#ffffff;
+  --ink:#1a1a1a;--ink2:#4a4a4a;--ink3:#8a8a8a;--ink4:#c0bdb8;
+  --line:#e8e5e0;--line2:#d4d0ca;
+  --ocean:#2680FF;--ocean-dark:#1A6CE8;--ocean-light:#EBF4FF;
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
+  --red:#C30017;--red-bg:#FFF0F0;--red-border:#FFCCD4;
+  --amber:#E8900F;--amber-bg:#FFF8EC;--amber-border:#FFECC8;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;
+  --sidebar-w:240px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;-webkit-font-smoothing:antialiased}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--ink);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden}
+.sb-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo-row{display:flex;align-items:center;gap:10px}
+.sb-icon{width:32px;height:32px;background:var(--ocean);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-title{font-size:13px;font-weight:700;color:#fff;line-height:1.2}
+.sb-badge{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;margin-top:2px;letter-spacing:.05em}
+.sb-section{padding:14px 20px 5px;font-size:9px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.55);transition:all .15s;border-left:2px solid transparent}
+.sb-item:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.05)}
+.sb-item.active{color:#fff;background:rgba(255,255,255,.08);border-left-color:var(--ocean)}
+.sb-item svg{width:14px;height:14px;flex-shrink:0}
+.sb-foot{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:9px}
+.sb-av{width:28px;height:28px;border-radius:50%;background:var(--ocean);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-name{font-size:12px;color:rgba(255,255,255,.7)}
+.sb-role{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{height:54px;background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;position:sticky;top:0;z-index:40}
+.topbar-title{font-size:15px;font-weight:700;color:var(--ink)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);background:var(--bg);padding:4px 10px;border-radius:6px;border:1px solid var(--line)}
+.content{flex:1;overflow-y:auto;padding:24px}
+
+/* ── BTN ── */
+.btn{padding:7px 14px;border-radius:8px;border:none;font-size:12px;font-family:'Noto Sans TC',sans-serif;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn svg{width:13px;height:13px}
+.btn-primary{background:var(--ocean);color:#fff}.btn-primary:hover{background:var(--ocean-dark)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#047857}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--line2)}.btn-ghost:hover{background:var(--bg);border-color:var(--ink4)}
+.btn-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}.btn-amber:hover{background:#fef3c7}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-xs{padding:3px 8px;font-size:10px}
+
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card-hd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-hd-left{display:flex;align-items:center;gap:10px}
+.card-title{font-size:12px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em}
+.card-bd{padding:16px 18px}
+.card-bd-flush{padding:0}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:1100px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.stat-num{font-size:28px;font-weight:900;color:var(--ink);font-family:'DM Mono',monospace;line-height:1}
+.stat-lbl{font-size:11px;color:var(--ink3);margin-top:5px}
+.stat-sub{font-size:11px;margin-top:4px}
+.stat-up{color:var(--green)}.stat-down{color:var(--red)}
+
+/* ── SCREENS ── */
+.screen{display:none}.screen.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;background:var(--bg);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf8}
+.mono{font-family:'DM Mono',monospace}
+
+/* ── CHIPS ── */
+.chip{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.chip-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.chip-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.chip-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.chip-ocean{background:var(--ocean-light);color:var(--ocean-dark);border:1px solid #bae6fd}
+.chip-purple{background:var(--purple-bg);color:var(--purple);border:1px solid #ddd6fe}
+.chip-gray{background:var(--bg);color:var(--ink3);border:1px solid var(--line2)}
+.hat-y{background:#FFF8EC;color:#92400e;border:1px solid #FFECC8}
+.hat-b{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.hat-r{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3}
+.hat-k{background:#f9fafb;color:#374151;border:1px solid #d1d5db}
+.hat-s{background:#f9fafb;color:#6b7280;border:1px solid #e5e7eb}
+
+/* ── SEARCH & FILTER ── */
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.search-input{background:var(--white);border:1px solid var(--line2);border-radius:8px;padding:7px 12px 7px 32px;font-size:12px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;outline:none;position:relative;min-width:200px;transition:border .15s}
+.search-input:focus{border-color:var(--ocean)}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--ink4);pointer-events:none}
+.filter-sel{background:var(--white);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--ink2);font-family:'Noto Sans TC',sans-serif;cursor:pointer;outline:none}
+.filter-sel:focus{border-color:var(--ocean)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--white);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-hd{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:15px;font-weight:700;color:var(--ink)}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--ink3);padding:4px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--bg);color:var(--ink)}
+.modal-body{padding:20px 22px;overflow-y:auto;flex:1}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+
+/* ── FORM ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-row.single{grid-template-columns:1fr}
+.form-field{margin-bottom:0}
+.form-label{display:block;font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:5px}
+.form-label.req::after{content:' *';color:var(--red)}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;outline:none;transition:border .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--ocean);background:var(--white)}
+.form-input::placeholder{color:var(--ink4)}
+.form-textarea{resize:none;min-height:64px}
+.form-hint{font-size:10px;color:var(--ink3);margin-top:3px}
+.form-err{font-size:10px;color:var(--red);margin-top:3px;display:none}
+.form-err.show{display:block}
+.form-section{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;padding:12px 0 8px;border-top:1px solid var(--line);margin-top:4px}
+.form-section:first-child{border-top:none;padding-top:0}
+
+/* ── UPLOAD ZONE ── */
+.upload-zone{border:2px dashed var(--line2);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--ocean);background:var(--ocean-light)}
+.upload-zone.drag{transform:scale(1.01)}
+.upload-icon{width:40px;height:40px;background:var(--ocean-light);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--ocean)}
+.upload-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.upload-sub{font-size:11px;color:var(--ink3)}
+.upload-result{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;display:none}
+.upload-result.show{display:block}
+.upload-result-hd{padding:8px 12px;background:var(--bg);display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;color:var(--ink2);border-bottom:1px solid var(--line)}
+.upload-preview-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;font-size:11px}
+.upload-preview-row.header{background:var(--bg);font-weight:700;color:var(--ink3)}
+.upload-preview-cell{padding:6px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);color:var(--ink2)}
+.upload-preview-cell:last-child{border-right:none}
+.upload-err-row{padding:6px 12px;font-size:11px;color:var(--red);background:#fff5f5;border-bottom:1px solid var(--red-border)}
+.upload-summary{padding:8px 12px;font-size:11px;color:var(--ink3);background:var(--bg);border-top:1px solid var(--line)}
+.template-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ocean);cursor:pointer;margin-top:8px;text-decoration:underline}
+
+/* ── AVATAR ── */
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.av-coach{background:#f0fdf4;color:var(--green)}
+.av-admin{background:var(--ocean-light);color:var(--ocean-dark)}
+
+/* ── PROGRESS BAR ── */
+.prog-bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:2px;transition:width .3s}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:18px}
+.tab{padding:10px 16px;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--ink2)}
+.tab.active{color:var(--ocean);border-bottom-color:var(--ocean);font-weight:700}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:40px 20px;color:var(--ink3);font-size:13px}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.info-box{background:var(--ocean-light);border:1px solid #bae6fd;border-radius:8px;padding:10px 13px;font-size:11px;color:var(--ocean-dark);margin-bottom:14px;line-height:1.5}
+.warn-box{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:8px;padding:10px 13px;font-size:11px;color:#92400e;margin-bottom:14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+
+/* ── BOTTOM NAV (mobile only) ── */
+.bottom-nav{display:none}
+@media(max-width:768px){
+  body{flex-direction:column}
+  .sidebar{display:none}
+  .main{width:100%;min-width:0}
+  .content{padding:14px 12px 76px}
+  .topbar{padding:0 14px;gap:8px}
+  .topbar-right{gap:8px}
+  .stat-grid{grid-template-columns:1fr 1fr !important}
+  .dash-cards{grid-template-columns:1fr !important}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .filter-bar{flex-wrap:wrap}
+  .two-col{grid-template-columns:1fr !important}
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:58px;background:var(--ink);z-index:100;border-top:1px solid rgba(255,255,255,.1)}
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:rgba(255,255,255,.4);font-size:10px;cursor:pointer;transition:color .15s;-webkit-tap-highlight-color:transparent;user-select:none}
+  .bn-item:active{background:rgba(255,255,255,.06)}
+  .bn-item.active{color:var(--ocean)}
+  .bn-item svg{width:20px;height:20px;flex-shrink:0}
+}
+
+/* ── BATCH BAR ── */
+.batch-bar{background:var(--ocean-light);border:1px solid var(--brand-100,#bae6fd);border-radius:8px;padding:9px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;animation:fadeIn .15s}
+.batch-bar.hidden{display:none}
+
+/* ── PAGER ── */
+.pager{display:flex;align-items:center;gap:4px;padding:12px 0 4px;justify-content:flex-end;flex-wrap:wrap}
+.pager-btn{min-width:30px;height:30px;border-radius:6px;border:1px solid var(--line2);background:var(--white);color:var(--ink2);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;padding:0 6px}
+.pager-btn:hover:not(:disabled){border-color:var(--ocean);color:var(--ocean);background:var(--ocean-light)}
+.pager-btn.active{background:var(--ocean);color:#fff;border-color:var(--ocean);font-weight:700}
+.pager-btn:disabled{opacity:.35;cursor:not-allowed}
+.pager-ellipsis{font-size:12px;color:var(--ink3);padding:0 2px}
+.pager-info{font-size:11px;color:var(--ink3);margin-left:8px;white-space:nowrap;font-family:'DM Mono',monospace}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#fff;font-size:13px;padding:9px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:9999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.toast-ok{background:#16a34a}
+.toast.toast-warn{background:#dc2626}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div style="width:34px;height:34px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><polygon points="60,4 116,34 116,86 60,116 4,86 4,34" fill="#2680FF"/><polygon points="60,4 116,34 88,49 60,19" fill="#FFA626"/><polygon points="60,116 4,86 32,71 60,101" fill="#C30017"/><polygon points="18,42 34,34 34,78 18,70" fill="white" opacity="0.95"/><polygon points="86,34 102,42 102,70 86,78" fill="white" opacity="0.95"/><polygon points="34,53 86,53 86,61 34,61" fill="white" opacity="0.95"/></svg></div>
+      <div>
+        <div class="sb-title" style="font-size:13px;font-weight:900;line-height:1.15;letter-spacing:.01em;color:#fff">Handle Power<br><span style="font-size:9px;opacity:.45;font-weight:500;letter-spacing:.12em;text-transform:uppercase">小泳士管理系統</span></div>
+        <div class="sb-badge" id="sb-badge">ADMIN</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 角色切換（Demo 用） -->
+  <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08)">
+    <div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:5px;font-family:'DM Mono',monospace;letter-spacing:.08em">DEMO：切換角色</div>
+    <select id="role-switcher" onchange="switchRole(this.value)" style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 8px;font-size:11px;color:rgba(255,255,255,.8);font-family:'Noto Sans TC',sans-serif;cursor:pointer">
+      <option value="admin">管理員</option>
+      <option value="supervisor">考試教練（主管）</option>
+      <option value="coach">教學教練</option>
+    </select>
+  </div>
+
+  <div class="sb-section">總覽</div>
+  <div class="sb-item active" id="nav-dashboard" onclick="go('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    儀表板
+  </div>
+
+  <div class="sb-section role-admin role-supervisor" id="section-accounts">帳號管理</div>
+  <div class="sb-item role-admin role-supervisor" id="nav-coaches" onclick="go('coaches')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    教練帳號管理
+  </div>
+  <div class="sb-item role-admin" id="nav-guardians" onclick="go('guardians')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    家長帳號管理
+  </div>
+
+  <div class="sb-section">學員資料</div>
+  <div class="sb-item" id="nav-students" onclick="go('students')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+    學員資料管理
+  </div>
+
+  <div class="sb-section">考試紀錄</div>
+  <div class="sb-item" id="nav-exams" onclick="go('exams')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    考試紀錄瀏覽
+  </div>
+
+  <div class="sb-section role-admin role-supervisor">報表</div>
+  <div class="sb-item role-admin role-supervisor" id="nav-reports" onclick="go('reports')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    統計報表
+  </div>
+
+  <div class="sb-section role-admin">通知管理</div>
+  <div class="sb-item role-admin" id="nav-announcements" onclick="go('announcements')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    公告管理
+  </div>
+
+  <div class="sb-section role-admin">系統設定</div>
+  <div class="sb-item role-admin" id="nav-venues" onclick="go('venues')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    場館管理
+  </div>
+
+  <div class="sb-foot">
+    <div class="sb-av" id="sb-av">管</div>
+    <div>
+      <div class="sb-name" id="sb-name">系統管理員</div>
+      <div class="sb-role" id="sb-role">管理員</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">儀表板</div>
+    <div class="topbar-right">
+      <!-- 場館切換器 -->
+      <div style="display:flex;align-items:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <select id="venue-switcher" onchange="switchVenue(this.value)" style="background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--ink2);font-family:'Noto Sans TC',sans-serif;cursor:pointer;min-width:110px">
+          <option value="all">全部場館</option>
+          <option value="1">台北館</option>
+          <option value="2">新竹館</option>
+          <option value="3">桃園館</option>
+        </select>
+      </div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+  </div>
+  <div class="content" id="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="screen active" id="screen-dashboard">
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card" style="cursor:pointer" onclick="goToStagnant()">
+          <div class="stat-num" style="color:var(--red)" id="dash-stagnant-count">—</div>
+          <div class="stat-lbl">半年內停留同一級</div>
+          <div class="stat-sub" style="color:var(--ink3)">有考試但未升級</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer" onclick="goToRisk('stuck')">
+          <div class="stat-num" style="color:var(--red)" id="dash-stuck-count">—</div>
+          <div class="stat-lbl">卡關學員</div>
+          <div class="stat-sub" style="color:var(--ink3)">🔴 同級失敗 3 次以上</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer" onclick="goToRisk('warn')">
+          <div class="stat-num" style="color:var(--amber)" id="dash-warn-count">—</div>
+          <div class="stat-lbl">警示學員</div>
+          <div class="stat-sub" style="color:var(--ink3)">⚠ 同級失敗 2 次</div>
+        </div>
+      </div>
+
+      <div class="dash-cards" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <!-- 最近考試 / 近期預建班學員 -->
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title" id="dash-title1">最近考試紀錄</div>
+            <button class="btn btn-ghost btn-sm" id="dash-btn1" onclick="go('exams')">查看全部</button>
+          </div>
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead id="dash-exam-thead"><tr><th>學員</th><th>級別</th><th>結果</th><th>日期</th></tr></thead>
+              <tbody id="dash-exam-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- 停留同一級學員 / 預建班停留同一級 -->
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title" id="dash-title2">半年內停留同一級</div>
+            <button class="btn btn-ghost btn-sm" id="dash-btn2" onclick="goToStagnant()">查看全部</button>
+          </div>
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead><tr><th>學員</th><th>停留級別</th><th>最近考試</th><th>次數</th></tr></thead>
+              <tbody id="dash-stagnant-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- 需關注學員 / 預建班須關注學員 -->
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title" id="dash-title3">需關注學員</div>
+            <button class="btn btn-ghost btn-sm" id="dash-btn3" onclick="goToRisk()">查看全部</button>
+          </div>
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead><tr><th>學員</th><th>卡關級別</th><th>失敗次數</th><th>教練</th></tr></thead>
+              <tbody id="dash-warn-stuck-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ COACHES ═══ -->
+    <div class="screen" id="screen-coaches">
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" placeholder="搜尋教練姓名或手機..." id="coach-search" oninput="coachPage=1;renderCoaches()">
+        </div>
+        <select class="filter-sel" id="coach-role-filter" onchange="coachPage=1;renderCoaches()">
+          <option value="">全部角色</option>
+          <option value="exam">考試教練（主管）</option>
+          <option value="teach">教學教練</option>
+        </select>
+        <select class="filter-sel" id="coach-sort" onchange="coachPage=1;renderCoaches()">
+          <option value="created-desc">建立時間 新→舊</option>
+          <option value="created-asc">建立時間 舊→新</option>
+          <option value="name-asc">姓名 A→Z</option>
+          <option value="students-desc">帶班人數 多→少</option>
+        </select>
+        <select class="filter-sel" id="coach-status-filter" onchange="coachPage=1;renderCoaches()">
+          <option value="">全部狀態</option>
+          <option value="active">啟用中</option>
+          <option value="inactive">已停用</option>
+        </select>
+        <div style="margin-left:auto">
+          <button class="btn btn-primary" onclick="openCoachModal(null)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增教練
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-bd-flush tbl-wrap">
+          <table>
+            <thead><tr><th>教練姓名</th><th>角色</th><th>手機號碼</th><th>帳號狀態</th><th>帶班學員</th><th>建立時間</th><th>操作</th></tr></thead>
+            <tbody id="coach-table"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="coach-pager"></div>
+    </div>
+
+    <!-- ═══ GUARDIANS ═══ -->
+    <div class="screen" id="screen-guardians">
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" placeholder="搜尋家長姓名或手機..." id="guardian-search" oninput="guardianPage=1;renderGuardians()">
+        </div>
+        <select class="filter-sel" id="guardian-status-filter" onchange="guardianPage=1;renderGuardians()">
+          <option value="">全部狀態</option>
+          <option value="active">已啟用</option>
+          <option value="pending">待啟用</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-bd-flush tbl-wrap">
+          <table>
+            <thead><tr><th>家長姓名</th><th>手機號碼</th><th>帳號狀態</th><th>綁定孩子</th><th>最後登入</th><th>操作</th></tr></thead>
+            <tbody id="guardian-table"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="guardian-pager"></div>
+    </div>
+
+    <!-- ═══ STUDENTS ═══ -->
+    <div class="screen" id="screen-students">
+      <div id="stu-role-notice"></div>
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" placeholder="搜尋學員姓名、家長姓名或手機..." id="stu-search" oninput="stuPage=1;stuSelectedIds.clear();renderStudents()">
+        </div>
+        <select class="filter-sel" id="stu-hat" onchange="stuPage=1;stuSelectedIds.clear();renderStudents()">
+          <option value="">全部泳帽</option>
+          <option value="y">黃色布帽 1–3級</option>
+          <option value="b">藍色布帽 4-5級</option>
+          <option value="r">紅色布帽 6級</option>
+          <option value="k">黑色膠帽 7–8級</option>
+          <option value="s">銀色膠帽 9–10級</option>
+        </select>
+        <select class="filter-sel" id="stu-coach" onchange="stuPage=1;stuSelectedIds.clear();renderStudents()">
+          <option value="">全部教練</option>
+        </select>
+        <select class="filter-sel" id="stu-venue" onchange="stuPage=1;stuSelectedIds.clear();renderStudents()">
+          <option value="">全部場館</option>
+        </select>
+        <div style="margin-left:auto;display:flex;gap:8px">
+<button class="btn btn-primary" onclick="openStudentModal(null)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增學員
+          </button>
+        </div>
+      </div>
+      <div class="batch-bar hidden" id="stu-batch-bar">
+        <span style="font-size:12px;font-weight:700;color:var(--ocean-dark)" id="stu-batch-count">已選 0 位</span>
+        <button class="btn btn-ghost btn-sm" onclick="openBatchCoach()">指派教練</button>
+        <button class="btn btn-ghost btn-sm" onclick="openBatchVenue()">更改場館</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearStuSelection()" style="margin-left:auto">取消選取</button>
+      </div>
+      <div class="card">
+        <div class="card-bd-flush tbl-wrap">
+          <table>
+            <thead id="stu-thead"><tr><th>學員姓名</th><th>級數</th><th>預設場館</th><th>家長姓名</th><th>家長手機</th><th>家長帳號</th><th>教學教練</th><th>操作</th></tr></thead>
+            <tbody id="stu-table"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="stu-pager"></div>
+    </div>
+
+    <!-- ═══ EXAMS ═══ -->
+    <div class="screen" id="screen-exams">
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" placeholder="搜尋學員姓名或班級編號..." id="exam-search" oninput="examPage=1;renderExams()">
+        </div>
+        <select class="filter-sel" id="exam-verdict" onchange="examPage=1;renderExams()">
+          <option value="">全部結果</option>
+          <option value="pass">通過</option>
+          <option value="fail">未通過</option>
+          <option value="absent">未出席</option>
+        </select>
+        <select class="filter-sel" id="exam-level" onchange="examPage=1;renderExams()">
+          <option value="">全部級別</option>
+          <option value="1">一級</option><option value="2">二級</option><option value="3">三級</option>
+          <option value="4">四級</option><option value="5">五級</option><option value="6">六級</option>
+          <option value="7">七級</option><option value="8">八級</option><option value="9">九級</option>
+          <option value="10">十級</option>
+        </select>
+        <select class="filter-sel" id="exam-venue" onchange="examPage=1;renderExams()">
+          <option value="">全部場館</option>
+        </select>
+        <input type="date" class="filter-sel" id="exam-date-from" onchange="examPage=1;renderExams()" title="開始日期" style="font-size:12px">
+        <span style="font-size:12px;color:var(--ink3);flex-shrink:0">至</span>
+        <input type="date" class="filter-sel" id="exam-date-to" onchange="examPage=1;renderExams()" title="結束日期" style="font-size:12px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);cursor:pointer;white-space:nowrap;flex-shrink:0">
+          <input type="checkbox" id="exam-stagnant" onchange="examPage=1;renderExams()" style="accent-color:var(--red)">
+          停留同一級
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);cursor:pointer;white-space:nowrap;flex-shrink:0">
+          <input type="checkbox" id="exam-consec-fail" onchange="examPage=1;renderExams()" style="accent-color:var(--red)">
+          連續三次未通過
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:8px" id="exam-count-label"></div>
+      <div class="card">
+        <div class="card-bd-flush tbl-wrap">
+          <table>
+            <thead><tr><th>學員</th><th>場館</th><th>班級</th><th>考試級別</th><th>結果</th><th>教學教練</th><th>考試教練</th><th>考試日期</th><th>操作</th></tr></thead>
+            <tbody id="exam-table"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="exam-pager"></div>
+    </div>
+
+    <!-- ═══ REPORTS ═══ -->
+    <div class="screen" id="screen-reports">
+      <div class="tabs" id="report-tabs" style="overflow-x:auto;flex-wrap:nowrap;gap:0">
+        <div class="tab active" onclick="switchRptTab('overview',this)">總覽</div>
+        <div class="tab" onclick="switchRptTab('risk',this)" style="color:var(--red)">風險學員</div>
+        <div class="tab" onclick="switchRptTab('venue',this)">場館統計</div>
+        <div class="tab" onclick="switchRptTab('coach-ana',this)">教練分析</div>
+        <div class="tab" onclick="switchRptTab('level',this)">各級通過率</div>
+        <div class="tab" onclick="switchRptTab('speed',this)">升級速度</div>
+        <div class="tab" onclick="switchRptTab('parent',this)">家長帳號</div>
+      </div>
+
+      <!-- ── Tab 1：總覽 ── -->
+      <div class="tab-panel active" id="rpt-overview">
+        <div class="stat-grid" id="rpt-overview-cards" style="grid-template-columns:repeat(5,1fr)"></div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">各場館本月狀況</div></div>
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead><tr><th>場館</th><th>學員數</th><th>教練數</th><th>本月考試</th><th>本月通過率</th><th>風險學員</th></tr></thead>
+              <tbody id="rpt-overview-venue"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tab 2：風險學員 ── -->
+      <div class="tab-panel" id="rpt-risk">
+        <div class="filter-bar" style="margin-bottom:14px">
+          <select class="filter-sel" id="risk-type-filter" onchange="riskPage=1;renderRptRisk()">
+            <option value="">全部風險類型</option>
+            <option value="stuck">🔴 卡關（連續失敗 3 次以上）</option>
+            <option value="warn">⚠ 警示（連續失敗 2 次）</option>
+            <option value="stagnant">同級停留過久</option>
+            <option value="noexam">長時間未考試</option>
+          </select>
+          <select class="filter-sel" id="risk-coach-filter" onchange="riskPage=1;renderRptRisk()">
+            <option value="">全部教練</option>
+          </select>
+          <select class="filter-sel" id="risk-venue-filter" onchange="riskPage=1;renderRptRisk()">
+            <option value="">全部場館</option>
+          </select>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+            <span style="font-size:12px;color:var(--ink3)" id="risk-count-label"></span>
+            <button class="btn btn-ghost btn-sm" onclick="exportRisk()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              匯出 Excel
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead><tr><th>學員</th><th>風險標籤</th><th>教練</th><th>說明</th><th>操作</th></tr></thead>
+              <tbody id="rpt-risk-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="rpt-risk-pager"></div>
+      </div>
+
+      <!-- ── Tab 3：場館統計 ── -->
+      <div class="tab-panel" id="rpt-venue">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">場館統計</div></div>
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead><tr><th>場館</th><th>學員數</th><th>教練數</th><th>本月考試人次</th><th>本月通過人次</th><th>本月通過率</th><th>風險學員數</th></tr></thead>
+              <tbody id="rpt-venue-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tab 4：教練分析 ── -->
+      <div class="tab-panel" id="rpt-coach-ana">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">教練帶班分析</div></div>
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead><tr><th>教練</th><th>帶班學員數</th><th>本月考試人次</th><th>通過人次</th><th>通過率</th><th>風險學員數</th></tr></thead>
+              <tbody id="rpt-coach-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tab 5：各級通過率 ── -->
+      <div class="tab-panel" id="rpt-level">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">各級數考試通過率</div>
+            <div style="font-size:11px;color:var(--ink3)">趨勢 = vs. 上個月</div>
+          </div>
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead><tr><th>級數</th><th>泳帽</th><th>考試人次</th><th>通過人次</th><th>通過率</th><th>趨勢</th></tr></thead>
+              <tbody id="rpt-level-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tab 6：升級速度 ── -->
+      <div class="tab-panel" id="rpt-speed">
+        <div class="stat-grid" id="rpt-speed-cards" style="grid-template-columns:repeat(3,1fr)"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">各級平均停留天數</div></div>
+            <div class="card-bd-flush tbl-wrap">
+              <table>
+                <thead><tr><th>級數</th><th>泳帽</th><th>平均天數</th><th>樣本數</th></tr></thead>
+                <tbody id="rpt-speed-level"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">各教練平均升級速度</div></div>
+            <div class="card-bd-flush tbl-wrap">
+              <table>
+                <thead><tr><th>教練</th><th>帶班學員</th><th>平均升級天數</th><th>樣本數</th></tr></thead>
+                <tbody id="rpt-speed-coach"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tab 7：家長帳號 ── -->
+      <div class="tab-panel" id="rpt-parent">
+        <div class="stat-grid" id="rpt-parent-cards" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div class="filter-bar" style="margin-bottom:14px">
+          <select class="filter-sel" id="parent-status-filter" onchange="parentPage=1;renderRptParent()">
+            <option value="">全部家長</option>
+            <option value="inactive">未啟用帳號</option>
+            <option value="no-login">長期未登入（&gt;30天）</option>
+          </select>
+          <select class="filter-sel" id="parent-venue-filter" onchange="parentPage=1;renderRptParent()">
+            <option value="">全部場館</option>
+          </select>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+            <span style="font-size:12px;color:var(--ink3)" id="parent-count-label"></span>
+            <button class="btn btn-ghost btn-sm" onclick="exportParent()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              匯出 Excel
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-bd-flush tbl-wrap">
+            <table>
+              <thead><tr><th>家長姓名</th><th>手機</th><th>綁定學員</th><th>帳號狀態</th><th>最後登入</th><th>操作</th></tr></thead>
+              <tbody id="rpt-parent-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="rpt-parent-pager"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ANNOUNCEMENTS ═══ -->
+    <div class="screen" id="screen-announcements">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div style="font-size:13px;color:var(--ink3)">發布公告給家長，例如考試日期、報名開始、停課通知等。</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <select class="filter-sel" id="ann-venue-filter" onchange="renderAnnouncements()">
+            <option value="">全部場館</option>
+          </select>
+          <button class="btn btn-primary" onclick="openAnnModal(null)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增公告
+          </button>
+        </div>
+      </div>
+      <div id="ann-list"></div>
+    </div>
+
+    <!-- ═══ VENUES ═══ -->
+    <div class="screen" id="screen-venues">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:13px;color:var(--ink3)">管理所有場館資料，場館資訊將顯示於考試紀錄和統計報表中。</div>
+        <button class="btn btn-primary" onclick="openVenueModal(null)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          新增場館
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px" id="venue-cards"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- 教練 Modal -->
+<div class="modal-overlay hidden" id="coach-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title" id="coach-modal-title">新增教練</div>
+      <button class="modal-close" onclick="closeModal('coach-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section">基本資料</div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label req">教練姓名</label>
+          <input class="form-input" id="cm-name" placeholder="請輸入教練姓名">
+          <div class="form-err" id="cm-name-err">請輸入姓名</div>
+        </div>
+        <div class="form-field">
+          <label class="form-label req">手機號碼</label>
+          <input class="form-input" id="cm-phone" placeholder="09XX-XXX-XXX" oninput="fmtPhone(this)">
+          <div class="form-err" id="cm-phone-err">請輸入正確手機號碼</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label req">角色</label>
+          <select class="form-select" id="cm-role">
+            <option value="teach">教學教練</option>
+            <option value="exam">考試教練（主管）</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">帳號狀態</label>
+          <select class="form-select" id="cm-status">
+            <option value="active">啟用</option>
+            <option value="inactive">停用</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-section">帳號設定</div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label req">初始密碼</label>
+          <input class="form-input" id="cm-pwd" type="password" placeholder="請設定初始密碼（8字元以上，含大小寫、數字、符號）">
+          <div class="form-hint">教練首次登入後可自行修改密碼</div>
+          <div class="form-err" id="cm-pwd-err">密碼不符合要求</div>
+        </div>
+      </div>
+      <div class="warn-box" id="cm-deactivate-warn" style="display:none">
+        停用帳號後此教練將無法登入系統，帶班學員的資料不受影響。
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('coach-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveCoach()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 家長密碼重設 Modal -->
+<div class="modal-overlay hidden" id="reset-pwd-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-hd">
+      <div class="modal-title">重設家長密碼</div>
+      <button class="modal-close" onclick="closeModal('reset-pwd-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box" id="reset-target-info"></div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label req">新密碼</label>
+          <div style="display:flex;gap:6px">
+            <input class="form-input" id="reset-pwd" type="password" placeholder="至少 8 字元" style="flex:1">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="toggleResetPwdVisibility()" id="reset-pwd-toggle">顯示</button>
+          </div>
+          <div class="form-hint" style="margin-top:5px">或 <a href="#" style="color:var(--ocean)" onclick="autoGenResetPwd();return false;">自動產生密碼</a>　設定後請口頭告知家長新密碼</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('reset-pwd-modal')">取消</button>
+      <button class="btn btn-primary" id="reset-confirm-btn" onclick="confirmResetPwd()">確認重設</button>
+    </div>
+  </div>
+</div>
+
+<!-- 學員 Modal -->
+<div class="modal-overlay hidden" id="student-modal">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-hd">
+      <div class="modal-title" id="stu-modal-title">新增學員</div>
+      <button class="modal-close" onclick="closeModal('student-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- tab 切換（編輯模式才顯示歷史） -->
+    <div id="stu-modal-tabs" style="display:none;border-bottom:1px solid var(--line);display:flex">
+      <div class="tab active" id="stab-info" onclick="switchStuTab('info')" style="padding:10px 20px">基本資料</div>
+      <div class="tab" id="stab-history" onclick="switchStuTab('history')" style="padding:10px 20px">考試歷史</div>
+    </div>
+    <div class="modal-body" id="stu-modal-body">
+      <!-- 基本資料 panel -->
+      <div id="stu-panel-info">
+        <div class="form-section" style="border-top:none;padding-top:0">學員資料</div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label req">學員姓名</label>
+            <input class="form-input" id="sm-name" placeholder="請輸入學員姓名">
+            <div class="form-err" id="sm-name-err">請輸入姓名</div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">目前級數</label>
+            <select class="form-select" id="sm-level">
+              <option value="1" selected>一級（黃色布帽）— 預設</option><option value="2">二級（黃色布帽）</option>
+              <option value="3">三級（黃色布帽）</option><option value="4">四級（黃色布帽）</option>
+              <option value="5">五級（藍色布帽）</option><option value="6">六級（紅色布帽）</option>
+              <option value="7">七級（黑色膠帽）</option><option value="8">八級（黑色膠帽）</option>
+              <option value="9">九級（銀色膠帽）</option><option value="10">十級（銀色膠帽）</option>
+            </select>
+            <div class="form-hint">新學員預設一級，考試後由系統更新</div>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-field">
+            <label class="form-label req">教學教練</label>
+            <select class="form-select" id="sm-coach"></select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-field">
+            <label class="form-label">預設場館</label>
+            <select class="form-select" id="sm-venue">
+              <option value="">未指定</option>
+            </select>
+            <div class="form-hint">學員可跨館上課考試，此為主要上課場館</div>
+          </div>
+        </div>
+        <div class="form-section">家長資料</div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label req">家長姓名</label>
+            <input class="form-input" id="sm-gname" placeholder="請輸入家長姓名">
+            <div class="form-err" id="sm-gname-err">請輸入家長姓名</div>
+          </div>
+          <div class="form-field" id="sm-gphone-field">
+            <label class="form-label req">家長手機（登入帳號）</label>
+            <input class="form-input" id="sm-gphone" placeholder="09XX-XXX-XXX" oninput="fmtPhone(this);checkSmPhone()">
+            <div class="form-err" id="sm-gphone-err">請輸入正確手機格式</div>
+            <div id="sm-phone-status" style="font-size:10px;margin-top:3px"></div>
+          </div>
+        </div>
+        <div class="info-box" id="sm-phone-infobox">
+          填寫家長手機後，家長可用此號碼自行啟用帳號查詢考試紀錄。若同一家長已有帳號（其他孩子），新學員將自動連結至現有帳號。
+        </div>
+      </div>
+      <!-- 考試歷史 panel -->
+      <div id="stu-panel-history" style="display:none">
+        <div id="stu-history-content"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('student-modal')">取消</button>
+      <button class="btn btn-primary" id="stu-save-btn" onclick="saveStudent()">建立學員</button>
+    </div>
+  </div>
+</div>
+
+<!-- 考試結果修改 Modal -->
+<div class="modal-overlay hidden" id="exam-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hd">
+      <div class="modal-title">修改考試結果</div>
+      <button class="modal-close" onclick="closeModal('exam-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box" id="exam-modal-info"></div>
+      <div class="warn-box">修改後家長查詢頁將即時更新。請確認修改原因正確。</div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">修改結果為</label>
+          <select class="form-select" id="em-verdict">
+            <option value="pass">通過</option>
+            <option value="fail">未通過</option>
+            <option value="absent">未出席</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">修改考試級別</label>
+          <select class="form-select" id="em-level">
+            <option value="1">一級</option><option value="2">二級</option><option value="3">三級</option>
+            <option value="4">四級</option><option value="5">五級</option><option value="6">六級</option>
+            <option value="7">七級</option><option value="8">八級</option><option value="9">九級</option>
+            <option value="10">十級</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">指派場館</label>
+          <select class="form-select" id="em-venue"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">教學教練</label>
+          <select class="form-select" id="em-teach-coach"></select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">考試教練</label>
+          <select class="form-select" id="em-exam-coach"></select>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">修改教練評語</label>
+          <textarea class="form-textarea" id="em-coach-note" placeholder="修改或補充考試評語（家長可見）" style="min-height:72px"></textarea>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">修改原因備註 <span style="color:var(--ink3);font-weight:400">（內部紀錄，家長不可見）</span></label>
+          <textarea class="form-textarea" id="em-note" placeholder="請說明修改原因（將記錄於系統日誌）"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('exam-modal')">取消</button>
+      <button class="btn btn-amber" onclick="confirmEditExam()">確認修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 批次指派教練 Modal -->
+<div class="modal-overlay hidden" id="batch-coach-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hd">
+      <div class="modal-title">批次指派教練</div>
+      <button class="modal-close" onclick="closeModal('batch-coach-modal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--ink2);margin-bottom:14px" id="batch-coach-desc"></div>
+      <div class="form-field">
+        <label class="form-label req">指派給</label>
+        <select class="form-select" id="batch-coach-sel"></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('batch-coach-modal')">取消</button>
+      <button class="btn btn-primary" onclick="applyBatchCoach()">確認指派</button>
+    </div>
+  </div>
+</div>
+
+<!-- 批次更改場館 Modal -->
+<div class="modal-overlay hidden" id="batch-venue-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hd">
+      <div class="modal-title">批次更改場館</div>
+      <button class="modal-close" onclick="closeModal('batch-venue-modal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--ink2);margin-bottom:14px" id="batch-venue-desc"></div>
+      <div class="form-field">
+        <label class="form-label req">更改為</label>
+        <select class="form-select" id="batch-venue-sel"></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('batch-venue-modal')">取消</button>
+      <button class="btn btn-primary" onclick="applyBatchVenue()">確認更改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 風險學員：學員資訊 Modal -->
+<div class="modal-overlay hidden" id="risk-stu-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-hd">
+      <div class="modal-title" id="risk-stu-modal-title">學員資訊</div>
+      <button class="modal-close" onclick="closeModal('risk-stu-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="risk-stu-modal-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('risk-stu-modal')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- 風險學員考試紀錄 Modal -->
+<div class="modal-overlay hidden" id="risk-exam-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-hd">
+      <div>
+        <div class="modal-title" id="risk-exam-modal-name"></div>
+        <div id="risk-exam-modal-sub" style="font-size:11px;color:var(--ink3);margin-top:3px"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('risk-exam-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>日期</th><th>考試級別</th><th>結果</th><th>場館</th><th>教學教練</th><th>考試教練</th><th>評語</th></tr></thead>
+          <tbody id="risk-exam-modal-table"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('risk-exam-modal')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- 公告 Modal -->
+<div class="modal-overlay hidden" id="ann-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-hd">
+      <div class="modal-title" id="ann-modal-title">新增公告</div>
+      <button class="modal-close" onclick="closeModal('ann-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label req">類型</label>
+          <select class="form-select" id="am-type">
+            <option value="exam">考試預告</option>
+            <option value="enroll">報名開始</option>
+            <option value="cancel">停課通知</option>
+            <option value="general">一般公告</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">適用場館</label>
+          <select class="form-select" id="am-venue">
+            <option value="">全部場館</option>
+          </select>
+          <div class="form-hint">不選則全館家長皆可看到</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label req">發布日期</label>
+          <input class="form-input" type="date" id="am-date">
+        </div>
+        <div class="form-field">
+          <label class="form-label">下線日期<span style="font-weight:400;color:var(--ink3)">（選填）</span></label>
+          <input class="form-input" type="date" id="am-end-date">
+          <div class="form-hint">到期後自動標記為已下線</div>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label req">標題</label>
+          <input class="form-input" id="am-title" placeholder="例：5 月份考試日期預告">
+          <div class="form-err" id="am-title-err">請輸入標題</div>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">內容（選填）</label>
+          <textarea class="form-input" id="am-content" rows="4" placeholder="詳細說明、注意事項等…" style="resize:vertical;line-height:1.6"></textarea>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field" style="flex-direction:row;align-items:center;gap:10px">
+          <input type="checkbox" id="am-pinned" style="width:16px;height:16px;accent-color:var(--ocean);cursor:pointer">
+          <label for="am-pinned" style="font-size:13px;color:var(--ink2);cursor:pointer;font-weight:500">置頂顯示</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('ann-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveAnn()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 場館 Modal -->
+<div class="modal-overlay hidden" id="venue-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hd">
+      <div class="modal-title" id="venue-modal-title">新增場館</div>
+      <button class="modal-close" onclick="closeModal('venue-modal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="grid-template-columns:1fr auto;gap:10px">
+        <div class="form-field">
+          <label class="form-label req">場館名稱</label>
+          <input class="form-input" id="vm-name" placeholder="例：台北館">
+          <div class="form-err" id="vm-name-err">請輸入場館名稱</div>
+        </div>
+        <div class="form-field" style="min-width:80px">
+          <label class="form-label req">英文代號</label>
+          <input class="form-input" id="vm-code" placeholder="C" maxlength="1" style="text-transform:uppercase;text-align:center;font-family:'DM Mono',monospace;font-size:16px;font-weight:700;letter-spacing:.05em">
+          <div class="form-err" id="vm-code-err">需為唯一大寫英文字母</div>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label req">地址 / 地點描述</label>
+          <input class="form-input" id="vm-location" placeholder="例：台北市中山區某路123號">
+          <div class="form-err" id="vm-location-err">請輸入地址</div>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">狀態</label>
+          <select class="form-select" id="vm-status">
+            <option value="active">營運中</option>
+            <option value="inactive">暫停營運</option>
+            <option value="closed" disabled>已關閉（請用關閉按鈕操作）</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('venue-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveVenue()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════ SUPABASE ════
+const SUPA = supabase.createClient(
+  'https://mqkasrtaxkcchrqyornh.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xa2FzcnRheGtjY2hycXlvcm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA5MTksImV4cCI6MjA5MjYwNjkxOX0.TanYWbC8sQD99H_ylOaCO-WVCdbibB8OIo7xMaWFy-M'
+);
+
+// ════ DATA ════
+const HAT_MAP={1:'黃色布帽',2:'黃色布帽',3:'黃色布帽',4:'藍色布帽',5:'藍色布帽',6:'紅色布帽',7:'黑色膠帽',8:'黑色膠帽',9:'銀色膠帽',10:'銀色膠帽'};
+const HAT_CHIP={1:'hat-y',2:'hat-y',3:'hat-y',4:'hat-b',5:'hat-b',6:'hat-r',7:'hat-k',8:'hat-k',9:'hat-s',10:'hat-s'};
+const LV_LABEL={1:'一級',2:'二級',3:'三級',4:'四級',5:'五級',6:'六級',7:'七級',8:'八級',9:'九級',10:'十級'};
+
+const LAST=['王','李','張','陳','林','黃','吳','劉','蔡','鄭','許','謝'];
+const FIRST=['小明','小華','小芸','小宇','小蓉','小恩','小涵','大為','俊傑','雅婷','怡君','志豪','建國','品軒','宜庭'];
+const GLAST=['王','李','張','陳','林','黃','吳','劉'];
+const GFIRSTM=['志豪','建國','宗翰','彥廷','冠廷','家豪'];
+const GFIRSTF=['美玲','雅婷','淑芬','雅雯','靜怡','佳蓉'];
+const PRE=['0912','0923','0934','0945','0956','0967'];
+let nextId=101;
+let coachPage=1,guardianPage=1,stuPage=1,examPage=1;
+let resetTargetAuthId=null;
+let editingStuId=null;
+let editingCoachId=null;
+let editingExamId=null;
+let editingVenueId=null;
+let editingAnnoId=null;
+let annEditId=null;
+let ANNOUNCEMENTS_DATA=[];
+let currentRole='admin';
+let currentVenueId='all';
+
+const ROLE_CONFIG = {
+  admin: {
+    badge: 'ADMIN', badgeColor: '#C30017',
+    name: '系統管理員', roleLabel: '管理員', avText: '管',
+    canEditAllStudents: true, canManageAccounts: true,
+    canReports: true, canEditExams: true,
+  },
+  supervisor: {
+    badge: 'SUPERVISOR', badgeColor: '#0c447c',
+    name: '林主管', roleLabel: '考試教練（主管）', avText: '林',
+    canEditAllStudents: true, canManageAccounts: true,
+    canReports: true, canEditExams: true,
+  },
+  coach: {
+    badge: 'COACH', badgeColor: '#3c3489',
+    name: '陳教練', roleLabel: '教學教練', avText: '陳',
+    canEditAllStudents: false, canManageAccounts: false,
+    canReports: false, canEditExams: false,
+  },
+};
+let stuSelectedIds=new Set();
+function toggleStuSelect(id,checked){
+  checked?stuSelectedIds.add(id):stuSelectedIds.delete(id);
+  updateBatchBar();
+}
+function toggleAllStudents(checked){
+  document.querySelectorAll('.stu-row-cb').forEach(cb=>{
+    const id=parseInt(cb.dataset.id);
+    cb.checked=checked;
+    checked?stuSelectedIds.add(id):stuSelectedIds.delete(id);
+  });
+  updateBatchBar();
+}
+function updateBatchBar(){
+  const bar=document.getElementById('stu-batch-bar');
+  const countEl=document.getElementById('stu-batch-count');
+  const n=stuSelectedIds.size;
+  if(bar) bar.classList.toggle('hidden',n===0);
+  if(countEl) countEl.textContent='已選 '+n+' 位學員';
+  const allCb=document.getElementById('stu-select-all');
+  if(allCb){
+    const pageCbs=document.querySelectorAll('.stu-row-cb');
+    allCb.checked=pageCbs.length>0&&[...pageCbs].every(cb=>cb.checked);
+    allCb.indeterminate=!allCb.checked&&[...pageCbs].some(cb=>cb.checked);
+  }
+}
+function clearStuSelection(){
+  stuSelectedIds.clear();
+  renderStudents();
+}
+function openBatchCoach(){
+  const n=stuSelectedIds.size;
+  if(!n) return;
+  document.getElementById('batch-coach-desc').textContent='將 '+n+' 位學員的教練改為：';
+  const sel=document.getElementById('batch-coach-sel');
+  sel.innerHTML='';
+  COACHES_DATA.filter(c=>c.role==='teach'&&c.status==='active').forEach(c=>{
+    const o=document.createElement('option');o.value=c.name;o.textContent=c.name;sel.appendChild(o);
+  });
+  openModal('batch-coach-modal');
+}
+async function applyBatchCoach(){
+  const coachName=document.getElementById('batch-coach-sel').value;
+  const coach=COACHES_DATA.find(c=>c.name===coachName);
+  const ids=[...stuSelectedIds];
+  for(const id of ids){
+    await SUPA.from('students').update({teach_coach_id:coach?.id||null}).eq('id',id);
+  }
+  closeModal('batch-coach-modal');
+  stuSelectedIds.clear();
+  await loadStudents();
+  renderStudents();
+}
+function openBatchVenue(){
+  const n=stuSelectedIds.size;
+  if(!n) return;
+  document.getElementById('batch-venue-desc').textContent='將 '+n+' 位學員的場館改為：';
+  const sel=document.getElementById('batch-venue-sel');
+  sel.innerHTML='<option value="">未指定</option>';
+  VENUES_DATA.filter(v=>v.status==='active').forEach(v=>{
+    const o=document.createElement('option');o.value=v.id;o.textContent=v.name;sel.appendChild(o);
+  });
+  openModal('batch-venue-modal');
+}
+async function applyBatchVenue(){
+  const venueId=document.getElementById('batch-venue-sel').value||null;
+  const ids=[...stuSelectedIds];
+  for(const id of ids){
+    await SUPA.from('students').update({default_venue_id:venueId}).eq('id',id);
+  }
+  closeModal('batch-venue-modal');
+  stuSelectedIds.clear();
+  await loadStudents();
+  renderStudents();
+}
+const PAGE_SIZE=20;
+
+function renderPager(containerId,total,curPage,onPageFn){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  const totalPages=Math.ceil(total/PAGE_SIZE);
+  if(totalPages<=1){el.innerHTML='';return;}
+  const s=Math.max(1,Math.min(curPage-2,totalPages-4));
+  const e=Math.min(totalPages,s+4);
+  let h='<div class="pager">';
+  h+=`<button class="pager-btn" ${curPage===1?'disabled':''} onclick="${onPageFn}(${curPage-1})">‹</button>`;
+  if(s>1) h+=`<button class="pager-btn" onclick="${onPageFn}(1)">1</button>`;
+  if(s>2) h+='<span class="pager-ellipsis">…</span>';
+  for(let i=s;i<=e;i++) h+=`<button class="pager-btn${i===curPage?' active':''}" onclick="${onPageFn}(${i})">${i}</button>`;
+  if(e<totalPages-1) h+='<span class="pager-ellipsis">…</span>';
+  if(e<totalPages) h+=`<button class="pager-btn" onclick="${onPageFn}(${totalPages})">${totalPages}</button>`;
+  h+=`<button class="pager-btn" ${curPage===totalPages?'disabled':''} onclick="${onPageFn}(${curPage+1})">›</button>`;
+  h+=`<span class="pager-info">${(curPage-1)*PAGE_SIZE+1}–${Math.min(curPage*PAGE_SIZE,total)} / ${total} 筆</span>`;
+  h+='</div>';
+  el.innerHTML=h;
+}
+function goCoachPage(p){coachPage=p;renderCoaches();}
+function goGuardianPage(p){guardianPage=p;renderGuardians();}
+function goStuPage(p){stuPage=p;renderStudents();}
+function goExamPage(p){examPage=p;renderExams();}
+let riskPage=1,parentPage=1;
+function goRiskPage(p){riskPage=p;renderRptRisk();}
+function goParentPage(p){parentPage=p;renderRptParent();}
+
+function rn(){return LAST[ri(LAST)]+FIRST[ri(FIRST)]}
+function rgn(){return GLAST[ri(GLAST)]+(Math.random()>.5?GFIRSTM[ri(GFIRSTM)]:GFIRSTF[ri(GFIRSTF)])}
+function rp(){return PRE[ri(PRE)]+'-'+String(Math.floor(Math.random()*900)+100)+'-'+String(Math.floor(Math.random()*900)+100)}
+function ri(a){return Math.floor(Math.random()*a.length)}
+function rd(daysAgo){const d=new Date(Date.now()-daysAgo*86400000);return d.getFullYear()+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')}
+
+// 場館資料（從 Supabase 載入）
+let VENUES_DATA=[];
+
+async function loadVenues(){
+  const {data,error}=await SUPA.from('venues').select('*').order('name');
+  if(error){showToast('載入場館失敗：'+error.message,'warn');return;}
+  VENUES_DATA=data.map(v=>({
+    ...v,
+    studentCount: 0,
+    coachCount: 0,
+  }));
+  syncVenueSwitcher();
+}
+
+// 當前選定場館（'all' 或 venue id）
+function venueLabel(id){
+  if(!id||id==='all') return '全部場館';
+  const v=VENUES_DATA.find(x=>String(x.id)===String(id));
+  return v?v.name:'—';
+}
+
+let COACHES_DATA=[];
+
+async function loadCoaches(){
+  const {data,error}=await SUPA.from('coaches').select('*').order('created_at');
+  if(error){showToast('載入教練失敗：'+error.message,'warn');return;}
+  COACHES_DATA=data.map(c=>({
+    ...c,
+    students:0,
+    created:c.created_at?new Date(c.created_at).toLocaleDateString('zh-TW'):'—',
+    venues:[],
+  }));
+}
+
+let STUDENTS_DATA=[];
+
+async function loadStudents(){
+  const {data:stuData,error:stuErr}=await SUPA.from('students')
+    .select('*').order('created_at',{ascending:false});
+  if(stuErr){showToast('載入學員失敗：'+stuErr.message,'warn');return;}
+  if(!stuData||stuData.length===0){STUDENTS_DATA=[];return;}
+
+  // 載入 student_guardian 及 guardians
+  const stuIds=stuData.map(s=>s.id);
+  const {data:sgData}=await SUPA.from('student_guardian')
+    .select('student_id, guardians(id,name,phone,status,auth_id)').in('student_id',stuIds);
+  const sgMap={};
+  (sgData||[]).forEach(r=>{sgMap[r.student_id]=r.guardians;});
+
+  STUDENTS_DATA=stuData.map(s=>{
+    const g=sgMap[s.id]||null;
+    const coach=COACHES_DATA.find(c=>String(c.id)===String(s.teach_coach_id));
+    return {
+      id:s.id,
+      name:s.name,
+      level:s.level,
+      guardianName:g?.name||'',
+      guardianPhone:g?.phone||'',
+      guardianId:g?.id||null,
+      guardianAuthId:g?.auth_id||null,
+      guardianActivated:g?.status==='active',
+      teachCoach:coach?.name||'',
+      teachCoachId:s.teach_coach_id,
+      defaultVenueId:s.default_venue_id,
+      status:s.status,
+      lastLogin:null,
+      created:s.created_at?new Date(s.created_at).toLocaleDateString('zh-TW'):'—',
+    };
+  });
+}
+
+const EXAM_NOTES=['打水節奏很穩，繼續保持！','換氣時抬頭，需要改善轉頭技巧。','蛙腳力道不足，建議多練習。','整體表現良好，下次可以挑戰更高級別。','腳部動作需要加強，膝蓋容易打開。','手部推水不到位，需要注意手掌位置。','仰漂時身體平衡很好！','本次表現進步明顯，繼續努力。','','',''];
+const VERDICTS=['pass','pass','pass','fail','absent'];
+let EXAM_DATA=[];
+
+async function loadExams(){
+  const {data,error}=await SUPA.from('exams').select('*').order('exam_date',{ascending:false});
+  if(error){showToast('載入考試失敗：'+error.message,'warn');return;}
+  EXAM_DATA=data.map(e=>{
+    const student=STUDENTS_DATA.find(s=>String(s.id)===String(e.student_id));
+    const teachCoach=COACHES_DATA.find(c=>String(c.id)===String(e.teach_coach_id));
+    const examCoach=COACHES_DATA.find(c=>String(c.id)===String(e.exam_coach_id));
+    const d=new Date(e.exam_date);
+    const dateStr=d.getFullYear()+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0');
+    return {
+      id:e.id,
+      studentId:e.student_id,
+      studentName:student?.name||'（已刪除）',
+      level:e.level,
+      verdict:e.result,
+      date:dateStr,
+      venueId:e.venue_id,
+      teachCoach:teachCoach?.name||'',
+      teachCoachId:e.teach_coach_id,
+      examCoach:examCoach?.name||'',
+      examCoachId:e.exam_coach_id,
+      coachNote:e.note||'',
+      classCode:'',
+    };
+  });
+}
+
+// ════ NAV ════
+function go(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
+  const ni=document.getElementById('nav-'+screen);
+  if(ni) ni.classList.add('active');
+  // sync bottom nav
+  ['dashboard','students','exams'].forEach(s=>{
+    const bn=document.getElementById('bn-'+s);
+    if(bn) bn.classList.toggle('active',s===screen);
+  });
+  const titles={dashboard:'儀表板',coaches:'教練帳號管理',guardians:'家長帳號管理',students:'學員資料管理',exams:'考試紀錄瀏覽',reports:'統計報表',venues:'場館管理',announcements:'公告管理'};
+  const vLabel=currentVenueId==='all'?'':' · '+venueLabel(currentVenueId);
+  document.getElementById('topbar-title').textContent=(titles[screen]||'')+vLabel;
+  if(screen==='coaches') renderCoaches();
+  if(screen==='guardians') renderGuardians();
+  if(screen==='students'){renderStudents();initStuCoachFilter();initStuVenueFilter();}
+  if(screen==='exams'){renderExams();initExamVenueFilter();}
+  if(screen==='dashboard') renderDashExams();
+  if(screen==='venues') renderVenues();
+  if(screen==='announcements') renderAnnouncements();
+  if(screen==='reports') renderRptOverview();
+}
+
+// ════ STAGNANT LOGIC ════
+function getStagnantStudentIds(since){
+  const sixMonthsAgo = since || new Date(Date.now()-180*86400000);
+  const venueStudentIds=currentVenueId==='all'?null:new Set(STUDENTS_DATA.filter(s=>String(s.defaultVenueId)===String(currentVenueId)).map(s=>s.id));
+  const byStudent={};
+  EXAM_DATA.forEach(e=>{
+    if(venueStudentIds&&!venueStudentIds.has(e.studentId)) return;
+    const d=new Date(e.date.replace(/\//g,'-'));
+    if(d<sixMonthsAgo) return;
+    if(!byStudent[e.studentId]) byStudent[e.studentId]={levels:new Set(),hasFail:false,count:0};
+    byStudent[e.studentId].levels.add(e.level);
+    byStudent[e.studentId].count++;
+    if(e.verdict==='fail'||e.verdict==='absent') byStudent[e.studentId].hasFail=true;
+  });
+  const ids=new Set();
+  Object.entries(byStudent).forEach(([sid,info])=>{
+    if(info.count>=2 && info.levels.size===1 && info.hasFail){
+      ids.add(parseInt(sid));
+    }
+  });
+  return ids;
+}
+
+// ════ CONSECUTIVE FAIL LOGIC ════
+function getConsecFailStudentIds(){
+  // 找出最近三次考試（同一級別）全部未通過或未出席的學員
+  const byStudent={};
+  EXAM_DATA.forEach(e=>{
+    if(!byStudent[e.studentId]) byStudent[e.studentId]=[];
+    byStudent[e.studentId].push(e);
+  });
+  const ids=new Set();
+  const details={}; // studentId -> {level, count, latestDate, name}
+  Object.entries(byStudent).forEach(([sid,exams])=>{
+    // 依日期排序，最新在前
+    const sorted=exams.sort((a,b)=>b.date.localeCompare(a.date));
+    // 找同一級別的最近考試
+    const byLevel={};
+    sorted.forEach(e=>{
+      if(!byLevel[e.level]) byLevel[e.level]=[];
+      byLevel[e.level].push(e);
+    });
+    Object.entries(byLevel).forEach(([lv,lvExams])=>{
+      if(lvExams.length<3) return;
+      const recent3=lvExams.slice(0,3);
+      const allFail=recent3.every(e=>e.verdict==='fail'||e.verdict==='absent');
+      if(allFail){
+        ids.add(parseInt(sid));
+        details[sid]={
+          level:parseInt(lv),
+          count:lvExams.filter(e=>e.verdict==='fail'||e.verdict==='absent').length,
+          latestDate:recent3[0].date,
+          name:recent3[0].studentName,
+          teachCoach:recent3[0].teachCoach,
+        };
+      }
+    });
+  });
+  return {ids, details};
+}
+
+function getStuckStudentIds(){
+  const byKey={};
+  EXAM_DATA.forEach(e=>{
+    const key=e.studentId+'_'+e.level;
+    if(!byKey[key]) byKey[key]={studentId:e.studentId,level:e.level,exams:[]};
+    byKey[key].exams.push(e);
+  });
+  const ids=new Set();
+  Object.values(byKey).forEach(r=>{
+    const s=STUDENTS_DATA.find(x=>x.id===r.studentId);
+    if(!s||s.level!==r.level) return;
+    const sorted=r.exams.sort((a,b)=>b.date.localeCompare(a.date));
+    let c=0;
+    for(const e of sorted){if(e.verdict!=='fail') break;c++;}
+    if(c>=3) ids.add(r.studentId);
+  });
+  return ids;
+}
+
+function getWarnStuckStudents(){
+  const byKey={};
+  EXAM_DATA.forEach(e=>{
+    const key=e.studentId+'_'+e.level;
+    if(!byKey[key]) byKey[key]={studentId:e.studentId,name:e.studentName,level:e.level,exams:[],teachCoach:e.teachCoach};
+    byKey[key].exams.push(e);
+  });
+  const stuck=[],warn=[];
+  Object.values(byKey).forEach(r=>{
+    const s=STUDENTS_DATA.find(x=>x.id===r.studentId);
+    if(!s||s.level!==r.level) return;
+    if(currentVenueId!=='all'&&String(s.defaultVenueId)!==String(currentVenueId)) return;
+    const sorted=r.exams.sort((a,b)=>b.date.localeCompare(a.date));
+    let consecFails=0;
+    for(const e of sorted){
+      if(e.verdict!=='fail') break;
+      consecFails++;
+    }
+    if(consecFails>=3) stuck.push({...r,failCount:consecFails,latestDate:sorted[0].date});
+    else if(consecFails===2) warn.push({...r,failCount:consecFails,latestDate:sorted[0].date});
+  });
+  return {stuck,warn};
+}
+function renderDashExams(){
+  const isCoach=currentRole==='coach';
+  const myCoachName=isCoach?ROLE_CONFIG.coach.name:null;
+  const myStudentIds=isCoach?new Set(STUDENTS_DATA.filter(s=>s.teachCoach===myCoachName).map(s=>s.id)):null;
+
+  // 依角色切換卡片標題
+  const t1=document.getElementById('dash-title1');
+  const t2=document.getElementById('dash-title2');
+  const t3=document.getElementById('dash-title3');
+  const h1=document.getElementById('dash-exam-thead');
+  if(isCoach){
+    if(t1) t1.textContent='近期考試預建班';
+    if(t2) t2.textContent='預建班停留同一級';
+    if(t3) t3.textContent='預建班須關注學員';
+    if(h1) h1.innerHTML='<tr><th>學員姓名</th><th>級數</th><th>最近考試</th><th>結果</th></tr>';
+  } else {
+    if(t1) t1.textContent='最近考試紀錄';
+    if(t2) t2.textContent='半年內停留同一級';
+    if(t3) t3.textContent='需關注學員';
+    if(h1) h1.innerHTML='<tr><th>學員</th><th>級別</th><th>結果</th><th>日期</th></tr>';
+  }
+
+  const tbody=document.getElementById('dash-exam-table');
+  tbody.innerHTML='';
+
+  if(isCoach){
+    // 卡片1：近期考試預建班（依班級代碼 + 日期分組，最多 4 班）
+    if(h1) h1.innerHTML='<tr><th>班級</th><th>學員</th><th>級數</th><th>結果</th></tr>';
+    // 以日期為主分組，班級為次分組
+    const myExams=EXAM_DATA.filter(e=>myStudentIds.has(e.studentId))
+      .sort((a,b)=>b.date.localeCompare(a.date));
+    const dateGroups={};
+    myExams.forEach(e=>{
+      if(!dateGroups[e.date]) dateGroups[e.date]={};
+      if(!dateGroups[e.date][e.classCode]) dateGroups[e.date][e.classCode]=[];
+      dateGroups[e.date][e.classCode].push(e);
+    });
+    const recentDates=Object.keys(dateGroups).sort((a,b)=>b.localeCompare(a)).slice(0,3);
+    if(!recentDates.length){
+      tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:16px;font-size:12px;color:var(--ink3)">目前無預建班考試紀錄</td></tr>';
+    } else {
+      recentDates.forEach((date,di)=>{
+        // 日期分隔列
+        const topBorder=di>0?'border-top:3px solid var(--line);':'';
+        tbody.innerHTML+=`<tr style="background:var(--ink)">
+          <td colspan="4" style="${topBorder}padding:6px 14px">
+            <span class="mono" style="font-size:12px;font-weight:700;color:#fff;letter-spacing:.04em">${date}</span>
+          </td>
+        </tr>`;
+        // 該日各班
+        Object.entries(dateGroups[date]).forEach(([classCode,exams])=>{
+          const passCount=exams.filter(e=>e.verdict==='pass').length;
+          tbody.innerHTML+=`<tr style="background:#f0f4ff">
+            <td colspan="4" style="padding:5px 14px 5px 16px;border-left:3px solid var(--blue)">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;font-weight:700;color:var(--ink)">${classCode}</span>
+                <span style="margin-left:auto;font-size:11px;color:var(--ink3)">${exams.length}位&nbsp;·&nbsp;<span style="color:var(--green);font-weight:600">通過${passCount}</span></span>
+              </div>
+            </td>
+          </tr>`;
+          exams.forEach(e=>{
+            const vChip=e.verdict==='pass'?'chip-green':e.verdict==='fail'?'chip-red':'chip-amber';
+            const vTxt=e.verdict==='pass'?'通過':e.verdict==='fail'?'未通過':'未出席';
+            tbody.innerHTML+=`<tr>
+              <td></td>
+              <td style="font-weight:500">${e.studentName}</td>
+              <td><span class="chip ${HAT_CHIP[e.level]}">${LV_LABEL[e.level]}</span></td>
+              <td><span class="chip ${vChip}">${vTxt}</span></td>
+            </tr>`;
+          });
+        });
+      });
+    }
+    // 卡片2：預建班停留同一級（過濾自己的學員）
+    const stagnantIds=getStagnantStudentIds();
+    const myStagnantIds=new Set([...stagnantIds].filter(id=>myStudentIds.has(id)));
+    const stagnantEl=document.getElementById('dash-stagnant-count');
+    if(stagnantEl) stagnantEl.textContent=myStagnantIds.size;
+    renderStagnant(myStagnantIds);
+    // 卡片3：預建班須關注學員（過濾自己的學員）
+    const {stuck,warn}=getWarnStuckStudents();
+    const myStuck=stuck.filter(r=>myStudentIds.has(r.studentId));
+    const myWarn=warn.filter(r=>myStudentIds.has(r.studentId));
+    const stuckEl=document.getElementById('dash-stuck-count');
+    const warnEl=document.getElementById('dash-warn-count');
+    if(stuckEl) stuckEl.textContent=myStuck.length;
+    if(warnEl) warnEl.textContent=myWarn.length;
+    renderWarnStuckTable(myStuck,myWarn);
+  } else {
+    // 管理員 / 主管視圖
+    const venueStudentIds=currentVenueId==='all'?null:new Set(STUDENTS_DATA.filter(s=>String(s.defaultVenueId)===String(currentVenueId)).map(s=>s.id));
+    const filteredExams=venueStudentIds?EXAM_DATA.filter(e=>venueStudentIds.has(e.studentId)):EXAM_DATA;
+    filteredExams.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).forEach(e=>{
+      const vChip=e.verdict==='pass'?'chip-green':e.verdict==='fail'?'chip-red':'chip-amber';
+      const vTxt=e.verdict==='pass'?'通過':e.verdict==='fail'?'未通過':'未出席';
+      tbody.innerHTML+=`<tr>
+        <td style="font-weight:500">${e.studentName}</td>
+        <td><span class="chip ${HAT_CHIP[e.level]}">${LV_LABEL[e.level]}</span></td>
+        <td><span class="chip ${vChip}">${vTxt}</span></td>
+        <td class="mono" style="font-size:11px">${e.date}</td>
+      </tr>`;
+    });
+    // 停留同一級
+    const stagnantIds=getStagnantStudentIds();
+    const stagnantEl=document.getElementById('dash-stagnant-count');
+    if(stagnantEl) stagnantEl.textContent=stagnantIds.size;
+    renderStagnant(stagnantIds);
+    // 需關注學員（警示 + 卡關）
+    const {stuck,warn}=getWarnStuckStudents();
+    const stuckEl=document.getElementById('dash-stuck-count');
+    const warnEl=document.getElementById('dash-warn-count');
+    if(stuckEl) stuckEl.textContent=stuck.length;
+    if(warnEl) warnEl.textContent=warn.length;
+    renderWarnStuckTable(stuck,warn);
+  }
+}
+
+function renderWarnStuckTable(stuck, warn) {
+  const tbody = document.getElementById('dash-warn-stuck-table');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  const all = [...stuck.map(r=>({...r,status:'stuck'})), ...warn.map(r=>({...r,status:'warn'}))];
+  if (!all.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;font-size:12px;color:var(--ink3)">目前無需關注學員</td></tr>';
+    return;
+  }
+  all.slice(0,8).forEach(r => {
+    const isStuck = r.status === 'stuck';
+    tbody.innerHTML += `<tr style="background:${isStuck?'#fff5f5':'#fffdf0'}">
+      <td style="font-weight:500">
+        ${r.name}
+        <span class="chip ${isStuck?'chip-red':'chip-amber'}" style="margin-left:5px;font-size:9px">${isStuck?'🔴 卡關':'⚠ 警示'}</span>
+      </td>
+      <td><span class="chip ${HAT_CHIP[r.level]}">${LV_LABEL[r.level]}</span></td>
+      <td class="mono" style="color:${isStuck?'var(--red)':'var(--amber)'};font-weight:700">${r.failCount} 次</td>
+      <td style="font-size:11px">${r.teachCoach}</td>
+    </tr>`;
+  });
+}
+
+
+function renderStagnant(stagnantIds){
+  const tbody=document.getElementById('dash-stagnant-table');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  const sixMonthsAgo=new Date(Date.now()-180*86400000);
+  const shown=new Set();
+  EXAM_DATA
+    .filter(e=>{
+      const d=new Date(e.date.replace(/\//g,'-'));
+      return d>=sixMonthsAgo && stagnantIds.has(e.studentId) && !shown.has(e.studentId);
+    })
+    .slice(0,8)
+    .forEach(e=>{
+      shown.add(e.studentId);
+      // 這位學員在半年內的所有考試
+      const studentExams=EXAM_DATA.filter(x=>x.studentId===e.studentId && new Date(x.date.replace(/\//g,'-'))>=sixMonthsAgo);
+      const latestExam=studentExams.sort((a,b)=>b.date.localeCompare(a.date))[0];
+      tbody.innerHTML+=`<tr>
+        <td style="font-weight:500">${e.studentName}</td>
+        <td><span class="chip ${HAT_CHIP[e.level]}">${LV_LABEL[e.level]}</span></td>
+        <td class="mono" style="font-size:11px">${latestExam?.date||'—'}</td>
+        <td class="mono">${studentExams.length}次</td>
+      </tr>`;
+    });
+  if(stagnantIds.size===0){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:16px;font-size:12px;color:var(--ink3)">目前無停留同一級的學員</td></tr>';
+  }
+}
+
+// ════ COACHES ════
+function renderCoaches(){
+  const q=(document.getElementById('coach-search')?.value||'').toLowerCase();
+  const rf=document.getElementById('coach-role-filter')?.value||'';
+  const sf=document.getElementById('coach-status-filter')?.value||'';
+  const sort=document.getElementById('coach-sort')?.value||'created-desc';
+  const tbody=document.getElementById('coach-table');
+  tbody.innerHTML='';
+
+  let list=COACHES_DATA.filter(c=>
+    (!q||c.name.toLowerCase().includes(q)||c.phone.replace(/-/g,'').includes(q.replace(/-/g,'')))&&
+    (!rf||c.role===rf)&&
+    (!sf||c.status===sf)
+  );
+
+  list.sort((a,b)=>{
+    if(sort==='created-asc') return a.created.localeCompare(b.created);
+    if(sort==='created-desc') return b.created.localeCompare(a.created);
+    if(sort==='name-asc') return a.name.localeCompare(b.name,'zh');
+    if(sort==='students-desc') return (b.students||0)-(a.students||0);
+    return 0;
+  });
+
+  const coachTotal=list.length;
+  list.slice((coachPage-1)*PAGE_SIZE,coachPage*PAGE_SIZE).forEach(c=>{
+    const roleTxt=c.role==='exam'?'考試教練（主管）':'教學教練';
+    const roleChip=c.role==='exam'?'chip-ocean':'chip-purple';
+    const statusChip=c.status==='active'?'chip-green':'chip-red';
+    const statusTxt=c.status==='active'?'啟用中':'已停用';
+    tbody.innerHTML+=`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${c.name[0]}</div><span style="font-weight:500">${c.name}</span></div></td>
+      <td><span class="chip ${roleChip}">${roleTxt}</span></td>
+      <td class="mono">${c.phone}</td>
+      <td><span class="chip ${statusChip}">${statusTxt}</span></td>
+      <td class="mono">${c.students>0?c.students+'人':'—'}</td>
+      <td class="mono" style="font-size:11px">${c.created}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-xs" onclick="openCoachModal('${c.id}')">編輯</button>
+          <button class="btn ${c.status==='active'?'btn-ghost':'btn-success'} btn-xs" onclick="toggleCoachStatus('${c.id}')">${c.status==='active'?'停用':'啟用'}</button>
+          <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteCoach('${c.id}')" title="刪除">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  });
+  renderPager('coach-pager',coachTotal,coachPage,'goCoachPage');
+}
+
+function openCoachModal(id){
+  editingCoachId=id;
+  const c=id?COACHES_DATA.find(x=>String(x.id)===String(id)):null;
+  document.getElementById('coach-modal-title').textContent=c?'編輯教練 · '+c.name:'新增教練';
+  document.getElementById('cm-name').value=c?.name||'';
+  document.getElementById('cm-phone').value=c?.phone||'';
+  document.getElementById('cm-role').value=c?.role||'teach';
+  document.getElementById('cm-status').value=c?.status||'active';
+  document.getElementById('cm-pwd').value='';
+  document.getElementById('cm-deactivate-warn').style.display=c?'block':'none';
+  ['cm-name-err','cm-phone-err','cm-pwd-err'].forEach(e=>document.getElementById(e).classList.remove('show'));
+  openModal('coach-modal');
+}
+async function saveCoach(){
+  const name=document.getElementById('cm-name').value.trim();
+  const phone=document.getElementById('cm-phone').value.trim();
+  const role=document.getElementById('cm-role').value;
+  const status=document.getElementById('cm-status').value;
+  let ok=true;
+  if(!name){document.getElementById('cm-name-err').classList.add('show');ok=false;}else document.getElementById('cm-name-err').classList.remove('show');
+  if(phone.replace(/-/g,'').length!==10){document.getElementById('cm-phone-err').classList.add('show');ok=false;}else document.getElementById('cm-phone-err').classList.remove('show');
+  document.getElementById('cm-pwd-err').classList.remove('show');
+  if(!ok)return;
+  if(editingCoachId){
+    const {error}=await SUPA.from('coaches').update({name,phone,role,status}).eq('id',editingCoachId);
+    if(error){showToast('更新失敗：'+error.message,'warn');return;}
+    showToast(name+' 已更新','ok');
+  }else{
+    const {error}=await SUPA.from('coaches').insert({name,phone,role,status});
+    if(error){showToast('新增失敗：'+error.message,'warn');return;}
+    showToast(name+' 已新增','ok');
+  }
+  closeModal('coach-modal');
+  await loadCoaches();
+  renderCoaches();
+}
+async function toggleCoachStatus(id){
+  const c=COACHES_DATA.find(x=>String(x.id)===String(id));
+  if(!c)return;
+  const newStatus=c.status==='active'?'inactive':'active';
+  const {error}=await SUPA.from('coaches').update({status:newStatus}).eq('id',id);
+  if(error){showToast('操作失敗：'+error.message,'warn');return;}
+  c.status=newStatus;
+  renderCoaches();
+}
+async function deleteCoach(id){
+  const c=COACHES_DATA.find(x=>String(x.id)===String(id));
+  if(!c)return;
+  if(c.students>0){alert('此教練目前有帶班學員（'+c.students+'人），請先重新指派後再刪除。');return;}
+  if(!confirm('確定刪除教練「'+c.name+'」？此操作無法還原。'))return;
+  const {error}=await SUPA.from('coaches').delete().eq('id',id);
+  if(error){showToast('刪除失敗：'+error.message,'warn');return;}
+  showToast(c.name+' 已刪除','ok');
+  await loadCoaches();
+  renderCoaches();
+}
+
+// ════ GUARDIANS ════
+function renderGuardians(){
+  const q=(document.getElementById('guardian-search')?.value||'').toLowerCase().replace(/-/g,'');
+  const sf=document.getElementById('guardian-status-filter')?.value||'';
+  const tbody=document.getElementById('guardian-table');
+  tbody.innerHTML='';
+  const seen=new Set();
+  const rows=[];
+  STUDENTS_DATA.forEach(s=>{
+    const key=s.guardianPhone.replace(/-/g,'');
+    if(seen.has(key))return;
+    seen.add(key);
+    const children=STUDENTS_DATA.filter(x=>x.guardianPhone===s.guardianPhone);
+    rows.push({name:s.guardianName,phone:s.guardianPhone,activated:s.guardianActivated,children,lastLogin:s.lastLogin,authId:s.guardianAuthId});
+  });
+  const filteredGuardians=rows.filter(r=>{
+    const matchQ=!q||r.name.toLowerCase().includes(q)||r.phone.replace(/-/g,'').includes(q);
+    const matchS=!sf||(sf==='active'&&r.activated)||(sf==='pending'&&!r.activated);
+    return matchQ&&matchS;
+  });
+  const guardianTotal=filteredGuardians.length;
+  filteredGuardians.slice((guardianPage-1)*PAGE_SIZE,guardianPage*PAGE_SIZE).forEach(r=>{
+    const chipCls=r.activated?'chip-green':'chip-amber';
+    const chipTxt=r.activated?'已啟用':'待啟用';
+    const names=r.children.map(c=>c.name).join('、');
+    tbody.innerHTML+=`<tr>
+      <td style="font-weight:500">${r.name}</td>
+      <td class="mono">${r.phone}</td>
+      <td><span class="chip ${chipCls}">${chipTxt}</span></td>
+      <td style="font-size:11px;color:var(--ink2)">${names}</td>
+      <td class="mono" style="font-size:11px">${r.lastLogin||'—'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-xs" onclick="openResetPwd('${r.name}','${r.phone}','${r.authId||''}')">重設密碼</button>
+          ${r.activated?`<button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deactivateGuardian('${r.phone}')">停用</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  });
+  renderPager('guardian-pager',guardianTotal,guardianPage,'goGuardianPage');
+}
+function openResetPwd(name,phone,authId){
+  resetTargetAuthId=authId||null;
+  document.getElementById('reset-target-info').textContent='家長：'+name+'（'+phone+'）';
+  const pwdEl=document.getElementById('reset-pwd');
+  pwdEl.value='';
+  pwdEl.type='password';
+  document.getElementById('reset-pwd-toggle').textContent='顯示';
+  const btn=document.getElementById('reset-confirm-btn');
+  btn.disabled=false;
+  btn.textContent='確認重設';
+  openModal('reset-pwd-modal');
+}
+function toggleResetPwdVisibility(){
+  const el=document.getElementById('reset-pwd');
+  const btn=document.getElementById('reset-pwd-toggle');
+  el.type=el.type==='password'?'text':'password';
+  btn.textContent=el.type==='password'?'顯示':'隱藏';
+}
+function autoGenResetPwd(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+  let pwd='';
+  for(let i=0;i<10;i++) pwd+=chars[Math.floor(Math.random()*chars.length)];
+  const el=document.getElementById('reset-pwd');
+  el.value=pwd;
+  el.type='text';
+  document.getElementById('reset-pwd-toggle').textContent='隱藏';
+}
+async function confirmResetPwd(){
+  const pwd=document.getElementById('reset-pwd').value.trim();
+  if(!pwd||pwd.length<8){showToast('密碼至少需要 8 字元','warn');return;}
+  if(!resetTargetAuthId){showToast('此家長尚未啟用帳號，無法重設密碼','warn');return;}
+  const btn=document.getElementById('reset-confirm-btn');
+  btn.disabled=true;
+  btn.textContent='處理中…';
+  const {error}=await SUPA.functions.invoke('admin-reset-password',{body:{auth_id:resetTargetAuthId,new_password:pwd}});
+  btn.disabled=false;
+  btn.textContent='確認重設';
+  if(error){showToast('重設失敗：'+error.message,'warn');return;}
+  closeModal('reset-pwd-modal');
+  showToast('✓ 密碼已重設，請口頭告知家長新密碼','success');
+}
+function deactivateGuardian(phone){
+  if(!confirm('確定停用此家長帳號？停用後家長將無法登入查詢。'))return;
+  STUDENTS_DATA.filter(s=>s.guardianPhone===phone).forEach(s=>s.guardianActivated=false);
+  renderGuardians();
+}
+
+// ════ STUDENT MODAL TABS ════
+function switchStuTab(tab){
+  ['info','history'].forEach(t=>{
+    document.getElementById('stu-panel-'+t).style.display=t===tab?'block':'none';
+    document.getElementById('stab-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='history') renderStuHistory();
+}
+
+function renderStuHistory(){
+  const el=document.getElementById('stu-history-content');
+  if(!el||!editingStuId) return;
+  const exams=EXAM_DATA.filter(e=>e.studentId===editingStuId)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  if(!exams.length){
+    el.innerHTML='<div class="empty" style="padding:24px">此學員尚無考試紀錄</div>';
+    return;
+  }
+  el.innerHTML=exams.map(e=>{
+    const vc=e.verdict==='pass'?'chip-green':e.verdict==='fail'?'chip-red':'chip-amber';
+    const vt=e.verdict==='pass'?'✓ 通過':e.verdict==='fail'?'✗ 未通過':'— 未出席';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);width:80px;flex-shrink:0">${e.date}</div>
+      <span class="chip ${HAT_CHIP[e.level]}">${LV_LABEL[e.level]}</span>
+      <span class="chip ${vc}" style="min-width:60px;text-align:center">${vt}</span>
+      <div style="flex:1;font-size:11px;color:var(--ink3)">${venueLabel(e.venueId)}</div>
+      ${e.coachNote?`<div style="font-size:11px;color:var(--ink2);flex:2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.coachNote}">${e.coachNote}</div>`:''}
+      <button class="btn btn-ghost btn-xs" onclick="closeModal('student-modal');openExamModal('${e.id}')">修改</button>
+    </div>`;
+  }).join('');
+}
+function initStuCoachFilter(){
+  const sel=document.getElementById('stu-coach');
+  if(!sel||sel.options.length>1)return;
+  COACHES_DATA.filter(c=>c.role==='teach').forEach(c=>{const o=document.createElement('option');o.value=o.textContent=c.name;sel.appendChild(o);});
+}
+
+function initStuVenueFilter(){
+  const sel=document.getElementById('stu-venue');
+  if(!sel||sel.options.length>1)return;
+  VENUES_DATA.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;sel.appendChild(o);});
+}
+
+function initExamVenueFilter(){
+  const sel=document.getElementById('exam-venue');
+  if(!sel||sel.options.length>1)return;
+  VENUES_DATA.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;sel.appendChild(o);});
+}
+function renderStudents(){
+  const q=(document.getElementById('stu-search')?.value||'').toLowerCase().replace(/-/g,'');
+  const hf=document.getElementById('stu-hat')?.value||'';
+  const cf=document.getElementById('stu-coach')?.value||'';
+  const vf=document.getElementById('stu-venue')?.value||'';
+  const tbody=document.getElementById('stu-table');
+  tbody.innerHTML='';
+  const HAT_GROUP={y:[1,2,3,4],b:[5],r:[6],k:[7,8],s:[9,10]};
+  const cfg=ROLE_CONFIG[currentRole];
+  const isCoach=currentRole==='coach';
+  const myCoach=isCoach?ROLE_CONFIG.coach.name:null;
+
+  // 教練視角隱藏家長手機（隱私保護）及不必要欄位
+  const thead=document.getElementById('stu-thead');
+  if(thead){
+    thead.innerHTML=isCoach
+      ?'<tr><th>學員姓名</th><th>級數</th><th>預設場館</th><th>家長姓名</th><th>操作</th></tr>'
+      :`<tr><th style="width:36px;text-align:center"><input type="checkbox" id="stu-select-all" onchange="toggleAllStudents(this.checked)" style="accent-color:var(--ocean);cursor:pointer"></th><th>學員姓名</th><th>級數</th><th>預設場館</th><th>家長姓名</th><th>家長手機</th><th>家長帳號</th><th>教學教練</th><th>操作</th></tr>`;
+  }
+  const effectiveVenue=currentVenueId!=='all'?String(currentVenueId):vf;
+
+const noticeEl=document.getElementById('stu-role-notice');
+  if(noticeEl){
+    noticeEl.innerHTML=currentRole==='coach'
+      ?roleNotice('教學教練僅能查看與編輯自己帶班的學員（'+ROLE_CONFIG.coach.name+'）'):'';
+  }
+
+  const filteredStudents=STUDENTS_DATA.filter(s=>{
+    const mq=!q||s.name.toLowerCase().includes(q)||(s.guardianName||'').toLowerCase().includes(q)||s.guardianPhone.replace(/-/g,'').includes(q);
+    const mh=!hf||(HAT_GROUP[hf]||[]).includes(s.level);
+    const mc=!cf||s.teachCoach===cf;
+    const mv=!effectiveVenue||String(s.defaultVenueId)===effectiveVenue;
+    const myOnly=!myCoach||s.teachCoach===myCoach;
+    return mq&&mh&&mc&&mv&&myOnly;
+  });
+  const stuTotal=filteredStudents.length;
+  filteredStudents.slice((stuPage-1)*PAGE_SIZE,stuPage*PAGE_SIZE).forEach(s=>{
+    const chipCls=s.guardianActivated?'chip-green':'chip-amber';
+    const chipTxt=s.guardianActivated?'已啟用':'待啟用';
+    const canEdit=cfg.canEditAllStudents||(isCoach&&s.teachCoach===ROLE_CONFIG.coach.name);
+    const vName=venueLabel(s.defaultVenueId)||'—';
+    if(isCoach){
+      tbody.innerHTML+=`<tr>
+        <td style="font-weight:500">${s.name}</td>
+        <td><span class="chip ${HAT_CHIP[s.level]}">${LV_LABEL[s.level]}・${HAT_MAP[s.level]}</span></td>
+        <td><span class="chip chip-gray">${vName}</span></td>
+        <td>${s.guardianName}</td>
+        <td><button class="btn btn-ghost btn-xs" onclick="openStudentModal('${s.id}')">編輯</button></td>
+      </tr>`;
+    } else {
+      tbody.innerHTML+=`<tr>
+        <td style="text-align:center"><input type="checkbox" class="stu-row-cb" data-id="${s.id}" ${stuSelectedIds.has(s.id)?'checked':''} onchange="toggleStuSelect('${s.id}',this.checked)" style="accent-color:var(--ocean);cursor:pointer"></td>
+        <td style="font-weight:500">${s.name}</td>
+        <td><span class="chip ${HAT_CHIP[s.level]}">${LV_LABEL[s.level]}・${HAT_MAP[s.level]}</span></td>
+        <td><span class="chip chip-gray">${vName}</span></td>
+        <td>${s.guardianName}</td>
+        <td class="mono">${s.guardianPhone}</td>
+        <td><span class="chip ${chipCls}">${chipTxt}</span></td>
+        <td>${s.teachCoach}</td>
+        <td>${canEdit
+          ?`<button class="btn btn-ghost btn-xs" onclick="openStudentModal('${s.id}')">編輯</button>`
+          :`<span style="font-size:10px;color:var(--ink3)">無權限</span>`
+        }</td>
+      </tr>`;
+    }
+  });
+  renderPager('stu-pager',stuTotal,stuPage,'goStuPage');
+  updateBatchBar();
+}
+function openStudentModal(id){
+  editingStuId=id;
+  const s=id?STUDENTS_DATA.find(x=>String(x.id)===String(id)):null;
+  document.getElementById('stu-modal-title').textContent=s?'編輯學員 · '+s.name:'新增學員';
+  document.getElementById('sm-name').value=s?.name||'';
+  document.getElementById('sm-level').value=s?.level||1;
+  document.getElementById('sm-gname').value=s?.guardianName||'';
+  document.getElementById('sm-gphone').value=s?.guardianPhone||'';
+  // 教練角色：隱藏家長電話欄（隱私保護）
+  const phoneField=document.getElementById('sm-gphone-field');
+  const phoneInfobox=document.getElementById('sm-phone-infobox');
+  const isCoachRole=currentRole==='coach';
+  if(phoneField) phoneField.style.display=isCoachRole?'none':'';
+  if(phoneInfobox) phoneInfobox.style.display=isCoachRole?'none':'';
+  // 填教練選項
+  const csel=document.getElementById('sm-coach');
+  csel.innerHTML='';
+  COACHES_DATA.filter(c=>c.role==='teach').forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.id; o.textContent=c.name;
+    if(s?.teachCoachId&&String(s.teachCoachId)===String(c.id))o.selected=true;
+    csel.appendChild(o);
+  });
+  // 填場館選項
+  const vsel=document.getElementById('sm-venue');
+  vsel.innerHTML='<option value="">未指定</option>';
+  VENUES_DATA.filter(v=>v.status==='active').forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v.id; o.textContent=v.name;
+    if(s?.defaultVenueId&&String(s.defaultVenueId)===String(v.id))o.selected=true;
+    vsel.appendChild(o);
+  });
+  // 重置 tab：永遠先顯示基本資料
+  switchStuTab('info');
+  // 新增學員時隱藏「考試歷史」tab；編輯時顯示
+  const histTab=document.getElementById('stab-history');
+  if(histTab) histTab.style.display=id?'block':'none';
+  // 新增時更新儲存按鈕文字
+  const saveBtn=document.getElementById('stu-save-btn');
+  if(saveBtn) saveBtn.textContent=id?'儲存修改':'建立學員';
+  ['sm-name-err','sm-gname-err','sm-gphone-err'].forEach(e=>document.getElementById(e).classList.remove('show'));
+  document.getElementById('sm-phone-status').textContent='';
+  openModal('student-modal');
+}
+function checkSmPhone(){
+  const raw=document.getElementById('sm-gphone').value.replace(/-/g,'');
+  const el=document.getElementById('sm-phone-status');
+  if(raw.length<10){el.textContent='';return;}
+  const ex=STUDENTS_DATA.find(s=>s.guardianPhone.replace(/-/g,'')===raw&&String(s.id)!==String(editingStuId));
+  if(ex){el.style.color='var(--amber)';el.textContent='⚠ 此號碼已登記為 '+ex.name+' 的家長（'+ex.guardianName+'），新學員將連結至同一帳號';}
+  else{el.style.color='var(--green)';el.textContent='✓ 此號碼可使用';}
+}
+async function saveStudent(){
+  const name=document.getElementById('sm-name').value.trim();
+  const gname=document.getElementById('sm-gname').value.trim();
+  const level=parseInt(document.getElementById('sm-level').value);
+  const coachId=document.getElementById('sm-coach').value||null;
+  const venueId=document.getElementById('sm-venue').value||null;
+  const isCoachRole=currentRole==='coach';
+  let ok=true;
+  if(!name){document.getElementById('sm-name-err').classList.add('show');ok=false;}else document.getElementById('sm-name-err').classList.remove('show');
+  if(!isCoachRole){
+    if(!gname){document.getElementById('sm-gname-err').classList.add('show');ok=false;}else document.getElementById('sm-gname-err').classList.remove('show');
+    const gphoneVal=document.getElementById('sm-gphone').value.trim();
+    if(gphoneVal.replace(/-/g,'').length!==10){document.getElementById('sm-gphone-err').classList.add('show');ok=false;}else document.getElementById('sm-gphone-err').classList.remove('show');
+  }
+  if(!ok)return;
+
+  if(editingStuId){
+    const stuUpdate={name,level,default_venue_id:venueId,teach_coach_id:coachId};
+    const {error}=await SUPA.from('students').update(stuUpdate).eq('id',editingStuId);
+    if(error){showToast('更新失敗：'+error.message,'warn');return;}
+    if(!isCoachRole){
+      const s=STUDENTS_DATA.find(x=>String(x.id)===String(editingStuId));
+      if(s?.guardianId){
+        await SUPA.from('guardians').update({name:gname,phone:document.getElementById('sm-gphone').value.trim()}).eq('id',s.guardianId);
+      }
+    }
+    showToast(name+' 已更新','ok');
+  }else{
+    const gphone=document.getElementById('sm-gphone').value.trim();
+    // 建立或取得家長
+    let guardianId=null;
+    const {data:existG}=await SUPA.from('guardians').select('id').eq('phone',gphone).maybeSingle();
+    if(existG){
+      guardianId=existG.id;
+    }else{
+      const {data:newG,error:ge}=await SUPA.from('guardians').insert({name:gname,phone:gphone}).select('id').single();
+      if(ge){showToast('家長建立失敗：'+ge.message,'warn');return;}
+      guardianId=newG.id;
+    }
+    // 建立學員
+    const {data:newS,error:se}=await SUPA.from('students').insert({name,level,initial_level:level,default_venue_id:venueId,teach_coach_id:coachId}).select('id').single();
+    if(se){showToast('學員建立失敗：'+se.message,'warn');return;}
+    // 建立關聯
+    await SUPA.from('student_guardian').insert({student_id:newS.id,guardian_id:guardianId});
+    showToast(name+' 已建立','ok');
+  }
+  closeModal('student-modal');
+  await loadStudents();
+  renderStudents();
+}
+
+// ════ EXAMS ════
+function renderExams(){
+  const q=(document.getElementById('exam-search')?.value||'').toLowerCase();
+  const vf=document.getElementById('exam-verdict')?.value||'';
+  const lf=document.getElementById('exam-level')?.value||'';
+  const evf=document.getElementById('exam-venue')?.value||'';
+  const dateFrom=document.getElementById('exam-date-from')?.value||'';
+  const dateTo=document.getElementById('exam-date-to')?.value||'';
+  const stagnantOnly=document.getElementById('exam-stagnant')?.checked||false;
+  const consecFailOnly=document.getElementById('exam-consec-fail')?.checked||false;
+  const tbody=document.getElementById('exam-table');
+  tbody.innerHTML='';
+  const cfg=ROLE_CONFIG[currentRole];
+  const sixMonthsAgo=new Date(Date.now()-180*86400000);
+  const stagnantIds=getStagnantStudentIds(sixMonthsAgo);
+  const {ids:consecIds}=getConsecFailStudentIds();
+  const effectiveVenue=currentVenueId!=='all'?String(currentVenueId):evf;
+
+  let filtered=EXAM_DATA.filter(e=>{
+    const matchQ=!q||e.studentName.toLowerCase().includes(q)||e.classCode.toLowerCase().includes(q);
+    const matchV=!vf||e.verdict===vf;
+    const matchL=!lf||e.level===parseInt(lf);
+    const matchVenue=!effectiveVenue||String(e.venueId)===effectiveVenue;
+    const eDate=new Date(e.date.replace(/\//g,'-'));
+    const matchFrom=!dateFrom||eDate>=new Date(dateFrom);
+    const matchTo=!dateTo||eDate<=new Date(dateTo);
+    const matchStagnant=!stagnantOnly||stagnantIds.has(e.studentId);
+    const matchConsec=!consecFailOnly||consecIds.has(e.studentId);
+    return matchQ&&matchV&&matchL&&matchVenue&&matchFrom&&matchTo&&matchStagnant&&matchConsec;
+  });
+
+  const countEl=document.getElementById('exam-count-label');
+  const flags=[];
+  if(stagnantOnly) flags.push('停留同一級');
+  if(consecFailOnly) flags.push('連續三次未通過');
+  if(effectiveVenue) flags.push(venueLabel(effectiveVenue));
+  if(countEl) countEl.textContent='共 '+filtered.length+' 筆紀錄'+(flags.length?' · '+flags.join(' · '):'');
+
+  filtered.slice((examPage-1)*PAGE_SIZE,examPage*PAGE_SIZE).forEach(e=>{
+    const vc=e.verdict==='pass'?'chip-green':e.verdict==='fail'?'chip-red':'chip-amber';
+    const vt=e.verdict==='pass'?'通過':e.verdict==='fail'?'未通過':'未出席';
+    const isStagnant=stagnantIds.has(e.studentId);
+    const isConsec=consecIds.has(e.studentId);
+    const vName=venueLabel(e.venueId)||'—';
+    const rowBg=isConsec?'background:#fff0f0':isStagnant?'background:#fff5f5':'';
+    tbody.innerHTML+=`<tr${rowBg?` style="${rowBg}"`:''}">
+      <td>
+        <span style="font-weight:500">${e.studentName}</span>
+        ${isConsec?'<span class="chip chip-red" style="margin-left:5px;font-size:9px">連3次未過</span>':''}
+        ${isStagnant&&!isConsec?'<span class="chip chip-red" style="margin-left:5px;font-size:9px">停滯</span>':''}
+      </td>
+      <td><span class="chip chip-gray" style="font-size:10px">${vName}</span></td>
+      <td class="mono" style="font-size:11px">${e.classCode}</td>
+      <td><span class="chip ${HAT_CHIP[e.level]}">${LV_LABEL[e.level]}</span></td>
+      <td><span class="chip ${vc}">${vt}</span></td>
+      <td style="font-size:11px">${e.teachCoach}</td>
+      <td style="font-size:11px">${e.examCoach}</td>
+      <td class="mono" style="font-size:11px">${e.date}</td>
+      <td>${cfg.canEditExams
+        ?`<button class="btn btn-amber btn-xs" onclick="openExamModal('${e.id}')">修改</button>`
+        :`<span style="font-size:10px;color:var(--ink3)">無權限</span>`
+      }</td>
+    </tr>`;
+  });
+  renderPager('exam-pager',filtered.length,examPage,'goExamPage');
+}
+function openExamModal(id){
+  editingExamId=id;
+  const e=EXAM_DATA.find(x=>String(x.id)===String(id));
+  if(!e)return;
+  document.getElementById('exam-modal-info').textContent=e.studentName+' · '+LV_LABEL[e.level]+' · '+e.date+' · '+venueLabel(e.venueId);
+  document.getElementById('em-verdict').value=e.verdict;
+  document.getElementById('em-level').value=e.level;
+  document.getElementById('em-coach-note').value=e.coachNote||'';
+  document.getElementById('em-note').value='';
+  // 填充場館（含已關閉）
+  const venSel=document.getElementById('em-venue');
+  venSel.innerHTML=VENUES_DATA.map(v=>{
+    const suffix=v.status==='closed'?'（已關閉）':v.status==='inactive'?'（暫停）':'';
+    return `<option value="${v.id}" ${String(v.id)===String(e.venueId)?'selected':''}>${v.name}${suffix}</option>`;
+  }).join('');
+  // 填充教學教練
+  const teachSel=document.getElementById('em-teach-coach');
+  teachSel.innerHTML=COACHES_DATA.filter(c=>c.role==='teach').map(c=>{
+    const suffix=c.status==='inactive'?'（已停用）':'';
+    return `<option value="${c.name}" ${c.name===e.teachCoach?'selected':''}>${c.name}${suffix}</option>`;
+  }).join('');
+  // 填充考試教練
+  const examSel=document.getElementById('em-exam-coach');
+  examSel.innerHTML=COACHES_DATA.filter(c=>c.role==='exam').map(c=>{
+    const suffix=c.status==='inactive'?'（已停用）':'';
+    return `<option value="${c.name}" ${c.name===e.examCoach?'selected':''}>${c.name}${suffix}</option>`;
+  }).join('');
+  openModal('exam-modal');
+}
+async function confirmEditExam(){
+  const result=document.getElementById('em-verdict').value;
+  const level=parseInt(document.getElementById('em-level').value);
+  const venueId=document.getElementById('em-venue').value||null;
+  const teachCoachName=document.getElementById('em-teach-coach').value;
+  const examCoachName=document.getElementById('em-exam-coach').value;
+  const note=document.getElementById('em-coach-note').value;
+  const teachCoach=COACHES_DATA.find(c=>c.name===teachCoachName);
+  const examCoach=COACHES_DATA.find(c=>c.name===examCoachName);
+  const {error}=await SUPA.from('exams').update({
+    result, level,
+    venue_id:venueId,
+    teach_coach_id:teachCoach?.id||null,
+    exam_coach_id:examCoach?.id||null,
+    note,
+  }).eq('id',editingExamId);
+  if(error){showToast('更新失敗：'+error.message,'warn');return;}
+  showToast('考試紀錄已更新','ok');
+  closeModal('exam-modal');
+  await loadExams();
+  renderExams();
+}
+
+// ════ REPORTS TABS ════
+// ════ REPORT HELPERS ════
+function isThisMonth(d){const dt=new Date(d.replace(/\//g,'-')),n=new Date();return dt.getFullYear()===n.getFullYear()&&dt.getMonth()===n.getMonth();}
+function isLastMonth(d){const dt=new Date(d.replace(/\//g,'-')),n=new Date(),lm=new Date(n.getFullYear(),n.getMonth()-1,1);return dt.getFullYear()===lm.getFullYear()&&dt.getMonth()===lm.getMonth();}
+function daysSince(d){return Math.floor((Date.now()-new Date(d.replace(/\//g,'-')))/86400000);}
+
+function getRiskStudents(){
+  const {stuck,warn}=getWarnStuckStudents();
+  const stuckIds=new Set(stuck.map(r=>r.studentId));
+  const warnIds=new Set(warn.map(r=>r.studentId));
+  const stagnantIds=getStagnantStudentIds();
+  const lastExam={};
+  EXAM_DATA.forEach(e=>{if(!lastExam[e.studentId]||e.date>lastExam[e.studentId]) lastExam[e.studentId]=e.date;});
+  return STUDENTS_DATA.map(s=>{
+    const risks=[];
+    if(stuckIds.has(s.id)) risks.push('stuck');
+    if(warnIds.has(s.id)) risks.push('warn');
+    if(stagnantIds.has(s.id)) risks.push('stagnant');
+    const last=lastExam[s.id];
+    if(!last||daysSince(last)>90) risks.push('noexam');
+    return {...s,risks,lastExamDate:last||null};
+  }).filter(s=>s.risks.length>0);
+}
+
+function computeProgressionSpeed(){
+  const byStudent={};
+  EXAM_DATA.filter(e=>e.verdict==='pass').forEach(e=>{
+    if(!byStudent[e.studentId]) byStudent[e.studentId]={};
+    if(!byStudent[e.studentId][e.level]||e.date<byStudent[e.studentId][e.level])
+      byStudent[e.studentId][e.level]=e.date;
+  });
+  const levelDays={};
+  Object.entries(byStudent).forEach(([sid,levels])=>{
+    const student=STUDENTS_DATA.find(s=>s.id===parseInt(sid));
+    const sorted=Object.entries(levels).map(([lv,dt])=>({lv:parseInt(lv),dt})).sort((a,b)=>a.lv-b.lv);
+    for(let i=0;i<sorted.length-1;i++){
+      const a=sorted[i],b=sorted[i+1];
+      if(b.lv===a.lv+1){
+        const days=Math.round((new Date(b.dt.replace(/\//g,'-'))-new Date(a.dt.replace(/\//g,'-')))/86400000);
+        if(days>0&&days<730){
+          if(!levelDays[a.lv]) levelDays[a.lv]=[];
+          levelDays[a.lv].push({days,coach:student?.teachCoach||''});
+        }
+      }
+    }
+  });
+  return levelDays;
+}
+
+function xlsxDownload(rows, headers, filename){
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  XLSX.writeFile(wb, filename);
+}
+
+function exportRisk(){
+  const typeF=document.getElementById('risk-type-filter')?.value||'';
+  const coachF=document.getElementById('risk-coach-filter')?.value||'';
+  const venueF=document.getElementById('risk-venue-filter')?.value||'';
+  const data=getRiskStudents().filter(s=>(!typeF||s.risks.includes(typeF))&&(!coachF||s.teachCoach===coachF)&&(!venueF||String(s.defaultVenueId)===String(venueF)));
+  if(!data.length){alert('目前無資料可匯出');return;}
+  const RL={stuck:'🔴 卡關',warn:'⚠ 警示',stagnant:'同級停留過久',noexam:'長時間未考試'};
+  const rows=data.map(s=>{
+    const descs=[];
+    if(s.risks.includes('stuck')) descs.push('現在級別連續 3 次以上 fail（不含缺考）');
+    if(s.risks.includes('warn')) descs.push('現在級別連續 2 次 fail（不含缺考）');
+    if(s.risks.includes('stagnant')) descs.push('近 6 個月未升級');
+    if(s.risks.includes('noexam')) descs.push('長時間未考試');
+    descs.push(s.lastExamDate?`最後考試：${s.lastExamDate}（距今 ${daysSince(s.lastExamDate)} 天）`:'最後考試：無紀錄');
+    const stu=STUDENTS_DATA.find(x=>x.id===s.id);
+    return [s.name, LV_LABEL[s.level], HAT_MAP[s.level], s.risks.map(r=>RL[r]).join('、'), s.teachCoach, stu?.guardianName||'', stu?.guardianPhone||'', descs.join('；')];
+  });
+  const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  xlsxDownload(rows,['學員姓名','級數','泳帽','風險類型','教練','家長姓名','家長手機','說明'],`風險學員_${today}.xlsx`);
+}
+
+function exportParent(){
+  const statusF=document.getElementById('parent-status-filter')?.value||'';
+  const venueF=document.getElementById('parent-venue-filter')?.value||'';
+  const venuePhones=venueF?new Set(STUDENTS_DATA.filter(s=>String(s.defaultVenueId)===String(venueF)).map(s=>s.guardianPhone)):null;
+  const seen=new Set();
+  const rows=[];
+  STUDENTS_DATA.forEach(s=>{
+    if(venuePhones&&!venuePhones.has(s.guardianPhone)) return;
+    if(seen.has(s.guardianPhone)) return;
+    seen.add(s.guardianPhone);
+    const children=STUDENTS_DATA.filter(x=>x.guardianPhone===s.guardianPhone).map(x=>x.name).join('、');
+    const activated=s.guardianActivated;
+    const lastLogin=s.lastLogin||'';
+    const matchFilter=(statusF==='inactive'&&!activated)||(statusF==='no-login'&&(!lastLogin||daysSince(lastLogin)>30))||!statusF;
+    if(!matchFilter) return;
+    rows.push([s.guardianName, s.guardianPhone, children, activated?'已啟用':'未啟用', lastLogin?`${lastLogin}（${daysSince(lastLogin)}天前）`:'從未登入']);
+  });
+  if(!rows.length){alert('目前無資料可匯出');return;}
+  const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  xlsxDownload(rows,['家長姓名','手機','綁定學員','帳號狀態','最後登入'],`家長帳號_${today}.xlsx`);
+}
+
+function openRiskStuModal(studentId){
+  const s=STUDENTS_DATA.find(x=>x.id===studentId);
+  if(!s) return;
+  document.getElementById('risk-stu-modal-title').textContent=s.name+' · 學員資訊';
+  const exams=EXAM_DATA.filter(e=>e.studentId===studentId).sort((a,b)=>b.date.localeCompare(a.date));
+  const lastExam=exams[0];
+  const passCount=exams.filter(e=>e.verdict==='pass').length;
+  const failCount=exams.filter(e=>e.verdict==='fail').length;
+  const row=(label,value)=>`
+    <div style="display:flex;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)">
+      <div style="width:90px;font-size:11px;font-weight:700;color:var(--ink3);flex-shrink:0">${label}</div>
+      <div style="font-size:13px;color:var(--ink)">${value}</div>
+    </div>`;
+  document.getElementById('risk-stu-modal-body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:4px">
+      <div class="av" style="width:40px;height:40px;border-radius:8px;background:#fff0f0;color:var(--red);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.name[0]}</div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--ink)">${s.name}</div>
+        <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="chip ${HAT_CHIP[s.level]}">${LV_LABEL[s.level]}</span>
+          <span class="chip chip-gray">${HAT_MAP[s.level]}</span>
+        </div>
+      </div>
+    </div>
+    ${row('場館',venueLabel(s.defaultVenueId)||'—')}
+    ${row('教學教練',s.teachCoach||'—')}
+    ${row('家長姓名',s.guardianName||'—')}
+    ${row('家長手機',`<span style="font-family:'DM Mono',monospace">${s.guardianPhone||'—'}</span>`)}
+    ${row('家長帳號',s.guardianActivated?'<span class="chip chip-green">已啟用</span>':'<span class="chip chip-amber">未啟用</span>')}
+    ${row('考試次數',`<span style="font-family:'DM Mono',monospace">${exams.length} 次（通過 ${passCount}、未通過 ${failCount}）</span>`)}
+    ${row('最後考試',lastExam?`<span style="font-family:'DM Mono',monospace">${lastExam.date}</span>`:'無紀錄')}
+  `;
+  openModal('risk-stu-modal');
+}
+
+function openRiskExamModal(studentId){
+  const s=STUDENTS_DATA.find(x=>x.id===studentId);
+  if(!s) return;
+  document.getElementById('risk-exam-modal-name').textContent=s.name+' 的考試紀錄';
+  document.getElementById('risk-exam-modal-sub').textContent=LV_LABEL[s.level]+'・'+HAT_MAP[s.level]+'・'+s.teachCoach;
+  const tbody=document.getElementById('risk-exam-modal-table');
+  const exams=EXAM_DATA.filter(e=>e.studentId===studentId).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!exams.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--ink3);font-size:12px">尚無考試紀錄</td></tr>';
+  } else {
+    tbody.innerHTML=exams.map(e=>{
+      const vc=e.verdict==='pass'?'chip-green':e.verdict==='fail'?'chip-red':'chip-amber';
+      const vt=e.verdict==='pass'?'通過':e.verdict==='fail'?'未通過':'未出席';
+      return `<tr>
+        <td class="mono" style="font-size:11px">${e.date}</td>
+        <td><span class="chip ${HAT_CHIP[e.level]}">${LV_LABEL[e.level]}</span></td>
+        <td><span class="chip ${vc}">${vt}</span></td>
+        <td style="font-size:11px">${venueLabel(e.venueId)}</td>
+        <td style="font-size:11px">${e.teachCoach}</td>
+        <td style="font-size:11px">${e.examCoach}</td>
+        <td style="font-size:11px;color:var(--ink3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.coachNote||''}">${e.coachNote||'—'}</td>
+      </tr>`;
+    }).join('');
+  }
+  openModal('risk-exam-modal');
+}
+
+function goToStagnant(){
+  go('reports');
+  document.querySelectorAll('#report-tabs .tab').forEach(t=>{
+    t.classList.toggle('active',t.getAttribute('onclick')?.includes("'risk'"));
+  });
+  document.querySelectorAll('#screen-reports .tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('rpt-risk').classList.add('active');
+  document.getElementById('risk-type-filter').value='stagnant';
+  riskPage=1;
+  renderRptRisk();
+}
+
+function goToRisk(typeFilter=''){
+  go('reports');
+  document.querySelectorAll('#report-tabs .tab').forEach(t=>{
+    t.classList.toggle('active',t.getAttribute('onclick')?.includes("'risk'"));
+  });
+  document.querySelectorAll('#screen-reports .tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('rpt-risk').classList.add('active');
+  if(typeFilter) document.getElementById('risk-type-filter').value=typeFilter;
+  riskPage=1;
+  renderRptRisk();
+}
+
+function switchRptTab(name,el){
+  document.querySelectorAll('#report-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#screen-reports .tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('rpt-'+name).classList.add('active');
+  const fns={overview:renderRptOverview,risk:renderRptRisk,venue:renderRptVenue,'coach-ana':renderRptCoach,level:renderRptLevel,speed:renderRptSpeed,parent:renderRptParent};
+  if(fns[name]) fns[name]();
+}
+
+function renderRptOverview(){
+  const riskStudents=getRiskStudents();
+  const guardianPhones=[...new Set(STUDENTS_DATA.map(s=>s.guardianPhone))];
+  const activatedCount=guardianPhones.filter(ph=>(STUDENTS_DATA.find(x=>x.guardianPhone===ph)||{}).guardianActivated).length;
+  const activationRate=guardianPhones.length?Math.round(activatedCount/guardianPhones.length*100):0;
+  const tmExams=EXAM_DATA.filter(e=>isThisMonth(e.date));
+  const tmPass=tmExams.filter(e=>e.verdict==='pass').length;
+  const passRate=tmExams.length?Math.round(tmPass/tmExams.length*100):0;
+
+  const cards=document.getElementById('rpt-overview-cards');
+  if(cards) cards.innerHTML=`
+    <div class="stat-card"><div class="stat-num" style="color:var(--ocean)">${STUDENTS_DATA.length}</div><div class="stat-lbl">學員總數</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--ocean)">${tmExams.length}</div><div class="stat-lbl">本月考試人次</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:${passRate>=75?'var(--green)':passRate>=60?'var(--amber)':'var(--red)'}">${passRate}<span style="font-size:16px">%</span></div><div class="stat-lbl">本月通過率</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:${riskStudents.length>0?'var(--red)':'var(--green)'}">${riskStudents.length}</div><div class="stat-lbl">風險學員數</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:${activationRate>=80?'var(--green)':activationRate>=60?'var(--amber)':'var(--red)'}">${activationRate}<span style="font-size:16px">%</span></div><div class="stat-lbl">家長啟用率</div></div>
+  `;
+  const tbody=document.getElementById('rpt-overview-venue');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  VENUES_DATA.filter(v=>v.status==='active').forEach(v=>{
+    const vStu=STUDENTS_DATA.filter(s=>s.defaultVenueId===v.id).length;
+    const vCoach=COACHES_DATA.filter(c=>c.role==='teach'&&c.status==='active'&&(c.venues||[]).includes(v.id)).length;
+    const vEx=EXAM_DATA.filter(e=>e.venueId===v.id&&isThisMonth(e.date));
+    const vPr=vEx.length?Math.round(vEx.filter(e=>e.verdict==='pass').length/vEx.length*100):null;
+    const vRisk=riskStudents.filter(s=>s.defaultVenueId===v.id).length;
+    tbody.innerHTML+=`<tr>
+      <td style="font-weight:500">${v.name}</td>
+      <td class="mono">${vStu}</td>
+      <td class="mono">${vCoach}</td>
+      <td class="mono">${vEx.length}</td>
+      <td>${vPr!==null?`<span class="mono" style="color:${vPr>=75?'var(--green)':vPr>=60?'var(--amber)':'var(--red)'}">${vPr}%</span>`:'<span style="color:var(--ink4)">—</span>'}</td>
+      <td>${vRisk>0?`<span class="chip chip-red">${vRisk} 人</span>`:`<span class="chip chip-green">無</span>`}</td>
+    </tr>`;
+  });
+}
+
+function renderRptRisk(){
+  const typeF=document.getElementById('risk-type-filter')?.value||'';
+  const coachF=document.getElementById('risk-coach-filter')?.value||'';
+  const venueF=document.getElementById('risk-venue-filter')?.value||'';
+  const csel=document.getElementById('risk-coach-filter');
+  if(csel&&csel.options.length<=1) COACHES_DATA.filter(c=>c.role==='teach').forEach(c=>{const o=document.createElement('option');o.value=c.name;o.textContent=c.name;csel.appendChild(o);});
+  const vsel=document.getElementById('risk-venue-filter');
+  if(vsel&&vsel.options.length<=1) VENUES_DATA.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;vsel.appendChild(o);});
+  const tbody=document.getElementById('rpt-risk-table');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  const riskStudents=getRiskStudents().filter(s=>(!typeF||s.risks.includes(typeF))&&(!coachF||s.teachCoach===coachF)&&(!venueF||String(s.defaultVenueId)===String(venueF)));
+  const labelEl=document.getElementById('risk-count-label');
+  if(labelEl) labelEl.textContent='共 '+riskStudents.length+' 位風險學員';
+  const RL={stuck:{cls:'chip-red',txt:'🔴 卡關'},warn:{cls:'chip-amber',txt:'⚠ 警示'},stagnant:{cls:'chip-amber',txt:'停留過久'},noexam:{cls:'chip-purple',txt:'未考試'}};
+  if(!riskStudents.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--ink3);font-size:12px">目前無風險學員</td></tr>';renderPager('rpt-risk-pager',0,riskPage,'goRiskPage');return;}
+  riskStudents.slice((riskPage-1)*PAGE_SIZE,riskPage*PAGE_SIZE).forEach(s=>{
+    const chips=s.risks.map(r=>`<span class="chip ${RL[r].cls}" style="margin-right:3px;font-size:10px">${RL[r].txt}</span>`).join('');
+    const descs=[];
+    if(s.risks.includes('stuck')) descs.push('現在級別連續 3 次以上 fail（不含缺考）');
+    if(s.risks.includes('warn')) descs.push('現在級別連續 2 次 fail（不含缺考）');
+    if(s.risks.includes('stagnant')) descs.push('近 6 個月未升級');
+    if(s.risks.includes('noexam')) descs.push(s.lastExamDate?`最後考試 ${s.lastExamDate}（${daysSince(s.lastExamDate)} 天前）`:'無考試紀錄');
+    tbody.innerHTML+=`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="av" style="background:#fff0f0;color:var(--red)">${s.name[0]}</div>
+        <div><div style="font-weight:500">${s.name}</div><div style="font-size:10px;color:var(--ink3)">${LV_LABEL[s.level]}・${HAT_MAP[s.level]}</div></div>
+      </div></td>
+      <td>${chips}</td>
+      <td style="font-size:11px">${s.teachCoach}</td>
+      <td style="font-size:11px;color:var(--ink2)">${descs.join('；')}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-xs" onclick="openRiskStuModal(${s.id})">學員</button>
+        <button class="btn btn-ghost btn-xs" onclick="openRiskExamModal(${s.id})">考試紀錄</button>
+      </div></td>
+    </tr>`;
+  });
+  renderPager('rpt-risk-pager',riskStudents.length,riskPage,'goRiskPage');
+}
+
+function renderRptVenue(){
+  const tbody=document.getElementById('rpt-venue-table');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  const riskStudents=getRiskStudents();
+  VENUES_DATA.filter(v=>v.status==='active').forEach(v=>{
+    const vStu=STUDENTS_DATA.filter(s=>s.defaultVenueId===v.id).length;
+    const vCoach=COACHES_DATA.filter(c=>c.role==='teach'&&c.status==='active'&&(c.venues||[]).includes(v.id)).length;
+    const vEx=EXAM_DATA.filter(e=>e.venueId===v.id&&isThisMonth(e.date));
+    const vPass=vEx.filter(e=>e.verdict==='pass').length;
+    const vPr=vEx.length?Math.round(vPass/vEx.length*100):null;
+    const vRisk=riskStudents.filter(s=>s.defaultVenueId===v.id).length;
+    tbody.innerHTML+=`<tr>
+      <td style="font-weight:500">${v.name}</td>
+      <td class="mono">${vStu}</td>
+      <td class="mono">${vCoach}</td>
+      <td class="mono">${vEx.length}</td>
+      <td class="mono">${vEx.length?vPass:'—'}</td>
+      <td>${vPr!==null?`<div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="width:80px;margin:0"><div class="prog-fill" style="width:${vPr}%;background:${vPr>=75?'var(--green)':vPr>=60?'var(--amber)':'var(--red)'}"></div></div><span class="mono" style="font-size:11px;color:${vPr>=75?'var(--green)':vPr>=60?'var(--amber)':'var(--red)'}">${vPr}%</span></div>`:'<span style="color:var(--ink4)">—</span>'}</td>
+      <td>${vRisk>0?`<span class="chip chip-red">${vRisk} 人</span>`:`<span class="chip chip-green">無</span>`}</td>
+    </tr>`;
+  });
+}
+
+function renderRptCoach(){
+  const tbody=document.getElementById('rpt-coach-table');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  const riskStudents=getRiskStudents();
+  COACHES_DATA.filter(c=>c.role==='teach'&&c.status==='active').forEach(c=>{
+    const cStu=STUDENTS_DATA.filter(s=>s.teachCoach===c.name).length;
+    const cEx=EXAM_DATA.filter(e=>e.teachCoach===c.name&&isThisMonth(e.date));
+    const cPass=cEx.filter(e=>e.verdict==='pass').length;
+    const cPr=cEx.length?Math.round(cPass/cEx.length*100):null;
+    const cRisk=riskStudents.filter(s=>s.teachCoach===c.name).length;
+    tbody.innerHTML+=`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${c.name[0]}</div><span style="font-weight:500">${c.name}</span></div></td>
+      <td class="mono">${cStu}</td>
+      <td class="mono">${cEx.length}</td>
+      <td class="mono">${cEx.length?cPass:'—'}</td>
+      <td>${cPr!==null?`<span class="mono" style="color:${cPr>=75?'var(--green)':cPr>=60?'var(--amber)':'var(--red)'}">${cPr}%</span>`:'<span style="color:var(--ink4)">—</span>'}</td>
+      <td>${cRisk>0?`<span class="chip chip-red">${cRisk} 人</span>`:`<span class="chip chip-green">無</span>`}</td>
+    </tr>`;
+  });
+}
+
+function renderRptLevel(){
+  const tbody=document.getElementById('rpt-level-table');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  for(let lv=1;lv<=10;lv++){
+    const tm=EXAM_DATA.filter(e=>e.level===lv&&isThisMonth(e.date));
+    const lm=EXAM_DATA.filter(e=>e.level===lv&&isLastMonth(e.date));
+    const tmP=tm.filter(e=>e.verdict==='pass').length;
+    const lmP=lm.filter(e=>e.verdict==='pass').length;
+    const tmR=tm.length?Math.round(tmP/tm.length*100):null;
+    const lmR=lm.length?Math.round(lmP/lm.length*100):null;
+    const diff=tmR!==null&&lmR!==null?tmR-lmR:null;
+    const trend=diff===null?'<span style="color:var(--ink4)">—</span>':diff>0?`<span style="color:var(--green);font-weight:600">▲ +${diff}%</span>`:diff<0?`<span style="color:var(--red);font-weight:600">▼ ${diff}%</span>`:`<span style="color:var(--ink3)">持平</span>`;
+    tbody.innerHTML+=`<tr>
+      <td style="font-weight:700">${LV_LABEL[lv]}</td>
+      <td><span class="chip ${HAT_CHIP[lv]}">${HAT_MAP[lv]}</span></td>
+      <td class="mono">${tm.length||'—'}</td>
+      <td class="mono">${tm.length?tmP:'—'}</td>
+      <td>${tmR!==null?`<div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="width:80px;margin:0"><div class="prog-fill" style="width:${tmR}%;background:${tmR>=75?'var(--green)':tmR>=60?'var(--amber)':'var(--red)'}"></div></div><span class="mono" style="font-size:11px;color:${tmR>=75?'var(--green)':tmR>=60?'var(--amber)':'var(--red)'}">${tmR}%</span></div>`:'<span style="color:var(--ink4)">—</span>'}</td>
+      <td>${trend}</td>
+    </tr>`;
+  }
+}
+
+function renderRptSpeed(){
+  const speedData=computeProgressionSpeed();
+  const allDays=Object.values(speedData).flat().map(x=>x.days);
+  const globalAvg=allDays.length?Math.round(allDays.reduce((a,b)=>a+b,0)/allDays.length):null;
+  let fastestLv=null,slowestLv=null,fastestDays=Infinity,slowestDays=0;
+  Object.entries(speedData).forEach(([lv,arr])=>{
+    if(!arr.length) return;
+    const avg=Math.round(arr.reduce((a,b)=>a+b.days,0)/arr.length);
+    if(avg<fastestDays){fastestDays=avg;fastestLv=parseInt(lv);}
+    if(avg>slowestDays){slowestDays=avg;slowestLv=parseInt(lv);}
+  });
+  const cards=document.getElementById('rpt-speed-cards');
+  if(cards) cards.innerHTML=`
+    <div class="stat-card"><div class="stat-num" style="color:var(--ocean)">${globalAvg??'—'}</div><div class="stat-lbl">全體平均升級天數</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green);font-size:20px">${fastestLv?LV_LABEL[fastestLv]+'（'+fastestDays+'天）':'—'}</div><div class="stat-lbl">升級最快級別</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red);font-size:20px">${slowestLv?LV_LABEL[slowestLv]+'（'+slowestDays+'天）':'—'}</div><div class="stat-lbl">升級最慢級別</div></div>
+  `;
+  const lvTbody=document.getElementById('rpt-speed-level');
+  if(lvTbody){
+    lvTbody.innerHTML='';
+    for(let lv=1;lv<=10;lv++){
+      const arr=speedData[lv]||[];
+      const avg=arr.length?Math.round(arr.reduce((a,b)=>a+b.days,0)/arr.length):null;
+      lvTbody.innerHTML+=`<tr>
+        <td style="font-weight:700">${LV_LABEL[lv]}</td>
+        <td><span class="chip ${HAT_CHIP[lv]}">${HAT_MAP[lv]}</span></td>
+        <td class="mono">${avg!==null?avg+'天':'<span style="color:var(--ink4)">資料不足</span>'}</td>
+        <td class="mono" style="color:var(--ink3)">${arr.length}</td>
+      </tr>`;
+    }
+  }
+  const coachTbody=document.getElementById('rpt-speed-coach');
+  if(coachTbody){
+    coachTbody.innerHTML='';
+    COACHES_DATA.filter(c=>c.role==='teach'&&c.status==='active').forEach(c=>{
+      const cDays=Object.values(speedData).flat().filter(x=>x.coach===c.name).map(x=>x.days);
+      const avg=cDays.length?Math.round(cDays.reduce((a,b)=>a+b,0)/cDays.length):null;
+      const cStu=STUDENTS_DATA.filter(s=>s.teachCoach===c.name).length;
+      coachTbody.innerHTML+=`<tr>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${c.name[0]}</div><span style="font-weight:500">${c.name}</span></div></td>
+        <td class="mono">${cStu}</td>
+        <td class="mono">${avg!==null?avg+'天':'<span style="color:var(--ink4)">資料不足</span>'}</td>
+        <td class="mono" style="color:var(--ink3)">${cDays.length}</td>
+      </tr>`;
+    });
+  }
+}
+
+function renderRptParent(){
+  const statusF=document.getElementById('parent-status-filter')?.value||'';
+  const venueF=document.getElementById('parent-venue-filter')?.value||'';
+  const pvsel=document.getElementById('parent-venue-filter');
+  if(pvsel&&pvsel.options.length<=1) VENUES_DATA.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;pvsel.appendChild(o);});
+  // 以場館篩選：先找出該場館內有學員的家長手機
+  const venuePhones=venueF
+    ?new Set(STUDENTS_DATA.filter(s=>String(s.defaultVenueId)===String(venueF)).map(s=>s.guardianPhone))
+    :null;
+  const seen=new Set();
+  const rows=[];
+  STUDENTS_DATA.forEach(s=>{
+    if(venuePhones&&!venuePhones.has(s.guardianPhone)) return;
+    if(seen.has(s.guardianPhone)) return;
+    seen.add(s.guardianPhone);
+    const children=STUDENTS_DATA.filter(x=>x.guardianPhone===s.guardianPhone).map(x=>x.name).join('、');
+    rows.push({name:s.guardianName,phone:s.guardianPhone,activated:s.guardianActivated,lastLogin:s.lastLogin,children,authId:s.guardianAuthId});
+  });
+  const activated=rows.filter(r=>r.activated).length;
+  const active30=rows.filter(r=>r.lastLogin&&daysSince(r.lastLogin)<=30).length;
+  const rate=rows.length?Math.round(activated/rows.length*100):0;
+  const cards=document.getElementById('rpt-parent-cards');
+  if(cards) cards.innerHTML=`
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${activated}</div><div class="stat-lbl">已啟用帳號</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:${rows.length-activated>0?'var(--red)':'var(--green)'}">${rows.length-activated}</div><div class="stat-lbl">未啟用帳號</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:${rate>=80?'var(--green)':rate>=60?'var(--amber)':'var(--red)'}">${rate}<span style="font-size:16px">%</span></div><div class="stat-lbl">啟用率</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--ocean)">${active30}</div><div class="stat-lbl">近 30 天活躍</div></div>
+  `;
+  const filtered=rows.filter(r=>{
+    if(statusF==='inactive') return !r.activated;
+    if(statusF==='no-login') return !r.lastLogin||daysSince(r.lastLogin)>30;
+    return true;
+  });
+  const labelEl=document.getElementById('parent-count-label');
+  if(labelEl) labelEl.textContent='共 '+filtered.length+' 位家長';
+  const tbody=document.getElementById('rpt-parent-table');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  filtered.slice((parentPage-1)*PAGE_SIZE,parentPage*PAGE_SIZE).forEach(r=>{
+    const chipCls=r.activated?'chip-green':'chip-amber';
+    const chipTxt=r.activated?'已啟用':'未啟用';
+    const loginTxt=r.lastLogin?r.lastLogin+'（'+daysSince(r.lastLogin)+'天前）':'從未登入';
+    const loginColor=!r.lastLogin||daysSince(r.lastLogin)>30?'var(--red)':'var(--ink3)';
+    tbody.innerHTML+=`<tr>
+      <td style="font-weight:500">${r.name}</td>
+      <td class="mono">${r.phone}</td>
+      <td style="font-size:11px;color:var(--ink2)">${r.children}</td>
+      <td><span class="chip ${chipCls}">${chipTxt}</span></td>
+      <td class="mono" style="font-size:11px;color:${loginColor}">${loginTxt}</td>
+      <td><button class="btn btn-ghost btn-xs" onclick="openResetPwd('${r.name}','${r.phone}','${r.authId||''}')">重設密碼</button></td>
+    </tr>`;
+  });
+  renderPager('rpt-parent-pager',filtered.length,parentPage,'goParentPage');
+}
+
+// ════ MODAL ════
+function openModal(id){document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{if(e.target===o)o.classList.add('hidden');});
+});
+
+// ════ UTILS ════
+function fmtPhone(input){
+  let v=input.value.replace(/\D/g,'').slice(0,10);
+  if(v.length>=8)v=v.slice(0,4)+'-'+v.slice(4,7)+'-'+v.slice(7);
+  else if(v.length>=4)v=v.slice(0,4)+'-'+v.slice(4);
+  input.value=v;
+}
+
+// ════ VENUE SWITCH ════
+function switchVenue(vid){
+  currentVenueId=vid;
+  // 同步更新 topbar 場館切換器
+  const sw=document.getElementById('venue-switcher');
+  if(sw) sw.value=vid;
+  // 重新渲染目前 screen
+  const activeId=document.querySelector('.screen.active')?.id?.replace('screen-','');
+  if(activeId) go(activeId);
+}
+
+// ════ ROLE / PERMISSION ════
+
+
+function switchRole(role) {
+  currentRole = role;
+  const cfg = ROLE_CONFIG[role];
+
+  // badge & identity
+  const badge = document.getElementById('sb-badge');
+  badge.textContent = cfg.badge;
+  badge.style.background = cfg.badgeColor;
+  document.getElementById('sb-name').textContent = cfg.name;
+  document.getElementById('sb-role').textContent = cfg.roleLabel;
+  document.getElementById('sb-av').textContent = cfg.avText;
+
+  // show/hide nav items based on role
+  document.querySelectorAll('.sb-item, .sb-section').forEach(el => {
+    const forAdmin = el.classList.contains('role-admin');
+    const forSupervisor = el.classList.contains('role-supervisor');
+    const isRoleSpecific = forAdmin || forSupervisor;
+    if (!isRoleSpecific) { el.style.display = ''; return; }
+    if (role === 'admin' && forAdmin) { el.style.display = ''; return; }
+    if (role === 'supervisor' && forSupervisor) { el.style.display = ''; return; }
+    el.style.display = 'none';
+  });
+
+  // if current screen is forbidden, redirect to dashboard
+  const activeScreen = document.querySelector('.screen.active');
+  const screenId = activeScreen?.id?.replace('screen-','');
+  const forbidden = {
+    coach: ['coaches','guardians','reports','venues'],
+    supervisor: ['venues','guardians'],
+  };
+  if ((forbidden[role]||[]).includes(screenId)) {
+    go('dashboard');
+  }
+
+  // re-render current screen with role context
+  renderStudents();
+  renderExams();
+}
+
+// ════ ROLE NOTICE ════
+function roleNotice(msg) {
+  return `<div style="background:#FFF8EC;border:1px solid #FFECC8;border-radius:8px;padding:9px 13px;font-size:11px;color:#92400e;margin-bottom:12px;display:flex;align-items:center;gap:7px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    ${msg}
+  </div>`;
+}
+
+// ════ VENUES ════
+function renderVenues(){
+  const el=document.getElementById('venue-cards');
+  if(!el)return;
+  el.innerHTML='';
+  VENUES_DATA.forEach(v=>{
+    const isClosed=v.status==='closed';
+    const statusChip=v.status==='active'?'chip-green':isClosed?'chip-gray':'chip-red';
+    const statusTxt=v.status==='active'?'營運中':isClosed?'已關閉':'暫停營運';
+    const iconColor=isClosed?'var(--ink3)':'var(--ocean)';
+    const iconBg=isClosed?'var(--n100)':'var(--ocean-light)';
+    const card=document.createElement('div');
+    card.className='card';
+    card.style.opacity=isClosed?'0.65':'1';
+    card.innerHTML=`
+      <div class="card-hd">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:34px;height:34px;background:${iconBg};border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="font-size:14px;font-weight:700;color:var(--ink)">${v.name}</span>
+              ${v.code?`<span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:${isClosed?'var(--ink3)':'var(--ocean)'};background:${iconBg};border-radius:5px;padding:1px 6px;letter-spacing:.05em">${v.code}</span>`:''}
+            </div>
+            <span class="chip ${statusChip}" style="margin-top:2px">${statusTxt}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px">
+          ${isClosed
+            ? `<button class="btn btn-ghost btn-xs" onclick="reopenVenue('${v.id}')">重新開館</button>`
+            : `<button class="btn btn-ghost btn-xs" onclick="openVenueModal('${v.id}')">編輯</button>
+               <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="closeVenue('${v.id}')">關閉場館</button>`
+          }
+        </div>
+      </div>
+      <div class="card-bd" style="padding:12px 16px">
+        <div style="font-size:12px;color:var(--ink2);margin-bottom:12px;display:flex;align-items:center;gap:6px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${v.location}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:var(--bg);border-radius:7px;padding:9px 11px;text-align:center">
+            <div style="font-size:20px;font-weight:900;color:${isClosed?'var(--ink3)':'var(--ocean)'};font-family:'DM Mono',monospace">${v.studentCount}</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:2px">${isClosed?'歷史學員':'在籍學員'}</div>
+          </div>
+          <div style="background:var(--bg);border-radius:7px;padding:9px 11px;text-align:center">
+            <div style="font-size:20px;font-weight:900;color:${isClosed?'var(--ink3)':'var(--green)'};font-family:'DM Mono',monospace">${v.coachCount}</div>
+            <div style="font-size:10px;color:var(--ink3);margin-top:2px">支援教練</div>
+          </div>
+        </div>
+        ${isClosed
+          ? `<div style="font-size:11px;color:var(--ink3);text-align:center;margin-top:10px;padding:8px;background:var(--bg);border-radius:7px">歷史考試紀錄已保留</div>`
+          : `<button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:10px" onclick="switchVenue('${v.id}');go('students')">查看此館學員 →</button>`
+        }
+      </div>`;
+    el.appendChild(card);
+  });
+}
+
+function openVenueModal(id){
+  editingVenueId=id;
+  const v=id?VENUES_DATA.find(x=>String(x.id)===String(id)):null;
+  document.getElementById('venue-modal-title').textContent=v?'編輯場館 · '+v.name:'新增場館';
+  document.getElementById('vm-name').value=v?.name||'';
+  document.getElementById('vm-code').value=v?.code||'';
+  document.getElementById('vm-location').value=v?.location||'';
+  document.getElementById('vm-status').value=v?.status||'active';
+  ['vm-name-err','vm-code-err','vm-location-err'].forEach(e=>document.getElementById(e).classList.remove('show'));
+  openModal('venue-modal');
+}
+async function saveVenue(){
+  const name=document.getElementById('vm-name').value.trim();
+  const code=document.getElementById('vm-code').value.trim().toUpperCase();
+  const location=document.getElementById('vm-location').value.trim();
+  const status=document.getElementById('vm-status').value;
+  let ok=true;
+  if(!name){document.getElementById('vm-name-err').classList.add('show');ok=false;}else document.getElementById('vm-name-err').classList.remove('show');
+  const codeValid=/^[A-Z]$/.test(code)&&!VENUES_DATA.some(v=>v.code===code&&String(v.id)!==String(editingVenueId));
+  if(!codeValid){document.getElementById('vm-code-err').classList.add('show');ok=false;}else document.getElementById('vm-code-err').classList.remove('show');
+  if(!location){document.getElementById('vm-location-err').classList.add('show');ok=false;}else document.getElementById('vm-location-err').classList.remove('show');
+  if(!ok)return;
+  if(editingVenueId){
+    const {error}=await SUPA.from('venues').update({name,code,location,status}).eq('id',editingVenueId);
+    if(error){showToast('更新失敗：'+error.message,'warn');return;}
+  }else{
+    const {error}=await SUPA.from('venues').insert({name,code,location,status});
+    if(error){showToast('新增失敗：'+error.message,'warn');return;}
+  }
+  closeModal('venue-modal');
+  await loadVenues();
+  renderVenues();
+}
+async function closeVenue(id){
+  const v=VENUES_DATA.find(x=>String(x.id)===String(id));
+  if(!v)return;
+  const lines=[
+    `確定永久關閉「${v.name}」？`,
+    ``,
+    `・學員：${v.studentCount} 位（歷史紀錄完整保留）`,
+    `・關閉後無法新增學員或預建班至此館`,
+    ``,
+    `此操作可透過「重新開館」復原。`
+  ];
+  if(!confirm(lines.join('\n')))return;
+  const {error}=await SUPA.from('venues').update({status:'closed'}).eq('id',id);
+  if(error){showToast('操作失敗：'+error.message,'warn');return;}
+  if(currentVenueId===String(id)) switchVenue('all');
+  await loadVenues();
+  renderVenues();
+  showToast(`${v.name} 已關閉，歷史資料保留`,'ok');
+}
+async function reopenVenue(id){
+  const v=VENUES_DATA.find(x=>String(x.id)===String(id));
+  if(!v)return;
+  if(!confirm(`重新開館「${v.name}」？`))return;
+  const {error}=await SUPA.from('venues').update({status:'active'}).eq('id',id);
+  if(error){showToast('操作失敗：'+error.message,'warn');return;}
+  await loadVenues();
+  renderVenues();
+  showToast(`${v.name} 已重新開館`,'ok');
+}
+async function deleteVenue(id){
+  const v=VENUES_DATA.find(x=>String(x.id)===String(id));
+  if(!v)return;
+  if(v.studentCount>0){alert('此場館仍有 '+v.studentCount+' 位學員，請先重新指派後再刪除。');return;}
+  if(!confirm('確定刪除場館「'+v.name+'」？'))return;
+  const {error}=await SUPA.from('venues').delete().eq('id',id);
+  if(error){showToast('刪除失敗：'+error.message,'warn');return;}
+  if(currentVenueId===String(id)) switchVenue('all');
+  await loadVenues();
+  renderVenues();
+}
+function syncVenueSwitcher(){
+  const sw=document.getElementById('venue-switcher');
+  if(!sw)return;
+  const cur=sw.value;
+  sw.innerHTML='<option value="all">全部場館</option>';
+  VENUES_DATA.filter(v=>v.status==='active').forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v.id; o.textContent=v.name;
+    sw.appendChild(o);
+  });
+  sw.value=cur;
+}
+
+// ════ ANNOUNCEMENTS ════
+const ANN_TYPE = {
+  exam:    { label:'考試預告', cls:'chip-ocean' },
+  enroll:  { label:'報名開始', cls:'chip-green' },
+  cancel:  { label:'停課通知', cls:'chip-red' },
+  general: { label:'一般公告', cls:'chip-gray' },
+};
+
+async function loadAnnouncements(){
+  const {data,error}=await SUPA.from('announcements').select('*').order('created_at',{ascending:false});
+  if(error){showToast('載入公告失敗：'+error.message,'warn');return;}
+  ANNOUNCEMENTS_DATA=data.map(a=>({
+    id:a.id,
+    type:a.type,
+    date:a.publish_date||'',
+    endDate:a.expire_date||null,
+    title:a.title,
+    content:a.content||'',
+    pinned:!!a.pinned,
+    venueId:a.venue_id||null,
+  }));
+}
+
+function openAnnModal(id){
+  annEditId = id||null;
+  const isNew = !id;
+  document.getElementById('ann-modal-title').textContent = isNew ? '新增公告' : '編輯公告';
+  const vsel = document.getElementById('am-venue');
+  vsel.innerHTML = '<option value="">全部場館</option>';
+  VENUES_DATA.filter(v=>v.status==='active').forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;vsel.appendChild(o);});
+  if(isNew){
+    document.getElementById('am-type').value = 'general';
+    document.getElementById('am-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('am-end-date').value = '';
+    document.getElementById('am-title').value = '';
+    document.getElementById('am-content').value = '';
+    document.getElementById('am-pinned').checked = false;
+    vsel.value = '';
+  } else {
+    const a = ANNOUNCEMENTS_DATA.find(x=>String(x.id)===String(id));
+    if(!a) return;
+    document.getElementById('am-type').value = a.type;
+    document.getElementById('am-date').value = a.date;
+    document.getElementById('am-end-date').value = a.endDate||'';
+    document.getElementById('am-title').value = a.title;
+    document.getElementById('am-content').value = a.content||'';
+    document.getElementById('am-pinned').checked = !!a.pinned;
+    vsel.value = a.venueId||'';
+  }
+  document.getElementById('am-title-err').style.display='none';
+  document.getElementById('ann-modal').classList.remove('hidden');
+}
+async function saveAnn(){
+  const title = document.getElementById('am-title').value.trim();
+  if(!title){ document.getElementById('am-title-err').style.display='block'; return; }
+  document.getElementById('am-title-err').style.display='none';
+  const endDate = document.getElementById('am-end-date').value||null;
+  const venueVal = document.getElementById('am-venue').value;
+  const obj = {
+    type: document.getElementById('am-type').value,
+    publish_date: document.getElementById('am-date').value||null,
+    expire_date: endDate,
+    title,
+    content: document.getElementById('am-content').value.trim(),
+    pinned: document.getElementById('am-pinned').checked,
+    venue_id: venueVal || null,
+  };
+  if(annEditId){
+    const {error}=await SUPA.from('announcements').update(obj).eq('id',annEditId);
+    if(error){showToast('更新失敗：'+error.message,'warn');return;}
+  } else {
+    const {error}=await SUPA.from('announcements').insert(obj);
+    if(error){showToast('新增失敗：'+error.message,'warn');return;}
+  }
+  showToast(annEditId?'公告已更新':'公告已新增','ok');
+  closeModal('ann-modal');
+  await loadAnnouncements();
+  renderAnnouncements();
+}
+async function deleteAnn(id){
+  if(!confirm('確定刪除此公告？')) return;
+  const {error}=await SUPA.from('announcements').delete().eq('id',id);
+  if(error){showToast('刪除失敗：'+error.message,'warn');return;}
+  await loadAnnouncements();
+  renderAnnouncements();
+}
+async function toggleAnnPin(id){
+  const a=ANNOUNCEMENTS_DATA.find(x=>String(x.id)===String(id));
+  if(!a) return;
+  const {error}=await SUPA.from('announcements').update({pinned:!a.pinned}).eq('id',id);
+  if(error){showToast('操作失敗：'+error.message,'warn');return;}
+  a.pinned=!a.pinned;
+  renderAnnouncements();
+}
+function renderAnnouncements(){
+  const el = document.getElementById('ann-list');
+  if(!el) return;
+  const vfsel = document.getElementById('ann-venue-filter');
+  if(vfsel && vfsel.options.length <= 1) VENUES_DATA.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;vfsel.appendChild(o);});
+  const venueFilter = vfsel?.value||'';
+  const today = new Date().toISOString().slice(0,10);
+  let data = ANNOUNCEMENTS_DATA.slice();
+  if(venueFilter) data = data.filter(a => String(a.venueId||'')===venueFilter);
+  data.sort((a,b)=>{
+    const aExp = a.endDate&&a.endDate<today;
+    const bExp = b.endDate&&b.endDate<today;
+    if(aExp!==bExp) return aExp?1:-1;
+    if(a.pinned!==b.pinned) return a.pinned?-1:1;
+    return b.date.localeCompare(a.date);
+  });
+  if(!data.length){
+    el.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--ink3);font-size:13px">尚無公告，點擊「新增公告」開始發布。</div>';
+    return;
+  }
+  el.innerHTML = data.map(a=>{
+    const t = ANN_TYPE[a.type]||ANN_TYPE.general;
+    const dateStr = a.date ? a.date.replace(/-/g,'/') : '';
+    const isExpired = a.endDate && a.endDate < today;
+    const endDateStr = a.endDate ? a.endDate.replace(/-/g,'/') : '';
+    const venueName = a.venueId ? (VENUES_DATA.find(v=>String(v.id)===String(a.venueId))?.name||'') : '';
+    const pinnedIcon = a.pinned
+      ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="2" fill="white" stroke="white"/></svg>`
+      : '';
+    const borderStyle = isExpired ? 'border-left:3px solid var(--line2)' : a.pinned ? 'border-left:3px solid var(--amber)' : '';
+    return `<div class="card" style="margin-bottom:10px;${borderStyle}${isExpired?';opacity:.55':''}">
+      <div class="card-bd" style="display:flex;align-items:flex-start;gap:14px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            ${pinnedIcon}
+            <span class="chip ${t.cls}">${t.label}</span>
+            ${venueName?`<span class="chip chip-gray" style="font-size:10px">${venueName}</span>`:''}
+            <span style="font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace">${dateStr}</span>
+            ${endDateStr?`<span style="font-size:11px;color:var(--ink4);font-family:'DM Mono',monospace">→ ${endDateStr}</span>`:''}
+            ${isExpired?'<span class="chip chip-gray">已下線</span>':''}
+            ${a.pinned&&!isExpired?'<span class="chip chip-amber">置頂</span>':''}
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:${a.content?'6px':'0'}">${a.title}</div>
+          ${a.content?`<div style="font-size:13px;color:var(--ink2);line-height:1.7;white-space:pre-wrap">${a.content}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px">
+          ${!isExpired?`<button class="btn btn-ghost btn-xs" onclick="toggleAnnPin('${a.id}')">${a.pinned?'取消置頂':'置頂'}</button>`:''}
+          <button class="btn btn-ghost btn-xs" onclick="openAnnModal('${a.id}')">編輯</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteAnn('${a.id}')">刪除</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════ INIT ════
+async function init(){
+  const d=new Date();
+  document.getElementById('topbar-date').textContent=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+(d.getDate());
+  await loadVenues();
+  await loadCoaches();
+  await loadStudents();
+  await loadExams();
+  await loadAnnouncements();
+  renderDashExams();
+  switchRole('admin');
+}
+
+function showToast(msg, type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(type?' toast-'+type:'');
+  requestAnimationFrame(()=>t.classList.add('show'));
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+init();
+</script>
+
+<div id="toast" class="toast"></div>
+
+<!-- ── BOTTOM NAV (mobile coach) ── -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="bn-item active" id="bn-dashboard" onclick="go('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    儀表板
+  </div>
+  <div class="bn-item" id="bn-students" onclick="go('students')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+    學員
+  </div>
+  <div class="bn-item" id="bn-exams" onclick="go('exams')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    考試
+  </div>
+</nav>
+</body>
+</html>
