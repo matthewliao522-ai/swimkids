@@ -2012,17 +2012,9 @@ async function doSubmit() {
   });
   if(error){showToast('儲存失敗：'+error.message,'warn'); r.submitted=false; return;}
   const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
-  showToast('DEBUG guardianId='+( stu?.guardianId||'null'),'warn');
   if(stu?.guardianId) {
-    const vtxtLine = verdict==='pass'?'通過 🎉':verdict==='fail'?'未通過':'未出席';
-    const lvLabel = SKILL_DATA[examLv]?.label||('Lv'+examLv);
-    const msg = `${stu.name} 的游泳測驗結果已出爐！\n等級：${lvLabel}\n結果：${vtxtLine}\n\n請登入小泳士查看詳細評量。`;
-    const {data:notifyRes, error:notifyErr} = await SUPA.functions.invoke('line-send-notify', {body:{guardian_id:stu.guardianId, message:msg}});
-    if(notifyErr) showToast('LINE通知失敗：'+notifyErr.message,'warn');
-    else if(notifyRes?.skipped) showToast('家長未綁定LINE通知','warn');
-    else showToast('LINE通知已發送','ok');
-  } else {
-    showToast('DEBUG: stu='+(stu?'found':'null')+' guardianId='+(stu?.guardianId||'null'), 'warn');
+    const msg = `${stu.name} 的游泳測驗結果已出爐，請登入小泳士查看。`;
+    SUPA.functions.invoke('line-send-notify', {body:{guardian_id:stu.guardianId, message:msg}}).catch(()=>{});
   }
   if(verdict==='pass') {
     const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
