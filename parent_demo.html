@@ -514,6 +514,21 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
     <div id="next-goal-section" class="fade-up fu3"></div>
     <div class="section-title fade-up fu3">考試紀錄</div>
     <div id="exam-list" class="fade-up fu4"></div>
+    <div id="line-notify-section" style="display:none;margin-top:18px" class="fade-up fu4">
+      <div class="section-title">LINE 通知</div>
+      <div style="background:#fff;border-radius:16px;border:1px solid var(--slate6);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink1)">考試結果通知</div>
+          <div style="font-size:11px;color:var(--slate3);margin-top:2px">開啟後，考試結果出爐時將透過 LINE 通知您</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0">
+          <input type="checkbox" id="notify-toggle" onchange="toggleNotify(this)" style="opacity:0;width:0;height:0">
+          <span id="notify-slider" style="position:absolute;inset:0;background:var(--slate5);border-radius:24px;cursor:pointer;transition:.2s">
+            <span style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)" id="notify-knob"></span>
+          </span>
+        </label>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -986,9 +1001,43 @@ async function renderApp(showCelebration) {
   renderStats(child);
   renderNextGoal(child);
   renderExamList(child);
+  renderLineNotifySection();
   if (showCelebration) {
     setTimeout(() => showLevelUpCelebration(child), 600);
   }
+}
+
+function renderLineNotifySection() {
+  const g = currentAccount.guardian;
+  const section = document.getElementById('line-notify-section');
+  if (!g.line_user_id) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  const enabled = g.notify_enabled !== false;
+  const cb = document.getElementById('notify-toggle');
+  const slider = document.getElementById('notify-slider');
+  const knob = document.getElementById('notify-knob');
+  cb.checked = enabled;
+  slider.style.background = enabled ? 'var(--ocean)' : 'var(--slate5)';
+  knob.style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
+}
+
+async function toggleNotify(cb) {
+  const enabled = cb.checked;
+  const slider = document.getElementById('notify-slider');
+  const knob = document.getElementById('notify-knob');
+  slider.style.background = enabled ? 'var(--ocean)' : 'var(--slate5)';
+  knob.style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
+  const {error} = await SUPA.from('guardians')
+    .update({notify_enabled: enabled})
+    .eq('id', currentAccount.guardian.id);
+  if (error) {
+    cb.checked = !enabled;
+    slider.style.background = !enabled ? 'var(--ocean)' : 'var(--slate5)';
+    knob.style.transform = !enabled ? 'translateX(20px)' : 'translateX(0)';
+    alert('更新失敗，請稍後再試');
+    return;
+  }
+  currentAccount.guardian.notify_enabled = enabled;
 }
 function renderChildSwitcher() {
   const el = document.getElementById('child-switcher');
@@ -1274,7 +1323,7 @@ async function loadParentData(authId) {
   if (!annsLoaded) await loadAnnsFromSupa();
 
   const {data: guardian} = await SUPA.from('guardians')
-    .select('id, name, phone').eq('auth_id', authId).single();
+    .select('id, name, phone, notify_enabled, line_user_id').eq('auth_id', authId).single();
   if (!guardian) return;
 
   const {data: sg} = await SUPA.from('student_guardian')
