@@ -1405,7 +1405,10 @@ async function loadVenues(){
     ...v,
     studentCount: 0,
     coachCount: 0,
-  }));
+  })).sort((a,b)=>{
+    const closed=s=>s.status==='closed'?1:0;
+    return closed(a)-closed(b);
+  });
   syncVenueSwitcher();
 }
 
