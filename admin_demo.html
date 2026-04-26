@@ -1049,7 +1049,7 @@ tr:hover td{background:#fafaf8}
 </div>
 
 <!-- 風險學員：學員資訊 Modal -->
-<div class="modal-overlay hidden" id="risk-stu-modal">
+<div class="modal-overlay hidden" id="risk-stu-modal" data-backdrop-close>
   <div class="modal" style="max-width:420px">
     <div class="modal-hd">
       <div class="modal-title" id="risk-stu-modal-title">學員資訊</div>
@@ -1065,7 +1065,7 @@ tr:hover td{background:#fafaf8}
 </div>
 
 <!-- 風險學員考試紀錄 Modal -->
-<div class="modal-overlay hidden" id="risk-exam-modal">
+<div class="modal-overlay hidden" id="risk-exam-modal" data-backdrop-close>
   <div class="modal" style="max-width:640px">
     <div class="modal-hd">
       <div>
@@ -2778,7 +2778,7 @@ function renderRptParent(){
 // ════ MODAL ════
 function openModal(id){document.getElementById(id).classList.remove('hidden');}
 function closeModal(id){document.getElementById(id).classList.add('hidden');}
-document.querySelectorAll('.modal-overlay').forEach(o=>{
+document.querySelectorAll('.modal-overlay[data-backdrop-close]').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o)o.classList.add('hidden');});
 });
 
