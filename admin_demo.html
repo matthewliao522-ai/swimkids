@@ -273,16 +273,6 @@ tr:hover td{background:#fafaf8}
     </div>
   </div>
 
-  <!-- 角色切換（Demo 用） -->
-  <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08)">
-    <div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:5px;font-family:'DM Mono',monospace;letter-spacing:.08em">DEMO：切換角色</div>
-    <select id="role-switcher" onchange="switchRole(this.value)" style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 8px;font-size:11px;color:rgba(255,255,255,.8);font-family:'Noto Sans TC',sans-serif;cursor:pointer">
-      <option value="admin">管理員</option>
-      <option value="supervisor">考試教練（主管）</option>
-      <option value="coach">教學教練</option>
-    </select>
-  </div>
-
   <div class="sb-section">總覽</div>
   <div class="sb-item active" id="nav-dashboard" onclick="go('dashboard')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -3203,6 +3193,8 @@ function renderAnnouncements(){
 
 // ════ INIT ════
 // ════ AUTH ════
+let currentStaff = null;
+
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pwd = document.getElementById('login-pwd').value;
@@ -3217,25 +3209,53 @@ async function doLogin() {
   btn.disabled = false;
   if (error) { errEl.textContent = '帳號或密碼錯誤，請再確認'; return; }
 
+  await initAfterAuth(data.user.id);
+}
+
+async function initAfterAuth(userId) {
+  const errEl = document.getElementById('login-err');
   const { data: staffRole } = await SUPA.from('staff_roles')
-    .select('role').eq('auth_id', data.user.id).maybeSingle();
-  if (!staffRole || staffRole.role !== 'admin') {
+    .select('role, coach_id').eq('auth_id', userId).maybeSingle();
+  if (!staffRole) {
     await SUPA.auth.signOut();
-    errEl.textContent = '此帳號沒有管理員權限';
+    if (errEl) errEl.textContent = '此帳號沒有存取權限';
     return;
   }
 
+  let roleKey = 'admin';
+  let displayName = '系統管理員';
+  let roleLabel = '管理員';
+  let avText = '管';
+
+  if (staffRole.role === 'coach' && staffRole.coach_id) {
+    const { data: coach } = await SUPA.from('coaches')
+      .select('name, role').eq('id', staffRole.coach_id).maybeSingle();
+    if (coach) {
+      displayName = coach.name;
+      avText = coach.name.charAt(0);
+      if (coach.role === 'exam') {
+        roleKey = 'supervisor';
+        roleLabel = '考試教練';
+      } else {
+        roleKey = 'coach';
+        roleLabel = '教學教練';
+      }
+    }
+  }
+
+  currentStaff = { auth_id: userId, roleKey, displayName, roleLabel, avText };
   document.getElementById('login-screen').style.display = 'none';
-  await init();
+  await init(roleKey, displayName, roleLabel, avText);
 }
 
 async function doLogout() {
   if (!confirm('確定要登出？')) return;
   await SUPA.auth.signOut();
+  currentStaff = null;
   document.getElementById('login-screen').style.display = 'flex';
 }
 
-async function init(){
+async function init(roleKey='admin', displayName='系統管理員', roleLabel='管理員', avText='管'){
   const d=new Date();
   document.getElementById('topbar-date').textContent=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+(d.getDate());
   await loadVenues();
@@ -3244,7 +3264,11 @@ async function init(){
   await loadExams();
   await loadAnnouncements();
   renderDashExams();
-  switchRole('admin');
+  switchRole(roleKey);
+  // 覆寫為真實姓名
+  document.getElementById('sb-name').textContent = displayName;
+  document.getElementById('sb-role').textContent = roleLabel;
+  document.getElementById('sb-av').textContent = avText;
 }
 
 function showToast(msg, type=''){
@@ -3258,16 +3282,7 @@ function showToast(msg, type=''){
 
 (async () => {
   const { data: { session } } = await SUPA.auth.getSession();
-  if (session) {
-    const { data: staffRole } = await SUPA.from('staff_roles')
-      .select('role').eq('auth_id', session.user.id).maybeSingle();
-    if (staffRole?.role === 'admin') {
-      document.getElementById('login-screen').style.display = 'none';
-      await init();
-      return;
-    }
-    await SUPA.auth.signOut();
-  }
+  if (session) await initAfterAuth(session.user.id);
 })();
 </script>
 

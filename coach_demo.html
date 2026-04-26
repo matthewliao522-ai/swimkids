@@ -2306,9 +2306,18 @@ async function initAfterAuth(userId) {
   if (staffRole.coach_id) {
     const { data: coach } = await SUPA.from('coaches').select('name, role').eq('id', staffRole.coach_id).maybeSingle();
     if (coach) {
+      // 教學教練無法使用此系統
+      if (coach.role === 'teach') {
+        await SUPA.auth.signOut();
+        document.getElementById('login-err').textContent = '教學教練請使用管理系統，考試系統僅限考官與管理員';
+        return;
+      }
       currentStaff.coachName = coach.name;
-      currentStaff.coachRoleLabel = coach.role === 'teach' ? '教學教練' : '考試教練';
+      currentStaff.coachRoleLabel = '考試教練';
     }
+  } else {
+    currentStaff.coachName = '系統管理員';
+    currentStaff.coachRoleLabel = '管理員';
   }
 
   document.getElementById('login-screen').style.display = 'none';
