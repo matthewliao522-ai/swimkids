@@ -823,7 +823,8 @@ async function doActivatePhone() {
     err.textContent = '請輸入正確的手機號碼格式（09XX-XXX-XXX）';
     err.classList.add('show'); return;
   }
-  const {data: g} = await SUPA.from('guardians').select('id,auth_id,email').eq('phone', dbPhone(phone)).maybeSingle();
+  const {data: rows} = await SUPA.rpc('get_guardian_by_phone', { p_phone: dbPhone(phone) });
+  const g = rows?.[0] || null;
   if (!g) {
     err.textContent = '此號碼尚未在系統中，請確認或聯繫教練';
     err.classList.add('show'); return;
@@ -852,7 +853,8 @@ async function doForgotPhone() {
     err.textContent = '請輸入正確的手機號碼格式（09XX-XXX-XXX）';
     err.classList.add('show'); return;
   }
-  const {data: g} = await SUPA.from('guardians').select('id,auth_id,email').eq('phone', dbPhone(phone)).maybeSingle();
+  const {data: rows} = await SUPA.rpc('get_guardian_by_phone', { p_phone: dbPhone(phone) });
+  const g = rows?.[0] || null;
   if (!g) {
     err.textContent = '此手機號碼未在系統中，請確認或聯繫教練';
     err.classList.add('show'); return;
@@ -990,9 +992,9 @@ async function doLogin() {
     err.classList.add('show'); return;
   }
 
-  // Look up real email from DB
-  const { data: g } = await SUPA.from('guardians').select('email').eq('phone', dbPhone(phone)).maybeSingle();
-  const realEmail = (g?.email && !g.email.endsWith('@swimkids.app')) ? g.email : null;
+  // Look up real email from DB via RPC (bypasses RLS before auth)
+  const { data: rows } = await SUPA.rpc('get_guardian_by_phone', { p_phone: dbPhone(phone) });
+  const realEmail = (rows?.[0]?.email && !rows[0].email.endsWith('@swimkids.app')) ? rows[0].email : null;
   if (!realEmail) {
     err.classList.add('show');
     document.getElementById('login-pwd').classList.add('input-err');
