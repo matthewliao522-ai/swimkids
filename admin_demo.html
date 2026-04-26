@@ -235,6 +235,32 @@ tr:hover td{background:#fafaf8}
 </head>
 <body>
 
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen" style="position:fixed;inset:0;background:#1a1a1a;display:flex;align-items:center;justify-content:center;z-index:999;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:18px;font-weight:900;color:var(--ink);font-family:'Noto Sans TC',sans-serif">小泳士後台管理系統</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:6px">管理員登入</div>
+    </div>
+    <div style="margin-bottom:13px">
+      <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">電子郵件</label>
+      <input id="login-email" type="email" placeholder="admin@swimkids.app" onkeydown="if(event.key==='Enter')document.getElementById('login-pwd').focus()"
+        style="width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+        onfocus="this.style.borderColor='var(--ocean)'" onblur="this.style.borderColor='var(--line2)'">
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">密碼</label>
+      <input id="login-pwd" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"
+        style="width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+        onfocus="this.style.borderColor='var(--ocean)'" onblur="this.style.borderColor='var(--line2)'">
+    </div>
+    <div id="login-err" style="font-size:11px;color:var(--red);margin-bottom:10px;min-height:16px"></div>
+    <button id="login-btn" onclick="doLogin()"
+      style="width:100%;background:var(--ocean);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:background .15s"
+      onmouseover="this.style.background='var(--ocean-dark)'" onmouseout="this.style.background='var(--ocean)'">登入</button>
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-logo">
@@ -305,10 +331,13 @@ tr:hover td{background:#fafaf8}
 
   <div class="sb-foot">
     <div class="sb-av" id="sb-av">管</div>
-    <div>
+    <div style="flex:1;min-width:0">
       <div class="sb-name" id="sb-name">系統管理員</div>
       <div class="sb-role" id="sb-role">管理員</div>
     </div>
+    <button onclick="doLogout()" title="登出" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);padding:4px;border-radius:6px;display:flex;align-items:center;transition:color .15s" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
   </div>
 </aside>
 
@@ -3173,6 +3202,39 @@ function renderAnnouncements(){
 }
 
 // ════ INIT ════
+// ════ AUTH ════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd = document.getElementById('login-pwd').value;
+  const errEl = document.getElementById('login-err');
+  const btn = document.getElementById('login-btn');
+  errEl.textContent = '';
+  btn.textContent = '登入中…';
+  btn.disabled = true;
+
+  const { data, error } = await SUPA.auth.signInWithPassword({ email, password: pwd });
+  btn.textContent = '登入';
+  btn.disabled = false;
+  if (error) { errEl.textContent = '帳號或密碼錯誤，請再確認'; return; }
+
+  const { data: staffRole } = await SUPA.from('staff_roles')
+    .select('role').eq('auth_id', data.user.id).maybeSingle();
+  if (!staffRole || staffRole.role !== 'admin') {
+    await SUPA.auth.signOut();
+    errEl.textContent = '此帳號沒有管理員權限';
+    return;
+  }
+
+  document.getElementById('login-screen').style.display = 'none';
+  await init();
+}
+
+async function doLogout() {
+  if (!confirm('確定要登出？')) return;
+  await SUPA.auth.signOut();
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
 async function init(){
   const d=new Date();
   document.getElementById('topbar-date').textContent=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+(d.getDate());
@@ -3194,7 +3256,19 @@ function showToast(msg, type=''){
   t._timer=setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-init();
+(async () => {
+  const { data: { session } } = await SUPA.auth.getSession();
+  if (session) {
+    const { data: staffRole } = await SUPA.from('staff_roles')
+      .select('role').eq('auth_id', session.user.id).maybeSingle();
+    if (staffRole?.role === 'admin') {
+      document.getElementById('login-screen').style.display = 'none';
+      await init();
+      return;
+    }
+    await SUPA.auth.signOut();
+  }
+})();
 </script>
 
 <div id="toast" class="toast"></div>
