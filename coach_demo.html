@@ -1739,7 +1739,7 @@ function clearDraft(classId) {
   localStorage.removeItem('swim_exam_draft_' + classId);
 }
 
-function startExam(classId) {
+async function startExam(classId) {
   currentClassId = classId;
   currentStudentIdx = 0;
   const cls = CLASSES.find(c=>c.id===classId);
@@ -1748,6 +1748,26 @@ function startExam(classId) {
       examState[m.id] = { checks:{}, verdict:null, note:'', examLevel: m.examLevel };
     }
   });
+  if (cls.status === 'done' && !cls.isQuickExam) {
+    const {data: exams} = await SUPA.from('exams')
+      .select('id,student_id,level,result,fail_items,note')
+      .eq('prep_class_id', classId);
+    (exams||[]).forEach(e => {
+      const sd = SKILL_DATA[e.level];
+      const checks = {};
+      const failSet = new Set(e.fail_items||[]);
+      if (sd) sd.items.forEach((item,i) => {
+        if (failSet.has(item.fail)) checks['f'+i] = true;
+        else if (e.result !== 'absent') checks['p'+i] = true;
+      });
+      examState[e.student_id] = {
+        ...(examState[e.student_id]||{}),
+        examId: e.id, examLevel: e.level, checks,
+        verdict: e.result, note: e.note||'',
+        failItems: e.fail_items||[], submitted: true, editing: false,
+      };
+    });
+  }
   const hadDraft = restoreDraft(classId);
   if (hadDraft) showToast('已載入上次草稿', 'ok');
   document.getElementById('teach-coach-sel').value = cls.teachCoach || COACHES[0] || '';
@@ -1794,12 +1814,39 @@ function renderStudentTabs() {
   document.getElementById('ex-stu-progress').textContent = done + '/' + cls.members.length;
 }
 
+function editExam() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls.members[currentStudentIdx];
+  examState[m.id].editing = true;
+  renderExamForm();
+}
+
 function renderExamForm() {
   const cls = CLASSES.find(c=>c.id===currentClassId);
   const m = cls.members[currentStudentIdx];
   const r = examState[m.id];
   const examLv = r.examLevel || m.examLevel;
   const sd = SKILL_DATA[examLv];
+
+  if (r.submitted && !r.editing) {
+    document.getElementById('last-exam-ref').style.display = 'none';
+    const vtxt = r.verdict==='pass'?'通過':r.verdict==='fail'?'未通過':r.verdict==='absent'?'未出席':'未判定';
+    const vColor = r.verdict==='pass'?'var(--green)':r.verdict==='fail'?'var(--signal)':'var(--gold-dk)';
+    const failHtml = (r.failItems||[]).length
+      ? `<div style="margin-top:14px;text-align:left"><div style="font-size:10px;font-weight:700;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">未達標項目</div>${(r.failItems).map(f=>`<div style="font-size:12px;color:var(--signal);padding:5px 0;border-bottom:1px solid var(--line)">${f}</div>`).join('')}</div>` : '';
+    const noteHtml = r.note ? `<div style="margin-top:12px;padding:10px 12px;background:var(--n50);border-radius:8px;font-size:12px;color:var(--ink2);text-align:left"><span style="font-weight:600">評語：</span>${r.note}</div>` : '';
+    document.querySelector('.form-card').innerHTML = `
+      <div style="padding:28px 24px;text-align:center">
+        <div style="font-size:12px;color:var(--ink3);margin-bottom:4px">${sd.label}・${HAT_MAP[examLv]}</div>
+        <div style="font-size:30px;font-weight:900;color:${vColor};margin:10px 0">${vtxt}</div>
+        ${failHtml}${noteHtml}
+        <div style="margin-top:20px">
+          <button class="btn btn-ghost btn-sm" onclick="editExam()">修改結果</button>
+        </div>
+      </div>`;
+    updateProgress();
+    return;
+  }
   document.getElementById('ex-lv-name').textContent = sd.label + '・' + HAT_MAP[examLv];
   document.getElementById('ex-lv-desc').textContent = sd.desc;
   const sel = document.getElementById('lv-changer-sel');
@@ -1978,11 +2025,11 @@ function goPreview() {
     </div>
     ${r.note?`<div class="ph-note"><span style="color:var(--ink);font-weight:500">評語：</span>${r.note}</div>`:''}
     <div class="editable-notice">※ 送出後仍可在學員資料中修改考試結果</div>
-    <div class="warn-notice">送出後家長即可查詢，請確認資料無誤。</div>
+    <div class="warn-notice">${r.editing?'更新後家長立即可見，請確認資料無誤。':'送出後家長即可查詢，請確認資料無誤。'}</div>
     <div class="ph-actions">
       <button class="btn btn-ghost btn-sm" onclick="showScreen('exam')">← 返回修改</button>
       <div style="flex:1"></div>
-      <button class="btn btn-success btn-sm" onclick="doSubmit()">確認送出</button>
+      <button class="btn btn-success btn-sm" onclick="doSubmit()">${r.editing?'確認更新':'確認送出'}</button>
     </div>`;
   showScreen('preview');
 }
@@ -2014,15 +2061,32 @@ async function doSubmit() {
   const dateStr = today.getFullYear()+'-'+(today.getMonth()+1).toString().padStart(2,'0')+'-'+today.getDate().toString().padStart(2,'0');
   const teachCoachObj = COACHES_DATA.find(c=>c.name===cls.teachCoach);
   const examCoachObj = COACHES_DATA.find(c=>c.name===cls.examCoach);
-  const {error} = await SUPA.from('exams').insert({
+  if (r.editing && r.examId) {
+    const {error: upErr} = await SUPA.from('exams').update({
+      level:examLv, result:verdict, fail_items:failItems, note:r.note||'',
+      teach_coach_id:teachCoachObj?.id||null, exam_coach_id:examCoachObj?.id||null,
+    }).eq('id', r.examId);
+    if(upErr){showToast('更新失敗：'+upErr.message,'warn'); r.submitted=true; r.editing=true; return;}
+    r.editing = false; r.failItems = failItems;
+    if(verdict==='pass') {
+      const stu2 = STUDENTS.find(x=>String(x.id)===String(m.id));
+      if(stu2 && examLv>=stu2.level) { await SUPA.from('students').update({level:examLv}).eq('id',m.id); stu2.level=examLv; }
+    }
+    renderStudentTabs(); renderExamForm();
+    showToast('✓ '+m.name+' · '+vtxt+' 已更新','ok');
+    return;
+  }
+  const {data:insertedExam, error} = await SUPA.from('exams').insert({
     student_id:m.id, exam_date:dateStr, level:examLv,
     result:verdict, fail_items:failItems, note:r.note||'',
     teach_coach_id:teachCoachObj?.id||null,
     exam_coach_id:examCoachObj?.id||null,
     venue_id:cls.venueId,
     prep_class_id:cls.isQuickExam?null:cls.id,
-  });
+  }).select('id').single();
   if(error){showToast('儲存失敗：'+error.message,'warn'); r.submitted=false; return;}
+  r.examId = insertedExam?.id;
+  r.failItems = failItems;
   const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
   let lineStatus = '';
   if(stu?.guardianId) {
