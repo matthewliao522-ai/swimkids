@@ -2024,14 +2024,15 @@ async function doSubmit() {
   });
   if(error){showToast('儲存失敗：'+error.message,'warn'); r.submitted=false; return;}
   const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
+  let lineStatus = '';
   if(stu?.guardianId) {
     const msg = `${stu.name} 的游泳測驗結果已出爐，請登入 Handle Power 小泳士系統查看。`;
     const sendAt = new Date(Date.now() + 60*60*1000).toISOString();
     const {data:notifData, error:notifErr} = await SUPA.from('pending_notifications')
       .insert({guardian_id:stu.guardianId, student_name:stu.name, message:msg, send_at:sendAt})
       .select('id').single();
-    if(notifErr) showToast('通知排程失敗：'+notifErr.message,'warn');
-    else if(notifData?.id) { examState[m.id].pendingNotifyId = notifData.id; showToast('LINE 通知已排程（1小時後發送）','ok'); }
+    if(notifErr) lineStatus = '｜LINE 通知失敗';
+    else if(notifData?.id) { examState[m.id].pendingNotifyId = notifData.id; lineStatus = '｜LINE 已排程'; }
   }
   if(verdict==='pass') {
     const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
@@ -2050,7 +2051,7 @@ async function doSubmit() {
     cls.status='done'; clearDraft(currentClassId); renderDayScreen();
   }
   renderStudentTabs();
-  showToast('✓ '+m.name+' · '+vtxt,'ok');
+  showToast('✓ '+m.name+' · '+vtxt+(lineStatus?lineStatus:''), lineStatus==='｜LINE 通知失敗'?'warn':'ok');
   nextStudent();
 }
 
