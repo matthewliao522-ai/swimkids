@@ -1197,6 +1197,35 @@ tr:hover td{background:#fafaf8}
           </select>
         </div>
       </div>
+      <div style="border-top:1px solid var(--line2);margin:12px 0 4px"></div>
+      <div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.06em;margin-bottom:10px">LINE OA 設定（選填）</div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">Webhook URL（複製後貼到 LINE Developers）</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="form-input" id="vm-webhook-url" readonly style="background:var(--n100);color:var(--ink2);font-size:11px;font-family:'DM Mono',monospace" value="https://mqkasrtaxkcchrqyornh.supabase.co/functions/v1/line-webhook">
+            <button type="button" class="btn btn-ghost btn-xs" onclick="copyWebhookUrl()" style="white-space:nowrap">複製</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">Channel ID（LINE Developers → Basic settings）</label>
+          <input class="form-input" id="vm-line-channel-id" placeholder="例：2009894844">
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">Channel Access Token（長期）</label>
+          <input class="form-input" id="vm-line-token" placeholder="貼上 Channel access token (long-lived)">
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">Channel Secret</label>
+          <input class="form-input" id="vm-line-secret" placeholder="貼上 Channel secret">
+        </div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('venue-modal')">取消</button>
@@ -2870,9 +2899,13 @@ function renderVenues(){
             <div style="font-size:10px;color:var(--ink3);margin-top:2px">支援教練</div>
           </div>
         </div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--bg);border-radius:7px">
+          <div style="width:7px;height:7px;border-radius:50%;background:${v.line_channel_id?'var(--green)':'var(--ink3)'}"></div>
+          <span style="font-size:11px;color:${v.line_channel_id?'var(--green)':'var(--ink3)'}">LINE OA ${v.line_channel_id?'已設定':'未設定'}</span>
+        </div>
         ${isClosed
-          ? `<div style="font-size:11px;color:var(--ink3);text-align:center;margin-top:10px;padding:8px;background:var(--bg);border-radius:7px">歷史考試紀錄已保留</div>`
-          : `<button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:10px" onclick="switchVenue('${v.id}');go('students')">查看此館學員 →</button>`
+          ? `<div style="font-size:11px;color:var(--ink3);text-align:center;margin-top:8px;padding:8px;background:var(--bg);border-radius:7px">歷史考試紀錄已保留</div>`
+          : `<button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:8px" onclick="switchVenue('${v.id}');go('students')">查看此館學員 →</button>`
         }
       </div>`;
     el.appendChild(card);
@@ -2887,25 +2920,36 @@ function openVenueModal(id){
   document.getElementById('vm-code').value=v?.code||'';
   document.getElementById('vm-location').value=v?.location||'';
   document.getElementById('vm-status').value=v?.status||'active';
+  document.getElementById('vm-line-channel-id').value=v?.line_channel_id||'';
+  document.getElementById('vm-line-token').value=v?.line_channel_access_token||'';
+  document.getElementById('vm-line-secret').value=v?.line_channel_secret||'';
   ['vm-name-err','vm-code-err','vm-location-err'].forEach(e=>document.getElementById(e).classList.remove('show'));
   openModal('venue-modal');
+}
+function copyWebhookUrl(){
+  const url=document.getElementById('vm-webhook-url').value;
+  navigator.clipboard.writeText(url).then(()=>showToast('Webhook URL 已複製','ok'));
 }
 async function saveVenue(){
   const name=document.getElementById('vm-name').value.trim();
   const code=document.getElementById('vm-code').value.trim().toUpperCase();
   const location=document.getElementById('vm-location').value.trim();
   const status=document.getElementById('vm-status').value;
+  const line_channel_id=document.getElementById('vm-line-channel-id').value.trim()||null;
+  const line_channel_access_token=document.getElementById('vm-line-token').value.trim()||null;
+  const line_channel_secret=document.getElementById('vm-line-secret').value.trim()||null;
   let ok=true;
   if(!name){document.getElementById('vm-name-err').classList.add('show');ok=false;}else document.getElementById('vm-name-err').classList.remove('show');
   const codeValid=/^[A-Z]$/.test(code)&&!VENUES_DATA.some(v=>v.code===code&&String(v.id)!==String(editingVenueId));
   if(!codeValid){document.getElementById('vm-code-err').classList.add('show');ok=false;}else document.getElementById('vm-code-err').classList.remove('show');
   if(!location){document.getElementById('vm-location-err').classList.add('show');ok=false;}else document.getElementById('vm-location-err').classList.remove('show');
   if(!ok)return;
+  const payload={name,code,location,status,line_channel_id,line_channel_access_token,line_channel_secret};
   if(editingVenueId){
-    const {error}=await SUPA.from('venues').update({name,code,location,status}).eq('id',editingVenueId);
+    const {error}=await SUPA.from('venues').update(payload).eq('id',editingVenueId);
     if(error){showToast('更新失敗：'+error.message,'warn');return;}
   }else{
-    const {error}=await SUPA.from('venues').insert({name,code,location,status});
+    const {error}=await SUPA.from('venues').insert(payload);
     if(error){showToast('新增失敗：'+error.message,'warn');return;}
   }
   closeModal('venue-modal');

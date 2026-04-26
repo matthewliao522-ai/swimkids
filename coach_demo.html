@@ -2131,7 +2131,7 @@ async function doSubmit() {
     const msg = `${stu.name} 的游泳測驗結果已出爐，請登入 Handle Power 小泳士系統查看。`;
     const sendAt = new Date(Date.now() + 60*60*1000).toISOString();
     const {data:notifData, error:notifErr} = await SUPA.from('pending_notifications')
-      .insert({guardian_id:stu.guardianId, student_name:stu.name, message:msg, send_at:sendAt})
+      .insert({guardian_id:stu.guardianId, student_name:stu.name, message:msg, send_at:sendAt, venue_id:cls.venueId||null})
       .select('id').single();
     if(notifErr) lineStatus = '｜LINE 通知失敗';
     else if(notifData?.id) { examState[m.id].pendingNotifyId = notifData.id; lineStatus = '｜LINE 已排程'; }
