@@ -3096,6 +3096,7 @@ function showImportError(msg) {
 async function confirmImport() {
   let added = 0;
   let newStudents = 0;
+  const batchCodes = new Set(CLASSES.map(c => c.code));
   for(const cls of importParsed) {
     const venueId = cls.venueId || VENUES[0]?.id;
     const coachName = cls.teach || COACHES[0];
@@ -3104,7 +3105,18 @@ async function confirmImport() {
     const ctype = cls.classType||'C';
     const tslot = cls.timeSlot||'A';
     if(cls.isDuplicate) continue;
-    const code = generateUniqueCode(venueId, cls.date, ctype, tslot) || cls.name;
+    const baseCode = generateClassCode(venueId, cls.date, ctype, tslot);
+    let code;
+    if (!baseCode) {
+      code = cls.name;
+    } else if (!batchCodes.has(baseCode)) {
+      code = baseCode;
+    } else {
+      let n = 2;
+      while (batchCodes.has(baseCode + n)) n++;
+      code = baseCode + n;
+    }
+    batchCodes.add(code);
     const members = [];
     for(const s of cls.students) {
       let stuId = s.matched?.id;
