@@ -3018,6 +3018,15 @@ function parseImportRows(rows) {
     showImportError('檔案內沒有可解析的資料，請確認欄位標題正確。');
     return;
   }
+  // 標記重複班（已存在於 DB）
+  classOrder.forEach(key => {
+    const cls = classMap[key];
+    const venueId = VENUE_NAME_MAP[cls.venue] || null;
+    const baseCode = generateClassCode(venueId, cls.date, cls.classType||'C', cls.timeSlot||'A');
+    const existsByCode = baseCode && CLASSES.find(c => c.code === baseCode);
+    const existsByNote = cls.name && CLASSES.find(c => c.note === cls.name && c.date === cls.date);
+    cls.isDuplicate = !!(existsByCode || existsByNote);
+  });
   renderImportPreview(classOrder.map(k => classMap[k]), errors);
 }
 
@@ -3027,14 +3036,28 @@ function renderImportPreview(classes, errors) {
   if (errors.length) {
     html += `<div class="im-err-box"><strong>⚠ 發現 ${errors.length} 個問題，請修正後重新上傳：</strong><ul style="margin:6px 0 0 14px">${errors.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
   }
-  const totalCls = classes.length;
-  const okStudents = classes.reduce((n,c) => n + c.students.filter(s=>s.matched).length, 0);
-  const missingStudents = classes.reduce((n,c) => n + c.students.filter(s=>!s.matched).length, 0);
-  html += `<div class="im-summary">共 <strong>${totalCls}</strong> 個班、<strong>${okStudents}</strong> 位學員比對成功${missingStudents ? `、<span style="color:var(--brand)">${missingStudents} 位將新建</span>` : ''}</div>`;
+  const newCls = classes.filter(c => !c.isDuplicate);
+  const dupCls = classes.filter(c => c.isDuplicate);
+  const totalCls = newCls.length;
+  const okStudents = newCls.reduce((n,c) => n + c.students.filter(s=>s.matched).length, 0);
+  const missingStudents = newCls.reduce((n,c) => n + c.students.filter(s=>!s.matched).length, 0);
+  html += `<div class="im-summary">共 <strong>${totalCls}</strong> 個班將匯入、<strong>${okStudents}</strong> 位學員比對成功${missingStudents ? `、<span style="color:var(--brand)">${missingStudents} 位將新建</span>` : ''}${dupCls.length ? `、<span style="color:var(--signal)">${dupCls.length} 個班已存在略過</span>` : ''}</div>`;
   classes.forEach(cls => {
     const okCount = cls.students.filter(s=>s.matched).length;
     const warnCount = cls.students.filter(s=>!s.matched).length;
     const venueHtml = cls.venueId ? cls.venue : `<span style="color:var(--gold-dk)">${cls.venue||'未填'} ⚠</span>`;
+    if (cls.isDuplicate) {
+      html += `<div class="im-cls-card" style="opacity:.5;border-color:#ddd">
+        <div class="im-cls-hd">
+          <div>
+            <div class="im-cls-name" style="text-decoration:line-through;color:var(--ink3)">${cls.name}</div>
+            <div class="im-cls-meta">${cls.date} · ${venueHtml}</div>
+          </div>
+          <div style="font-size:11px;color:var(--signal);flex-shrink:0;font-weight:600">已存在，略過</div>
+        </div>
+      </div>`;
+      return;
+    }
     html += `<div class="im-cls-card">
       <div class="im-cls-hd">
         <div>
@@ -3094,8 +3117,7 @@ async function confirmImport() {
     const examCoachName = cls.exam || EXAM_COACHES[0];
     const ctype = cls.classType||'C';
     const tslot = cls.timeSlot||'A';
-    const exists = CLASSES.find(c=>c.note===cls.name && c.classDate===cls.date);
-    if(exists) continue;
+    if(cls.isDuplicate) continue;
     const code = generateUniqueCode(venueId, cls.date, ctype, tslot) || cls.name;
     const members = [];
     for(const s of cls.students) {
