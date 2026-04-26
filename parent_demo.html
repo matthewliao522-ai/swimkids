@@ -534,19 +534,41 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
     <div id="next-goal-section" class="fade-up fu3"></div>
     <div class="section-title fade-up fu3">考試紀錄</div>
     <div id="exam-list" class="fade-up fu4"></div>
-    <div id="line-notify-section" style="display:none;margin-top:18px" class="fade-up fu4">
+    <div id="line-notify-section" style="margin-top:18px" class="fade-up fu4">
       <div class="section-title">LINE 通知</div>
-      <div style="background:#fff;border-radius:16px;border:1px solid var(--slate6);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--ink1)">考試結果通知</div>
-          <div style="font-size:11px;color:var(--slate3);margin-top:2px">開啟後，考試結果出爐時將透過 LINE 通知您</div>
+
+      <!-- 未綁定 -->
+      <div id="line-unbound-card" style="display:none;background:#fff;border-radius:16px;border:1px solid var(--slate6);padding:16px 18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="width:36px;height:36px;background:var(--slate7);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--slate3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--slate)">尚未綁定 LINE 通知</div>
+            <div style="font-size:11px;color:var(--slate3);margin-top:2px">完成綁定後即可接收考試結果通知</div>
+          </div>
         </div>
-        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0">
-          <input type="checkbox" id="notify-toggle" onchange="toggleNotify(this)" style="opacity:0;width:0;height:0">
-          <span id="notify-slider" style="position:absolute;inset:0;background:var(--slate5);border-radius:24px;cursor:pointer;transition:.2s">
-            <span style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)" id="notify-knob"></span>
-          </span>
-        </label>
+        <div style="background:var(--slate7);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--slate2);line-height:1.8">
+          傳送以下訊息給場館的 <strong style="color:var(--slate)">LINE 官方帳號</strong>：
+          <div id="line-bind-msg" style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--ocean);background:var(--ocean-light);border-radius:8px;padding:8px 12px;margin-top:8px;letter-spacing:.03em;text-align:center"></div>
+        </div>
+      </div>
+
+      <!-- 已綁定 -->
+      <div id="line-bound-card" style="display:none;background:#fff;border-radius:16px;border:1px solid var(--slate6);padding:14px 18px">
+        <div id="line-bound-venues" style="font-size:11px;color:var(--slate3);margin-bottom:10px;display:flex;align-items:center;gap:5px"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--slate)">考試結果通知</div>
+            <div style="font-size:11px;color:var(--slate3);margin-top:2px">開啟後，考試結果出爐時將透過 LINE 通知您</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0">
+            <input type="checkbox" id="notify-toggle" onchange="toggleNotify(this)" style="opacity:0;width:0;height:0">
+            <span id="notify-slider" style="position:absolute;inset:0;background:var(--slate5);border-radius:24px;cursor:pointer;transition:.2s">
+              <span style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)" id="notify-knob"></span>
+            </span>
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -1088,9 +1110,33 @@ async function renderApp(showCelebration) {
 
 function renderLineNotifySection() {
   const g = currentAccount.guardian;
-  const section = document.getElementById('line-notify-section');
-  if (!g.line_user_id) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
+  const isBound = g.line_user_id || (g.lineBindings && g.lineBindings.length > 0);
+  const unboundCard = document.getElementById('line-unbound-card');
+  const boundCard = document.getElementById('line-bound-card');
+
+  if (!isBound) {
+    unboundCard.style.display = 'block';
+    boundCard.style.display = 'none';
+    const phone = (g.phone || '').replace(/\D/g, '');
+    document.getElementById('line-bind-msg').textContent = '小泳士' + phone;
+    return;
+  }
+
+  unboundCard.style.display = 'none';
+  boundCard.style.display = 'block';
+
+  // 顯示已綁定場館
+  const venuesEl = document.getElementById('line-bound-venues');
+  const boundVenues = (g.lineBindings || []).map(b => venueName(b.venue_id)).filter(Boolean);
+  if (boundVenues.length) {
+    venuesEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      + '<span style="color:var(--green);font-weight:600">已綁定：</span>'
+      + boundVenues.join('、');
+  } else {
+    venuesEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      + '<span style="color:var(--green);font-weight:600">LINE 已綁定</span>';
+  }
+
   const enabled = g.notify_enabled !== false;
   const cb = document.getElementById('notify-toggle');
   const slider = document.getElementById('notify-slider');
@@ -1484,6 +1530,10 @@ async function loadParentData(authId) {
   const {data: guardian} = await SUPA.from('guardians')
     .select('id, name, phone, notify_enabled, line_user_id').eq('auth_id', authId).single();
   if (!guardian) return;
+
+  const {data: lineBindings} = await SUPA.from('guardian_line_bindings')
+    .select('venue_id').eq('guardian_id', guardian.id);
+  guardian.lineBindings = lineBindings || [];
 
   const {data: sg} = await SUPA.from('student_guardian')
     .select('student_id').eq('guardian_id', guardian.id);
