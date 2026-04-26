@@ -1755,13 +1755,36 @@ function clearDraft(classId) {
 async function startExam(classId) {
   currentClassId = classId;
   currentStudentIdx = 0;
-  const cls = CLASSES.find(c=>c.id===classId);
+  let cls = CLASSES.find(c=>c.id===classId);
+
+  // done 班不在 CLASSES，按需從 DB 載入
+  if (!cls) {
+    const {data:p} = await SUPA.from('prep_classes').select('*').eq('id',classId).single();
+    if (!p) { showToast('找不到班級資料','warn'); return; }
+    const {data:enr} = await SUPA.from('prep_enrollments').select('student_id').eq('prep_class_id',classId);
+    const memberIds = (enr||[]).map(e=>e.student_id);
+    const members = memberIds.map(sid=>{
+      const s = STUDENTS.find(x=>String(x.id)===String(sid));
+      return s ? {...s, examLevel:s.level} : null;
+    }).filter(Boolean);
+    const coach = COACHES_DATA.find(c=>String(c.id)===String(p.coach_id));
+    cls = {
+      id:p.id, code:p.code, label:p.code,
+      date:p.class_date, venueId:p.venue_id,
+      coachId:p.coach_id, teachCoach:coach?.name||'', examCoach:'',
+      classType:p.class_type||'', timeSlot:p.time_slot||'',
+      status:p.status, note:p.note||'', members,
+    };
+    CLASSES.push(cls);
+  }
+
   cls.members.forEach(m => {
     if (!examState[m.id]) {
       examState[m.id] = { checks:{}, verdict:null, note:'', examLevel: m.examLevel };
     }
   });
-  if (cls.status === 'done' && !cls.isQuickExam) {
+
+  if (cls.status === 'done') {
     const {data: exams} = await SUPA.from('exams')
       .select('id,student_id,level,result,fail_items,note')
       .eq('prep_class_id', classId);
@@ -1781,6 +1804,7 @@ async function startExam(classId) {
       };
     });
   }
+
   const hadDraft = restoreDraft(classId);
   if (hadDraft) showToast('已載入上次草稿', 'ok');
   document.getElementById('teach-coach-sel').value = cls.teachCoach || COACHES[0] || '';
