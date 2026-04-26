@@ -55,7 +55,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: coachErr.message }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // 建立 staff_roles
+    // 建立 staff_roles（所有教練統一用 coach，exam/teach 由 coaches.role 區分）
     const { error: roleErr } = await supabaseAdmin.from('staff_roles').insert({
       auth_id: newUser.user.id,
       role: 'coach',
