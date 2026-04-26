@@ -3022,10 +3022,14 @@ function parseImportRows(rows) {
   classOrder.forEach(key => {
     const cls = classMap[key];
     const venueId = VENUE_NAME_MAP[cls.venue] || null;
-    const baseCode = generateClassCode(venueId, cls.date, cls.classType||'C', cls.timeSlot||'A');
-    const existsByCode = baseCode && CLASSES.find(c => c.code === baseCode);
+    const ctype = cls.classType||'C';
+    const tslot = cls.timeSlot||'A';
+    const existsBySlot = venueId && CLASSES.find(c =>
+      c.venueId === venueId && c.date === cls.date &&
+      c.classType === ctype && c.timeSlot === tslot
+    );
     const existsByNote = cls.name && CLASSES.find(c => c.note === cls.name && c.date === cls.date);
-    cls.isDuplicate = !!(existsByCode || existsByNote);
+    cls.isDuplicate = !!(existsBySlot || existsByNote);
   });
   renderImportPreview(classOrder.map(k => classMap[k]), errors);
 }
