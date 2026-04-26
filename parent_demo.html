@@ -1194,12 +1194,9 @@ function renderExamList(child) {
   const el = document.getElementById('exam-list');
   el.innerHTML = '';
 
-  // 家長端只顯示通過的考試
-  const passedExams = child.exams
-    .filter(e => e.verdict === 'pass')
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const allExams = [...child.exams].sort((a, b) => b.date.localeCompare(a.date));
 
-  if (!passedExams.length) {
+  if (!allExams.length) {
     el.innerHTML = `<div style="text-align:center;padding:40px 20px">
       <div style="font-size:32px;margin-bottom:12px">🏊</div>
       <div style="color:var(--slate3);font-size:13px;font-weight:500">尚未通過任何考試</div>
@@ -1208,22 +1205,29 @@ function renderExamList(child) {
     return;
   }
 
-  passedExams.forEach((exam, idx) => {
+  let firstOpen = true;
+  allExams.forEach(exam => {
     const sd = SKILL_DATA[exam.level];
     const dp = exam.date.split('-');
-    // 只顯示達標項目（通過的考試只有達標，不顯示未達標）
+    const isPassed = exam.verdict === 'pass';
+    const isFail = exam.verdict === 'fail';
+
+    // 通過：顯示達標項目
     const passItems = [];
-    if (sd) sd.items.forEach((item,i)=>{
-      if (exam.checks['p'+i]) passItems.push(item.pass);
-    });
+    if (sd && isPassed) sd.items.forEach((item,i)=>{ if (exam.checks['p'+i]) passItems.push(item.pass); });
+    // 未通過：顯示未達標項目
+    const failItems = [];
+    if (sd && isFail) sd.items.forEach((item,i)=>{ if (exam.checks['f'+i]) failItems.push(item.fail); });
+
     let bodyHtml = '';
-    if (passItems.length) {
-      bodyHtml += `<div class="skill-section">
-        <div class="skill-section-title">通過項目</div>
-        <div class="skill-grid">`;
-      passItems.forEach(t => {
-        bodyHtml += `<div class="skill-item-row sk-pass"><div class="sk-icon">✓</div><div class="sk-text">${t}</div></div>`;
-      });
+    if (isPassed && passItems.length) {
+      bodyHtml += `<div class="skill-section"><div class="skill-section-title">通過項目</div><div class="skill-grid">`;
+      passItems.forEach(t => { bodyHtml += `<div class="skill-item-row sk-pass"><div class="sk-icon">✓</div><div class="sk-text">${t}</div></div>`; });
+      bodyHtml += `</div></div>`;
+    }
+    if (isFail && failItems.length) {
+      bodyHtml += `<div class="skill-section"><div class="skill-section-title">未達標項目</div><div class="skill-grid">`;
+      failItems.forEach(t => { bodyHtml += `<div class="skill-item-row sk-fail"><div class="sk-icon">✗</div><div class="sk-text">${t}</div></div>`; });
       bodyHtml += `</div></div>`;
     }
     if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${exam.note}</div></div>`;
@@ -1236,6 +1240,10 @@ function renderExamList(child) {
       </div></div>
     </div>`;
 
+    const chipClass = isPassed ? 'chip-pass' : isFail ? 'chip-fail' : 'chip-absent';
+    const chipTxt = isPassed ? '通過' : isFail ? '未通過' : '未出席';
+    const levelTxt = isPassed ? `${sd?sd.label:''} 通過 🎉` : isFail ? `${sd?sd.label:''} 未通過` : `${sd?sd.label:''} 未出席`;
+
     const card = document.createElement('div');
     card.className = 'exam-card';
     card.innerHTML = `<div class="exam-header" onclick="this.parentElement.classList.toggle('open')">
@@ -1246,23 +1254,38 @@ function renderExamList(child) {
       </div>
       <div class="exam-divider"></div>
       <div class="exam-info">
-        <div class="exam-level">${sd?sd.label:''} 通過 🎉</div>
-        <div class="exam-class">
-          <span>${exam.classId}</span>
-          <span style="margin:0 4px;color:var(--slate5)">·</span>
-          <span style="display:inline-flex;align-items:center;gap:3px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            ${venueName(exam.venueId)}
-          </span>
-        </div>
+        <div class="exam-level">${levelTxt}</div>
         <div class="exam-coaches">${exam.teachCoach} 教學・${exam.examCoach} 監考</div>
       </div>
-      <div class="result-chip chip-pass">通過</div>
+      <div class="result-chip ${chipClass}">${chipTxt}</div>
       <div class="expand-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
     </div>
     <div class="exam-body">${bodyHtml}</div>`;
-    if (idx===0) card.classList.add('open');
+    if (firstOpen) { card.classList.add('open'); firstOpen = false; }
     el.appendChild(card);
+
+    // 未通過：附上目前級數確認卡
+    if (isFail && exam.level > 1) {
+      const confirmLv = exam.level - 1;
+      const confirmSd = SKILL_DATA[confirmLv];
+      const confirmCard = document.createElement('div');
+      confirmCard.className = 'exam-card';
+      confirmCard.style.cssText = 'border-color:#bbf7d0;background:#f0fdf4;opacity:.85;margin-left:14px';
+      confirmCard.innerHTML = `<div class="exam-header" style="cursor:default">
+        <div class="exam-date-block">
+          <div class="exam-month">${dp[1]}月</div>
+          <div class="exam-day">${parseInt(dp[2])}</div>
+          <div class="exam-year">${dp[0]}</div>
+        </div>
+        <div class="exam-divider"></div>
+        <div class="exam-info">
+          <div class="exam-level">${confirmSd?confirmSd.label:''} 確認通過</div>
+          <div class="exam-coaches" style="color:var(--slate3)">目前已通過級數確認</div>
+        </div>
+        <div class="result-chip chip-pass">通過</div>
+      </div>`;
+      el.appendChild(confirmCard);
+    }
   });
 }
 
