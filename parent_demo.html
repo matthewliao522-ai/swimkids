@@ -1194,26 +1194,32 @@ function renderExamList(child) {
   const el = document.getElementById('exam-list');
   el.innerHTML = '';
 
-  // 只顯示通過紀錄；fail 時額外插一張 N-1 級確認卡（每級只插一次，但記錄所有 fail 日期）
+  // 只顯示通過紀錄；N 級的失敗紀錄附在 N-1 級通過卡裡
+  // 如果沒有真實的 N-1 通過，則建立合成卡
   const passedLevels = new Set(child.exams.filter(e=>e.verdict==='pass').map(e=>e.level));
   const failsByLevel = {};
   child.exams.forEach(e => {
-    if (e.verdict === 'fail' && e.level > 1) {
+    if (e.verdict === 'fail') {
       if (!failsByLevel[e.level]) failsByLevel[e.level] = [];
       failsByLevel[e.level].push(e.date);
     }
   });
+  // 附加失敗日期到真實通過卡
   const displayItems = [];
   child.exams.forEach(e => {
-    if (e.verdict === 'pass') { displayItems.push({...e, synthetic: false}); }
+    if (e.verdict === 'pass') {
+      const nextFailDates = (failsByLevel[e.level + 1] || []).sort((a,b) => b.localeCompare(a));
+      displayItems.push({...e, synthetic: false, nextFailDates});
+    }
   });
+  // 無真實通過時建立合成卡
   Object.entries(failsByLevel).forEach(([lvStr, dates]) => {
     const confirmLv = parseInt(lvStr) - 1;
-    if (!passedLevels.has(confirmLv)) {
+    if (confirmLv >= 1 && !passedLevels.has(confirmLv)) {
       const sortedDates = [...dates].sort((a,b) => b.localeCompare(a));
       displayItems.push({
         level: confirmLv, verdict: 'pass', synthetic: true, checks: {},
-        date: sortedDates[0], failDates: sortedDates,
+        date: sortedDates[0], nextFailDates: sortedDates,
         teachCoach: '', examCoach: '', venueId: '', note: '',
       });
     }
@@ -1243,12 +1249,11 @@ function renderExamList(child) {
       passItems.forEach(t => { bodyHtml += `<div class="skill-item-row sk-pass"><div class="sk-icon">✓</div><div class="sk-text">${t}</div></div>`; });
       bodyHtml += `</div></div>`;
     }
-    if (exam.synthetic && exam.failDates?.length) {
+    if (exam.nextFailDates?.length) {
       const nextLv = SKILL_DATA[exam.level + 1];
-      const total = exam.failDates.length;
+      const total = exam.nextFailDates.length;
       const SHOW = 3;
-      const uid = `fd-${exam.level}`;
-      const rowsHtml = exam.failDates.map((d, i) => {
+      const rowsHtml = exam.nextFailDates.map((d, i) => {
         const dp2 = d.split('-');
         const extra = i >= SHOW ? `class="fd-extra-${exam.level}"` : '';
         const disp = i >= SHOW ? 'none' : 'flex';
@@ -1271,7 +1276,8 @@ function renderExamList(child) {
         <div class="skill-grid">${rowsHtml}</div>
         ${moreBtn}
       </div>`;
-    } else if (!exam.synthetic) {
+    }
+    if (!exam.synthetic) {
       if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${exam.note}</div></div>`;
       bodyHtml += `<div class="coach-row" style="grid-template-columns:1fr 1fr 1fr">
         <div><div class="coach-lbl">教學教練</div><div class="coach-name">${exam.teachCoach}</div></div>
