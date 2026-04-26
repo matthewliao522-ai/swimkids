@@ -1245,18 +1245,32 @@ function renderExamList(child) {
     }
     if (exam.synthetic && exam.failDates?.length) {
       const nextLv = SKILL_DATA[exam.level + 1];
-      bodyHtml += `<div class="skill-section">
-        <div class="skill-section-title">${nextLv?nextLv.label:exam.level+1+'級'} 挑戰紀錄</div>
-        <div class="skill-grid">`;
-      exam.failDates.forEach((d, i) => {
+      const total = exam.failDates.length;
+      const SHOW = 3;
+      const uid = `fd-${exam.level}`;
+      const rowsHtml = exam.failDates.map((d, i) => {
         const dp2 = d.split('-');
-        bodyHtml += `<div class="skill-item-row" style="background:var(--slate7)">
-          <div style="font-size:11px;color:var(--slate3);font-family:'DM Mono',monospace;flex-shrink:0">第 ${exam.failDates.length - i} 次</div>
-          <div class="sk-text" style="color:var(--slate2)">${dp2[0]} 年 ${parseInt(dp2[1])} 月 ${parseInt(dp2[2])} 日</div>
-          <div style="font-size:10px;color:var(--red);margin-left:auto">未通過</div>
+        const extra = i >= SHOW ? `class="fd-extra-${exam.level}"` : '';
+        const disp = i >= SHOW ? 'none' : 'flex';
+        return `<div ${extra} style="display:${disp};align-items:center;gap:8px;padding:6px 9px;border-radius:8px;background:var(--slate7)">
+          <div style="font-size:11px;color:var(--slate3);font-family:'DM Mono',monospace;flex-shrink:0">第 ${total - i} 次</div>
+          <div style="font-size:12px;color:var(--slate2);flex:1">${dp2[0]} 年 ${parseInt(dp2[1])} 月 ${parseInt(dp2[2])} 日</div>
+          <div style="font-size:10px;color:var(--red)">未通過</div>
         </div>`;
-      });
-      bodyHtml += `</div></div>`;
+      }).join('');
+      const moreBtn = total > SHOW
+        ? `<button onclick="
+            var els=document.querySelectorAll('.fd-extra-${exam.level}');
+            var showing=els[0].style.display!=='none';
+            els.forEach(function(e){e.style.display=showing?'none':'flex'});
+            this.textContent=showing?'顯示全部 ${total} 次 ▾':'收起 ▴';
+          " style="margin-top:6px;font-size:11px;color:var(--ocean);background:none;border:none;cursor:pointer;padding:2px 0">顯示全部 ${total} 次 ▾</button>`
+        : '';
+      bodyHtml += `<div class="skill-section">
+        <div class="skill-section-title">${nextLv?nextLv.label:exam.level+1+'級'} 挑戰紀錄（${total} 次）</div>
+        <div class="skill-grid">${rowsHtml}</div>
+        ${moreBtn}
+      </div>`;
     } else if (!exam.synthetic) {
       if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${exam.note}</div></div>`;
       bodyHtml += `<div class="coach-row" style="grid-template-columns:1fr 1fr 1fr">
