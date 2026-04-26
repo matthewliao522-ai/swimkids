@@ -1194,13 +1194,18 @@ function renderExamList(child) {
   const el = document.getElementById('exam-list');
   el.innerHTML = '';
 
-  // 只顯示通過紀錄；fail 時額外插一張 N-1 級確認卡
+  // 只顯示通過紀錄；fail 時額外插一張 N-1 級確認卡（每級只插一次）
   const passedLevels = new Set(child.exams.filter(e=>e.verdict==='pass').map(e=>e.level));
+  const syntheticAdded = new Set();
   const displayItems = [];
   child.exams.forEach(e => {
     if (e.verdict === 'pass') { displayItems.push({...e, synthetic: false}); }
-    else if (e.verdict === 'fail' && e.level > 1 && !passedLevels.has(e.level - 1)) {
-      displayItems.push({...e, level: e.level - 1, verdict: 'pass', synthetic: true, checks: {}});
+    else if (e.verdict === 'fail' && e.level > 1) {
+      const confirmLv = e.level - 1;
+      if (!passedLevels.has(confirmLv) && !syntheticAdded.has(confirmLv)) {
+        syntheticAdded.add(confirmLv);
+        displayItems.push({...e, level: confirmLv, verdict: 'pass', synthetic: true, checks: {}});
+      }
     }
   });
   displayItems.sort((a, b) => b.date.localeCompare(a.date));
