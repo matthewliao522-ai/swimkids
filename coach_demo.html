@@ -1300,7 +1300,7 @@ function renderPrepList() {
     d.className = 'class-card' + (cls.id===prepSelectedId?' selected':'');
     const cTypeMap={U:'幼兒',C:'初階',J:'進階'};
     const cTimeMap={A:'A',B:'B',C:'C',D:'D',Z:'Z',E:'E',F:'F',G:'G',H:'H',I:'I'};
-    const classDesc=`${cTypeMap[cls.classType]||cls.classType}班 · ${cTimeMap[cls.timeSlot]||cls.timeSlot}`;
+    const classDesc = cls.note || `${cTypeMap[cls.classType]||cls.classType}班 · ${cTimeMap[cls.timeSlot]||cls.timeSlot}`;
     d.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <div class="cc-code">${cls.code}</div>
       <div class="status-chip ${chipCls}">${chipTxt}</div>
@@ -1802,7 +1802,7 @@ function renderDayScreen() {
     if (isPast && cls.status!=='done') row.style.opacity = '0.6';
     const dayTypeMap={U:'幼兒',C:'初階',J:'進階'};
     const dayTimeMap={A:'A',B:'B',C:'C',D:'D',Z:'Z',E:'E',F:'F',G:'G',H:'H',I:'I'};
-    const dayDesc=`${dayTypeMap[cls.classType]||cls.classType}班 · ${dayTimeMap[cls.timeSlot]||cls.timeSlot}`;
+    const dayDesc = cls.note || `${dayTypeMap[cls.classType]||cls.classType}班 · ${dayTimeMap[cls.timeSlot]||cls.timeSlot}`;
     row.innerHTML = `<div class="pip ${pipCls}"></div>
       <div style="flex:1;min-width:0">
         <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brand)">${cls.code}</div>
@@ -1819,7 +1819,7 @@ function renderDayDetail(id) {
   const cls = CLASSES.find(c=>c.id===id);
   const dtTypeMap={U:'幼兒',C:'初階',J:'進階'};
   const dtTimeMap={A:'A',B:'B',C:'C',D:'D',Z:'Z',E:'E',F:'F',G:'G',H:'H',I:'I'};
-  document.getElementById('day-selected-title').textContent = cls.code + ' · ' + (dtTypeMap[cls.classType]||cls.classType) + '班 · ' + (dtTimeMap[cls.timeSlot]||cls.timeSlot);
+  document.getElementById('day-selected-title').textContent = cls.code + ' · ' + (cls.note || (dtTypeMap[cls.classType]||cls.classType) + '班 · ' + (dtTimeMap[cls.timeSlot]||cls.timeSlot));
   const btn = document.getElementById('day-start-btn');
   btn.style.display = 'inline-flex';
   const body = document.getElementById('day-class-detail');
@@ -2313,52 +2313,33 @@ function nextStudent() {
 // TOAST
 // ════════════════════════════════
 function downloadSampleExcel() {
-  // 從現有 demo 學員取前 8 位，分成 2 班，帶入真實手機號碼
   const today = new Date();
   const pad = n => String(n).padStart(2,'0');
-  const nextWeek = new Date(today.getTime() + 7 * 24 * 3600 * 1000);
   const d1 = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-  const d2 = `${nextWeek.getFullYear()}-${pad(nextWeek.getMonth()+1)}-${pad(nextWeek.getDate())}`;
+  const v1 = VENUES[0]?.code || 'N';
+  const v2 = VENUES[1]?.code || v1;
+  const tc1 = COACHES[0] || '教學教練A';
+  const tc2 = COACHES[1] || '教學教練B';
+  const ec1 = EXAM_COACHES[0] || '考試教練A';
 
-  const sample = [];
-  const group1 = STUDENTS.slice(0, 4);
-  const group2 = STUDENTS.slice(4, 7);
-
-  group1.forEach(s => sample.push({
-    '場館': '台北館',
-    '客戶姓名': s.guardianName,
-    '學員姓名': s.name,
-    '客戶電話': s.guardianPhone.replace(/-/g,''),
-    '客戶Email': '',
-    '班級名稱': 'Demo測試班A',
-    '考試日期': d1,
-    '班別': 'U',
-    '時段': 'A',
-    '教學教練': '陳教練',
-    '考試教練': '林主管',
-  }));
-  group2.forEach(s => sample.push({
-    '場館': '新竹館',
-    '客戶姓名': s.guardianName,
-    '學員姓名': s.name,
-    '客戶電話': s.guardianPhone.replace(/-/g,''),
-    '客戶Email': '',
-    '班級名稱': 'Demo測試班B',
-    '考試日期': d2,
-    '班別': 'C',
-    '時段': 'B',
-    '教學教練': '王教練',
-    '考試教練': '王主管',
-  }));
+  const sample = [
+    { '場館':v1, '客戶姓名':'陳小明媽媽', '學員姓名':'陳小明', '客戶電話':'0912345001', '客戶Email':'', '班級名稱':'幼兒A組', '考試日期':d1, '班別':'U', '時段':'A', '教學教練':tc1, '考試教練':ec1 },
+    { '場館':v1, '客戶姓名':'林小華爸爸', '學員姓名':'林小華', '客戶電話':'0912345002', '客戶Email':'', '班級名稱':'幼兒A組', '考試日期':d1, '班別':'U', '時段':'A', '教學教練':tc1, '考試教練':ec1 },
+    { '場館':v1, '客戶姓名':'王小美媽媽', '學員姓名':'王小美', '客戶電話':'0912345003', '客戶Email':'', '班級名稱':'幼兒A組', '考試日期':d1, '班別':'U', '時段':'A', '教學教練':tc1, '考試教練':ec1 },
+    { '場館':v1, '客戶姓名':'張小強爸爸', '學員姓名':'張小強', '客戶電話':'0912345004', '客戶Email':'', '班級名稱':'幼兒B組', '考試日期':d1, '班別':'U', '時段':'A', '教學教練':tc2, '考試教練':ec1 },
+    { '場館':v1, '客戶姓名':'李小花媽媽', '學員姓名':'李小花', '客戶電話':'0912345005', '客戶Email':'', '班級名稱':'幼兒B組', '考試日期':d1, '班別':'U', '時段':'A', '教學教練':tc2, '考試教練':ec1 },
+    { '場館':v2, '客戶姓名':'黃小龍爸爸', '學員姓名':'黃小龍', '客戶電話':'0912345006', '客戶Email':'', '班級名稱':'初階A組', '考試日期':d1, '班別':'C', '時段':'B', '教學教練':tc1, '考試教練':ec1 },
+    { '場館':v2, '客戶姓名':'吳小雨媽媽', '學員姓名':'吳小雨', '客戶電話':'0912345007', '客戶Email':'', '班級名稱':'初階A組', '考試日期':d1, '班別':'C', '時段':'B', '教學教練':tc1, '考試教練':ec1 },
+  ];
 
   const ws = XLSX.utils.json_to_sheet(sample);
   ws['!cols'] = [
-    {wch:10},{wch:10},{wch:10},{wch:14},{wch:22},{wch:18},{wch:12},{wch:6},{wch:6},{wch:10},{wch:10}
+    {wch:6},{wch:12},{wch:10},{wch:14},{wch:22},{wch:12},{wch:12},{wch:6},{wch:6},{wch:10},{wch:10}
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '預建班資料');
   XLSX.writeFile(wb, 'swimkids_import_sample.xlsx');
-  showToast('範本已下載，可直接匯入測試', 'ok');
+  showToast('範本已下載', 'ok');
 }
 
 function showToast(msg, type='') {
@@ -2996,7 +2977,7 @@ function parseImportRows(rows) {
     if (phone.length !== 10 || !phone.startsWith('09')) { errors.push(`第 ${rowNum} 行（${name}）：手機格式錯誤（${phone}）`); return; }
     const key = venue + '|' + date + '|' + classType + '|' + timeSlot + '|' + teach;
     if (!classMap[key]) {
-      const venueId = VENUE_NAME_MAP[venue] || null;
+      const venueId = VENUE_NAME_MAP[venue] || VENUES.find(v => v.code === venue)?.id || null;
       classMap[key] = { name, date, venue, venueId, classType, timeSlot, teach, exam, students: [], key };
       classOrder.push(key);
     }
