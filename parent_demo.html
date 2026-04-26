@@ -1194,18 +1194,28 @@ function renderExamList(child) {
   const el = document.getElementById('exam-list');
   el.innerHTML = '';
 
-  // 只顯示通過紀錄；fail 時額外插一張 N-1 級確認卡（每級只插一次）
+  // 只顯示通過紀錄；fail 時額外插一張 N-1 級確認卡（每級只插一次，但記錄所有 fail 日期）
   const passedLevels = new Set(child.exams.filter(e=>e.verdict==='pass').map(e=>e.level));
-  const syntheticAdded = new Set();
+  const failsByLevel = {};
+  child.exams.forEach(e => {
+    if (e.verdict === 'fail' && e.level > 1) {
+      if (!failsByLevel[e.level]) failsByLevel[e.level] = [];
+      failsByLevel[e.level].push(e.date);
+    }
+  });
   const displayItems = [];
   child.exams.forEach(e => {
     if (e.verdict === 'pass') { displayItems.push({...e, synthetic: false}); }
-    else if (e.verdict === 'fail' && e.level > 1) {
-      const confirmLv = e.level - 1;
-      if (!passedLevels.has(confirmLv) && !syntheticAdded.has(confirmLv)) {
-        syntheticAdded.add(confirmLv);
-        displayItems.push({...e, level: confirmLv, verdict: 'pass', synthetic: true, checks: {}});
-      }
+  });
+  Object.entries(failsByLevel).forEach(([lvStr, dates]) => {
+    const confirmLv = parseInt(lvStr) - 1;
+    if (!passedLevels.has(confirmLv)) {
+      const sortedDates = [...dates].sort((a,b) => b.localeCompare(a));
+      displayItems.push({
+        level: confirmLv, verdict: 'pass', synthetic: true, checks: {},
+        date: sortedDates[0], failDates: sortedDates,
+        teachCoach: '', examCoach: '', venueId: '', note: '',
+      });
     }
   });
   displayItems.sort((a, b) => b.date.localeCompare(a.date));
@@ -1233,7 +1243,21 @@ function renderExamList(child) {
       passItems.forEach(t => { bodyHtml += `<div class="skill-item-row sk-pass"><div class="sk-icon">✓</div><div class="sk-text">${t}</div></div>`; });
       bodyHtml += `</div></div>`;
     }
-    if (!exam.synthetic) {
+    if (exam.synthetic && exam.failDates?.length) {
+      const nextLv = SKILL_DATA[exam.level + 1];
+      bodyHtml += `<div class="skill-section">
+        <div class="skill-section-title">${nextLv?nextLv.label:exam.level+1+'級'} 挑戰紀錄</div>
+        <div class="skill-grid">`;
+      exam.failDates.forEach((d, i) => {
+        const dp2 = d.split('-');
+        bodyHtml += `<div class="skill-item-row" style="background:var(--slate7)">
+          <div style="font-size:11px;color:var(--slate3);font-family:'DM Mono',monospace;flex-shrink:0">第 ${exam.failDates.length - i} 次</div>
+          <div class="sk-text" style="color:var(--slate2)">${dp2[0]} 年 ${parseInt(dp2[1])} 月 ${parseInt(dp2[2])} 日</div>
+          <div style="font-size:10px;color:var(--red);margin-left:auto">未通過</div>
+        </div>`;
+      });
+      bodyHtml += `</div></div>`;
+    } else if (!exam.synthetic) {
       if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${exam.note}</div></div>`;
       bodyHtml += `<div class="coach-row" style="grid-template-columns:1fr 1fr 1fr">
         <div><div class="coach-lbl">教學教練</div><div class="coach-name">${exam.teachCoach}</div></div>
