@@ -1315,6 +1315,35 @@ function renderExamList(child) {
     if (firstOpen) { card.classList.add('open'); firstOpen = false; }
     el.appendChild(card);
   });
+
+  // 超過 5 筆時折疊，只顯示最新 5 筆
+  const SHOW_EXAMS = 5;
+  const cards = el.querySelectorAll('.exam-card');
+  if (cards.length > SHOW_EXAMS) {
+    for (let i = SHOW_EXAMS; i < cards.length; i++) {
+      cards[i].style.display = 'none';
+      cards[i].dataset.hidden = '1';
+    }
+    const moreBtn = document.createElement('button');
+    moreBtn.style.cssText = 'width:100%;margin-top:8px;padding:10px;background:#fff;border:1px solid var(--slate6);border-radius:12px;font-size:13px;color:var(--ocean);cursor:pointer;font-family:"Noto Sans TC",sans-serif';
+    moreBtn.textContent = `顯示全部 ${cards.length} 筆紀錄 ▾`;
+    moreBtn.onclick = () => {
+      const hidden = el.querySelectorAll('.exam-card[data-hidden="1"]');
+      const isHiding = hidden.length > 0;
+      hidden.forEach(c => { c.style.display = 'block'; delete c.dataset.hidden; });
+      if (isHiding) {
+        moreBtn.textContent = '收起 ▴';
+      } else {
+        for (let i = SHOW_EXAMS; i < cards.length; i++) {
+          cards[i].style.display = 'none';
+          cards[i].dataset.hidden = '1';
+        }
+        moreBtn.textContent = `顯示全部 ${cards.length} 筆紀錄 ▾`;
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    };
+    el.appendChild(moreBtn);
+  }
 }
 
 // ════════════════════
