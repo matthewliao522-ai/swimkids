@@ -16,6 +16,9 @@
   --red:#C30017;--red-bg:#FFF0F0;--red-border:#FFCCD4;
   --amber:#E8900F;--amber-bg:#FFF8EC;--amber-border:#FFECC8;
   --ok:#059669;--warn:#f59e0b;--bad:#ef4444;
+  --shadow-sm:0 1px 2px 0 rgba(0,0,0,.05);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1);
+  --transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;scroll-behavior:smooth}
@@ -74,9 +77,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
 .form-label{font-size:12px;font-weight:500;color:var(--slate2);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
 .form-input{
   width:100%;background:var(--slate7);border:1.5px solid var(--slate6);
-  border-radius:12px;padding:12px 14px;font-size:15px;
+  border-radius:12px;padding:14px 16px;font-size:15px;
   font-family:'Noto Sans TC',sans-serif;color:var(--slate);
-  transition:border .15s,box-shadow .15s;outline:none;
+  transition:var(--transition);outline:none;
 }
 .form-input:focus{border-color:var(--ocean);box-shadow:0 0 0 3px rgba(14,116,144,.1);background:var(--white)}
 .form-input::placeholder{color:var(--slate4)}

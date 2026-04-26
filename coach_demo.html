@@ -33,6 +33,10 @@
   --hat-y:#92400e;--hat-b:var(--brand-700);--hat-r:#9f1239;--hat-k:var(--n700);--hat-s:var(--n500);
 
   --sidebar-w:240px;
+  --shadow-sm:0 1px 2px 0 rgba(0,0,0,.05);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1);
+  --transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:15px}
@@ -88,7 +92,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .content.exam-mode{overflow:hidden}
 
 /* ── BTN ── */
-.btn{padding:7px 14px;border-radius:6px;border:none;font-size:12px;font-family:'Noto Sans TC',sans-serif;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn{padding:7px 14px;border-radius:6px;border:none;font-size:12px;font-family:'Noto Sans TC',sans-serif;font-weight:600;cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:active{transform:scale(.98)}
 .btn svg{width:13px;height:13px}
 .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dk)}
 .btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#047857}
@@ -98,7 +103,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .btn-sm{padding:5px 10px;font-size:11px}
 
 /* ── CARDS ── */
-.card{background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card{background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-sm);transition:var(--transition)}
+.card:hover{box-shadow:var(--shadow-md)}
 .card-hd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .card-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
 .card-bd{padding:14px 16px}
