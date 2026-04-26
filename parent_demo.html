@@ -149,8 +149,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
 /* OTP */
 .otp-row{display:flex;gap:8px;justify-content:center;margin:8px 0}
 .otp-input{
-  width:46px;height:54px;background:var(--slate7);border:1.5px solid var(--slate6);
-  border-radius:10px;text-align:center;font-size:22px;font-weight:700;
+  width:36px;height:48px;background:var(--slate7);border:1.5px solid var(--slate6);
+  border-radius:10px;text-align:center;font-size:20px;font-weight:700;
   font-family:'DM Mono',monospace;color:var(--slate);outline:none;
   transition:border .15s,box-shadow .15s;
 }
@@ -332,9 +332,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
     <!-- ── SCREEN A：選擇登入或首次啟用 ── -->
     <div class="auth-screen active" id="sc-choice">
       <div class="info-banner">
-        <strong>Demo 提示</strong><br>
-        已有帳號：手機 <strong>0912-345-678</strong>，密碼 <strong>Swim@2025!</strong><br>
-        首次啟用：點下方「首次啟用帳號」
+        輸入手機號碼與密碼登入。第一次使用請點「首次啟用帳號」。
       </div>
       <div class="form-group">
         <label class="form-label">手機號碼</label>
@@ -376,28 +374,48 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
       </div>
     </div>
 
+    <!-- ── SCREEN B2：填 Email ── -->
+    <div class="auth-screen" id="sc-email">
+      <div class="steps-row" id="steps-email"></div>
+      <div class="info-banner">
+        請輸入您的 Email，我們將寄送 6 位數驗證碼。
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="act-email" placeholder="example@gmail.com" autocomplete="email">
+        <div class="form-error" id="act-email-err"></div>
+      </div>
+      <button class="auth-btn" id="send-otp-btn" onclick="doSendEmailOTP()">發送驗證碼</button>
+      <div style="text-align:center;margin-top:12px">
+        <button class="auth-link" id="email-back-btn" onclick="goBack('sc-activate')">← 返回</button>
+      </div>
+    </div>
+
     <!-- ── SCREEN C：OTP 驗證 ── -->
     <div class="auth-screen" id="sc-otp">
       <div class="steps-row" id="steps-otp"></div>
       <div class="info-banner success" id="otp-sent-msg">
-        驗證碼已發送至 <strong id="otp-phone-display"></strong><br>
-        <span style="font-size:10px">（Demo模式：請輸入 <strong>8888</strong>）</span>
+        驗證碼已寄至 <strong id="otp-email-display"></strong>
       </div>
-      <div style="font-size:13px;color:var(--slate2);margin-bottom:14px;text-align:center">請輸入 4 位數驗證碼</div>
+      <div style="font-size:13px;color:var(--slate2);margin-bottom:14px;text-align:center">請輸入驗證碼</div>
       <div class="otp-row">
         <input class="otp-input" id="otp0" maxlength="1" oninput="otpNext(0)" onkeydown="otpKey(event,0)" type="tel">
         <input class="otp-input" id="otp1" maxlength="1" oninput="otpNext(1)" onkeydown="otpKey(event,1)" type="tel">
         <input class="otp-input" id="otp2" maxlength="1" oninput="otpNext(2)" onkeydown="otpKey(event,2)" type="tel">
         <input class="otp-input" id="otp3" maxlength="1" oninput="otpNext(3)" onkeydown="otpKey(event,3)" type="tel">
+        <input class="otp-input" id="otp4" maxlength="1" oninput="otpNext(4)" onkeydown="otpKey(event,4)" type="tel">
+        <input class="otp-input" id="otp5" maxlength="1" oninput="otpNext(5)" onkeydown="otpKey(event,5)" type="tel">
+        <input class="otp-input" id="otp6" maxlength="1" oninput="otpNext(6)" onkeydown="otpKey(event,6)" type="tel">
+        <input class="otp-input" id="otp7" maxlength="1" oninput="otpNext(7)" onkeydown="otpKey(event,7)" type="tel">
       </div>
-      <div class="form-error" id="otp-err" style="text-align:center">驗證碼錯誤，請重新輸入</div>
+      <div class="form-error" id="otp-err" style="text-align:center">驗證碼錯誤或已過期，請重新輸入</div>
       <div class="resend-row">
         <span id="resend-txt">重新發送（<span class="countdown" id="countdown">60</span>）</span>
         <button class="auth-link" id="resend-btn" onclick="resendOTP()" style="display:none">重新發送驗證碼</button>
       </div>
       <button class="auth-btn" onclick="doVerifyOTP()" style="margin-top:16px">驗證</button>
       <div style="text-align:center;margin-top:12px">
-        <button class="auth-link" onclick="goBack('sc-activate')">← 重新輸入手機</button>
+        <button class="auth-link" onclick="goBack('sc-email')">← 重新輸入 Email</button>
       </div>
     </div>
 
@@ -424,8 +442,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
         </div>
         <!-- checklist -->
         <div class="pwd-checklist" id="pwd-checklist">
-          <div class="chk-item" id="chk-len"><div class="chk-dot">✓</div>至少 8 個字元</div>
-          <div class="chk-item" id="chk-upper"><div class="chk-dot">✓</div>含大寫字母</div>
+          <div class="chk-item" id="chk-len"><div class="chk-dot">✓</div>至少 6 個字元</div>
           <div class="chk-item" id="chk-lower"><div class="chk-dot">✓</div>含小寫字母</div>
           <div class="chk-item" id="chk-num"><div class="chk-dot">✓</div>含數字</div>
           <div class="chk-item" id="chk-sym"><div class="chk-dot">✓</div>含特殊符號</div>
@@ -578,6 +595,7 @@ async function loadAnnsFromSupa() {
 
 // 新增帳號暫存
 let pendingPhone = '';
+let pendingEmail = '';
 let pendingMode = 'activate'; // 'activate' | 'forgot'
 let countdownTimer = null;
 
@@ -607,8 +625,8 @@ function togglePwd(id, btn) {
 }
 
 function renderSteps(containerId, active) {
-  // active: 1=phone, 2=otp, 3=setpwd
-  const labels = ['輸入手機','驗證身份','設定密碼'];
+  // active: 1=phone, 2=email, 3=otp, 4=setpwd
+  const labels = ['輸入手機','填 Email','驗證信箱','設定密碼'];
   const el = document.getElementById(containerId);
   el.innerHTML = '';
   labels.forEach((lbl, i) => {
@@ -619,7 +637,7 @@ function renderSteps(containerId, active) {
     col.innerHTML = `<div class="step-node ${state}">${n < active ? '✓' : n}</div>
       <div class="step-lbl" style="${n<=active?'color:var(--slate2)':''}">${lbl}</div>`;
     el.appendChild(col);
-    if (i < 2) {
+    if (i < 3) {
       const line = document.createElement('div');
       line.className = 'step-line ' + (n < active ? 'done' : 'todo');
       line.style.marginBottom = '16px';
@@ -632,8 +650,7 @@ function renderSteps(containerId, active) {
 // PASSWORD CHECKER
 // ════════════════════
 const PWD_RULES = [
-  { id:'chk-len', test: p => p.length >= 8, label:'至少 8 個字元' },
-  { id:'chk-upper', test: p => /[A-Z]/.test(p), label:'含大寫字母' },
+  { id:'chk-len', test: p => p.length >= 6, label:'至少 6 個字元' },
   { id:'chk-lower', test: p => /[a-z]/.test(p), label:'含小寫字母' },
   { id:'chk-num', test: p => /[0-9]/.test(p), label:'含數字' },
   { id:'chk-sym', test: p => /[^A-Za-z0-9]/.test(p), label:'含特殊符號' },
@@ -652,8 +669,8 @@ function checkPwdStrength() {
     el.classList.toggle('chk-pass', r.ok);
   });
 
-  // score: first 5 rules
-  const score = results.slice(0,5).filter(r => r.ok).length;
+  // score: first 4 rules
+  const score = results.slice(0,4).filter(r => r.ok).length;
   const bars = [document.getElementById('bar0'),document.getElementById('bar1'),document.getElementById('bar2'),document.getElementById('bar3')];
   const lbl = document.getElementById('pwd-label-txt');
   bars.forEach(b => b.className = 'pwd-bar');
@@ -667,9 +684,6 @@ function checkPwdStrength() {
   } else if (score === 3) {
     bars[0].classList.add('warn'); bars[1].classList.add('warn'); bars[2].classList.add('warn');
     lbl.textContent = '強度：普通'; lbl.className = 'pwd-label warn';
-  } else if (score === 4) {
-    bars.forEach(b => b.classList.add('ok'));
-    lbl.textContent = '強度：良好'; lbl.className = 'pwd-label ok';
   } else {
     bars.forEach(b => b.classList.add('ok'));
     lbl.textContent = '強度：強'; lbl.className = 'pwd-label ok';
@@ -695,22 +709,22 @@ function checkPwdMatch() {
 }
 
 function isPasswordValid(p) {
-  return PWD_RULES.slice(0,5).every(r => r.test(p));
+  return PWD_RULES.slice(0,4).every(r => r.test(p));
 }
 
 // ════════════════════
 // OTP
 // ════════════════════
+const OTP_LEN = 8;
 function otpNext(idx) {
   const cur = document.getElementById('otp'+idx);
   const val = cur.value.replace(/\D/g,'');
   cur.value = val.slice(-1);
   cur.classList.toggle('filled', !!cur.value);
-  if (cur.value && idx < 3) {
+  if (cur.value && idx < OTP_LEN - 1) {
     document.getElementById('otp'+(idx+1)).focus();
   }
-  // auto verify if all filled
-  if ([0,1,2,3].every(i => document.getElementById('otp'+i).value)) {
+  if (Array.from({length:OTP_LEN},(_,i)=>i).every(i => document.getElementById('otp'+i).value)) {
     setTimeout(doVerifyOTP, 200);
   }
 }
@@ -720,7 +734,7 @@ function otpKey(e, idx) {
   }
 }
 function clearOTP() {
-  [0,1,2,3].forEach(i => {
+  Array.from({length:OTP_LEN},(_,i)=>i).forEach(i => {
     const el = document.getElementById('otp'+i);
     el.value = ''; el.classList.remove('filled');
   });
@@ -742,10 +756,10 @@ function startCountdown() {
     }
   }, 1000);
 }
-function resendOTP() {
+async function resendOTP() {
   clearOTP();
   startCountdown();
-  // show toast
+  await SUPA.auth.signInWithOtp({ email: pendingEmail });
   const msg = document.getElementById('otp-sent-msg');
   const orig = msg.innerHTML;
   msg.innerHTML += '<br><strong style="color:var(--ok)">✓ 已重新發送</strong>';
@@ -784,36 +798,90 @@ async function doActivatePhone() {
     err.textContent = '請輸入正確的手機號碼格式（09XX-XXX-XXX）';
     err.classList.add('show'); return;
   }
-  const {data: g} = await SUPA.from('guardians').select('id,auth_id').eq('phone', dbPhone(phone)).maybeSingle();
+  const {data: g} = await SUPA.from('guardians').select('id,auth_id,email').eq('phone', dbPhone(phone)).maybeSingle();
   if (!g) {
     err.textContent = '此號碼尚未在系統中，請確認或聯繫教練';
     err.classList.add('show'); return;
   }
-  if (g.auth_id) {
+  const hasRealEmail = g.email && !g.email.endsWith('@swimkids.app');
+  if (g.auth_id && hasRealEmail) {
     err.textContent = '此號碼已完成帳號設定，請直接登入';
     err.classList.add('show'); return;
   }
   err.classList.remove('show');
   pendingPhone = phone;
-  goToOTP();
+  // Pre-fill email if already on file
+  const emailInput = document.getElementById('act-email');
+  emailInput.value = (g.email && !g.email.endsWith('@swimkids.app')) ? g.email : '';
+  renderSteps('steps-email', 2);
+  document.getElementById('auth-sub').textContent = '首次啟用帳號';
+  document.getElementById('email-back-btn').onclick = () => goBack('sc-activate');
+  showScreen('sc-email');
+  setTimeout(() => emailInput.focus(), 100);
 }
 
 async function doForgotPhone() {
   const phone = rawPhone(document.getElementById('forgot-phone').value);
   const err = document.getElementById('forgot-err');
-  const {data: g} = await SUPA.from('guardians').select('id,auth_id').eq('phone', dbPhone(phone)).maybeSingle();
-  if (!g || !g.auth_id) {
+  if (phone.length !== 10 || !phone.startsWith('09')) {
+    err.textContent = '請輸入正確的手機號碼格式（09XX-XXX-XXX）';
+    err.classList.add('show'); return;
+  }
+  const {data: g} = await SUPA.from('guardians').select('id,auth_id,email').eq('phone', dbPhone(phone)).maybeSingle();
+  if (!g) {
+    err.textContent = '此手機號碼未在系統中，請確認或聯繫教練';
     err.classList.add('show'); return;
   }
   err.classList.remove('show');
   pendingPhone = phone;
+  const realEmail = (g.email && !g.email.endsWith('@swimkids.app')) ? g.email : null;
+  if (realEmail) {
+    pendingEmail = realEmail;
+    const {error} = await SUPA.auth.signInWithOtp({ email: pendingEmail });
+    if (error) {
+      err.textContent = '驗證碼發送失敗：' + error.message;
+      err.classList.add('show'); return;
+    }
+    goToOTP();
+  } else {
+    // No email on file — go collect it first
+    const emailInput = document.getElementById('act-email');
+    emailInput.value = '';
+    renderSteps('steps-email', 2);
+    document.getElementById('auth-sub').textContent = '重設密碼';
+    document.getElementById('email-back-btn').onclick = () => goBack('sc-forgot');
+    showScreen('sc-email');
+    setTimeout(() => emailInput.focus(), 100);
+  }
+}
+
+async function doSendEmailOTP() {
+  const email = document.getElementById('act-email').value.trim().toLowerCase();
+  const err = document.getElementById('act-email-err');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    err.textContent = '請輸入正確的 Email 格式';
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+  const btn = document.getElementById('send-otp-btn');
+  btn.disabled = true; btn.textContent = '發送中…';
+
+  // Save email to DB
+  await SUPA.from('guardians').update({ email }).eq('phone', dbPhone(pendingPhone));
+  pendingEmail = email;
+
+  const { error } = await SUPA.auth.signInWithOtp({ email });
+  btn.disabled = false; btn.textContent = '發送驗證碼';
+  if (error) {
+    err.textContent = '發送失敗：' + error.message;
+    err.classList.add('show'); return;
+  }
   goToOTP();
 }
 
 function goToOTP() {
-  renderSteps('steps-otp', 2);
-  document.getElementById('otp-phone-display').textContent =
-    pendingPhone.slice(0,4)+'-'+pendingPhone.slice(4,7)+'-'+pendingPhone.slice(7);
+  renderSteps('steps-otp', 3);
+  document.getElementById('otp-email-display').textContent = pendingEmail;
   clearOTP();
   startCountdown();
   document.getElementById('auth-sub').textContent = pendingMode==='forgot' ? '重設密碼' : '首次啟用帳號';
@@ -821,13 +889,21 @@ function goToOTP() {
   setTimeout(() => document.getElementById('otp0').focus(), 100);
 }
 
-function doVerifyOTP() {
-  const code = [0,1,2,3].map(i => document.getElementById('otp'+i).value).join('');
+async function doVerifyOTP() {
+  const code = Array.from({length:OTP_LEN},(_,i)=>i).map(i => document.getElementById('otp'+i).value).join('');
   const err = document.getElementById('otp-err');
-  if (code !== '8888') { err.classList.add('show'); return; }
+  if (code.length < OTP_LEN) { err.classList.add('show'); return; }
+
+  const verifyBtn = document.querySelector('#sc-otp .auth-btn');
+  verifyBtn.disabled = true; verifyBtn.textContent = '驗證中…';
+
+  const { error } = await SUPA.auth.verifyOtp({ email: pendingEmail, token: code, type: 'email' });
+  verifyBtn.disabled = false; verifyBtn.textContent = '驗證';
+
+  if (error) { err.classList.add('show'); return; }
   err.classList.remove('show');
   clearInterval(countdownTimer);
-  renderSteps('steps-setpwd', 3);
+  renderSteps('steps-setpwd', 4);
   document.getElementById('pwd1').value = '';
   document.getElementById('pwd2').value = '';
   document.getElementById('pwd-strength').style.display = 'none';
@@ -855,35 +931,23 @@ async function doSetPassword() {
   }
   err.classList.remove('show');
 
-  const email = 'p' + pendingPhone + '@swimkids.app';
+  const setBtn = document.getElementById('set-pwd-btn');
+  setBtn.disabled = true; setBtn.textContent = '儲存中…';
 
-  if (pendingMode === 'forgot') {
-    // 忘記密碼：重新登入後更新密碼
-    const {data: loginData, error: loginErr} = await SUPA.auth.signInWithPassword({email, password: p1});
-    if (loginErr) {
-      // 若舊密碼不知道，需要管理員在後台重設
-      err.textContent = '密碼重設失敗，請聯繫教練或管理員';
-      err.classList.add('show'); return;
-    }
-    const {error: updateErr} = await SUPA.auth.updateUser({password: p1});
-    if (updateErr) {
-      err.textContent = '密碼更新失敗：' + updateErr.message;
-      err.classList.add('show'); return;
-    }
-    await loadParentData(loginData.user.id);
-  } else {
-    // 首次啟用：建立 Supabase Auth 帳號
-    const {data, error} = await SUPA.auth.signUp({email, password: p1});
-    if (error) {
-      err.textContent = '建立帳號失敗：' + error.message;
-      err.classList.add('show'); return;
-    }
-    const userId = data.user?.id;
-    if (userId) {
-      await SUPA.from('guardians').update({auth_id: userId, status: 'active'}).eq('phone', dbPhone(pendingPhone));
-    }
-    await loadParentData(userId);
+  // User is already signed in via OTP verification
+  const { error: updateErr } = await SUPA.auth.updateUser({ password: p1 });
+  if (updateErr) {
+    setBtn.disabled = false; setBtn.textContent = '完成設定，開始使用';
+    err.textContent = '密碼設定失敗：' + updateErr.message;
+    err.classList.add('show'); return;
   }
+
+  const { data: { user } } = await SUPA.auth.getUser();
+  if (user) {
+    await SUPA.from('guardians').update({ auth_id: user.id, status: 'active', email: pendingEmail })
+      .eq('phone', dbPhone(pendingPhone));
+  }
+  await loadParentData(user?.id);
 
   currentChildIdx = 0;
   document.getElementById('auth-shell').style.display = 'none';
@@ -897,8 +961,20 @@ async function doLogin() {
   const pwd = document.getElementById('login-pwd').value;
   const err = document.getElementById('login-err');
 
-  const email = 'p' + phone + '@swimkids.app';
-  const {data, error} = await SUPA.auth.signInWithPassword({email, password: pwd});
+  if (phone.length !== 10 || !phone.startsWith('09')) {
+    err.classList.add('show'); return;
+  }
+
+  // Look up real email from DB
+  const { data: g } = await SUPA.from('guardians').select('email').eq('phone', dbPhone(phone)).maybeSingle();
+  const realEmail = (g?.email && !g.email.endsWith('@swimkids.app')) ? g.email : null;
+  if (!realEmail) {
+    err.classList.add('show');
+    document.getElementById('login-pwd').classList.add('input-err');
+    return;
+  }
+
+  const { data, error } = await SUPA.auth.signInWithPassword({ email: realEmail, password: pwd });
   if (error) {
     err.classList.add('show');
     document.getElementById('login-pwd').classList.add('input-err');
