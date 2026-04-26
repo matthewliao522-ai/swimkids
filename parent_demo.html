@@ -16,9 +16,6 @@
   --red:#C30017;--red-bg:#FFF0F0;--red-border:#FFCCD4;
   --amber:#E8900F;--amber-bg:#FFF8EC;--amber-border:#FFECC8;
   --ok:#059669;--warn:#f59e0b;--bad:#ef4444;
-  --shadow-sm:0 1px 2px 0 rgba(0,0,0,.05);
-  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1);
-  --transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;scroll-behavior:smooth}
@@ -77,9 +74,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
 .form-label{font-size:12px;font-weight:500;color:var(--slate2);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
 .form-input{
   width:100%;background:var(--slate7);border:1.5px solid var(--slate6);
-  border-radius:12px;padding:14px 16px;font-size:15px;
+  border-radius:12px;padding:12px 14px;font-size:15px;
   font-family:'Noto Sans TC',sans-serif;color:var(--slate);
-  transition:var(--transition);outline:none;
+  transition:border .15s,box-shadow .15s;outline:none;
 }
 .form-input:focus{border-color:var(--ocean);box-shadow:0 0 0 3px rgba(14,116,144,.1);background:var(--white)}
 .form-input::placeholder{color:var(--slate4)}
@@ -152,8 +149,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
 /* OTP */
 .otp-row{display:flex;gap:8px;justify-content:center;margin:8px 0}
 .otp-input{
-  width:36px;height:48px;background:var(--slate7);border:1.5px solid var(--slate6);
-  border-radius:10px;text-align:center;font-size:20px;font-weight:700;
+  width:46px;height:54px;background:var(--slate7);border:1.5px solid var(--slate6);
+  border-radius:10px;text-align:center;font-size:22px;font-weight:700;
   font-family:'DM Mono',monospace;color:var(--slate);outline:none;
   transition:border .15s,box-shadow .15s;
 }
@@ -335,7 +332,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
     <!-- ── SCREEN A：選擇登入或首次啟用 ── -->
     <div class="auth-screen active" id="sc-choice">
       <div class="info-banner">
-        輸入手機號碼與密碼登入。第一次使用請點「首次啟用帳號」。
+        <strong>Demo 提示</strong><br>
+        已有帳號：手機 <strong>0912-345-678</strong>，密碼 <strong>Swim@2025!</strong><br>
+        首次啟用：點下方「首次啟用帳號」
       </div>
       <div class="form-group">
         <label class="form-label">手機號碼</label>
@@ -377,48 +376,28 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
       </div>
     </div>
 
-    <!-- ── SCREEN B2：填 Email ── -->
-    <div class="auth-screen" id="sc-email">
-      <div class="steps-row" id="steps-email"></div>
-      <div class="info-banner">
-        請輸入您的 Email，我們將寄送 6 位數驗證碼。
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input class="form-input" type="email" id="act-email" placeholder="example@gmail.com" autocomplete="email">
-        <div class="form-error" id="act-email-err"></div>
-      </div>
-      <button class="auth-btn" id="send-otp-btn" onclick="doSendEmailOTP()">發送驗證碼</button>
-      <div style="text-align:center;margin-top:12px">
-        <button class="auth-link" id="email-back-btn" onclick="goBack('sc-activate')">← 返回</button>
-      </div>
-    </div>
-
     <!-- ── SCREEN C：OTP 驗證 ── -->
     <div class="auth-screen" id="sc-otp">
       <div class="steps-row" id="steps-otp"></div>
       <div class="info-banner success" id="otp-sent-msg">
-        驗證碼已寄至 <strong id="otp-email-display"></strong>
+        驗證碼已發送至 <strong id="otp-phone-display"></strong><br>
+        <span style="font-size:10px">（Demo模式：請輸入 <strong>8888</strong>）</span>
       </div>
-      <div style="font-size:13px;color:var(--slate2);margin-bottom:14px;text-align:center">請輸入驗證碼</div>
+      <div style="font-size:13px;color:var(--slate2);margin-bottom:14px;text-align:center">請輸入 4 位數驗證碼</div>
       <div class="otp-row">
         <input class="otp-input" id="otp0" maxlength="1" oninput="otpNext(0)" onkeydown="otpKey(event,0)" type="tel">
         <input class="otp-input" id="otp1" maxlength="1" oninput="otpNext(1)" onkeydown="otpKey(event,1)" type="tel">
         <input class="otp-input" id="otp2" maxlength="1" oninput="otpNext(2)" onkeydown="otpKey(event,2)" type="tel">
         <input class="otp-input" id="otp3" maxlength="1" oninput="otpNext(3)" onkeydown="otpKey(event,3)" type="tel">
-        <input class="otp-input" id="otp4" maxlength="1" oninput="otpNext(4)" onkeydown="otpKey(event,4)" type="tel">
-        <input class="otp-input" id="otp5" maxlength="1" oninput="otpNext(5)" onkeydown="otpKey(event,5)" type="tel">
-        <input class="otp-input" id="otp6" maxlength="1" oninput="otpNext(6)" onkeydown="otpKey(event,6)" type="tel">
-        <input class="otp-input" id="otp7" maxlength="1" oninput="otpNext(7)" onkeydown="otpKey(event,7)" type="tel">
       </div>
-      <div class="form-error" id="otp-err" style="text-align:center">驗證碼錯誤或已過期，請重新輸入</div>
+      <div class="form-error" id="otp-err" style="text-align:center">驗證碼錯誤，請重新輸入</div>
       <div class="resend-row">
         <span id="resend-txt">重新發送（<span class="countdown" id="countdown">60</span>）</span>
         <button class="auth-link" id="resend-btn" onclick="resendOTP()" style="display:none">重新發送驗證碼</button>
       </div>
       <button class="auth-btn" onclick="doVerifyOTP()" style="margin-top:16px">驗證</button>
       <div style="text-align:center;margin-top:12px">
-        <button class="auth-link" onclick="goBack('sc-email')">← 重新輸入 Email</button>
+        <button class="auth-link" onclick="goBack('sc-activate')">← 重新輸入手機</button>
       </div>
     </div>
 
@@ -445,7 +424,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
         </div>
         <!-- checklist -->
         <div class="pwd-checklist" id="pwd-checklist">
-          <div class="chk-item" id="chk-len"><div class="chk-dot">✓</div>至少 6 個字元</div>
+          <div class="chk-item" id="chk-len"><div class="chk-dot">✓</div>至少 8 個字元</div>
+          <div class="chk-item" id="chk-upper"><div class="chk-dot">✓</div>含大寫字母</div>
           <div class="chk-item" id="chk-lower"><div class="chk-dot">✓</div>含小寫字母</div>
           <div class="chk-item" id="chk-num"><div class="chk-dot">✓</div>含數字</div>
           <div class="chk-item" id="chk-sym"><div class="chk-dot">✓</div>含特殊符號</div>
@@ -534,43 +514,6 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
     <div id="next-goal-section" class="fade-up fu3"></div>
     <div class="section-title fade-up fu3">考試紀錄</div>
     <div id="exam-list" class="fade-up fu4"></div>
-    <div id="line-notify-section" style="margin-top:18px" class="fade-up fu4">
-      <div class="section-title">LINE 通知</div>
-
-      <!-- 未綁定 -->
-      <div id="line-unbound-card" style="display:none;background:#fff;border-radius:16px;border:1px solid var(--slate6);padding:16px 18px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <div style="width:36px;height:36px;background:var(--slate7);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--slate3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--slate)">尚未綁定 LINE 通知</div>
-            <div style="font-size:11px;color:var(--slate3);margin-top:2px">完成綁定後即可接收考試結果通知</div>
-          </div>
-        </div>
-        <div style="background:var(--slate7);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--slate2);line-height:1.8">
-          傳送以下訊息給場館的 <strong style="color:var(--slate)">LINE 官方帳號</strong>：
-          <div id="line-bind-msg" style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--ocean);background:var(--ocean-light);border-radius:8px;padding:8px 12px;margin-top:8px;letter-spacing:.03em;text-align:center"></div>
-        </div>
-      </div>
-
-      <!-- 已綁定 -->
-      <div id="line-bound-card" style="display:none;background:#fff;border-radius:16px;border:1px solid var(--slate6);padding:14px 18px">
-        <div id="line-bound-venues" style="font-size:11px;color:var(--slate3);margin-bottom:10px;display:flex;align-items:center;gap:5px"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--slate)">考試結果通知</div>
-            <div style="font-size:11px;color:var(--slate3);margin-top:2px">開啟後，考試結果出爐時將透過 LINE 通知您</div>
-          </div>
-          <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0">
-            <input type="checkbox" id="notify-toggle" onchange="toggleNotify(this)" style="opacity:0;width:0;height:0">
-            <span id="notify-slider" style="position:absolute;inset:0;background:var(--slate5);border-radius:24px;cursor:pointer;transition:.2s">
-              <span style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)" id="notify-knob"></span>
-            </span>
-          </label>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -620,7 +563,6 @@ async function loadAnnsFromSupa() {
 
 // 新增帳號暫存
 let pendingPhone = '';
-let pendingEmail = '';
 let pendingMode = 'activate'; // 'activate' | 'forgot'
 let countdownTimer = null;
 
@@ -650,8 +592,8 @@ function togglePwd(id, btn) {
 }
 
 function renderSteps(containerId, active) {
-  // active: 1=phone, 2=email, 3=otp, 4=setpwd
-  const labels = ['輸入手機','填 Email','驗證信箱','設定密碼'];
+  // active: 1=phone, 2=otp, 3=setpwd
+  const labels = ['輸入手機','驗證身份','設定密碼'];
   const el = document.getElementById(containerId);
   el.innerHTML = '';
   labels.forEach((lbl, i) => {
@@ -662,7 +604,7 @@ function renderSteps(containerId, active) {
     col.innerHTML = `<div class="step-node ${state}">${n < active ? '✓' : n}</div>
       <div class="step-lbl" style="${n<=active?'color:var(--slate2)':''}">${lbl}</div>`;
     el.appendChild(col);
-    if (i < 3) {
+    if (i < 2) {
       const line = document.createElement('div');
       line.className = 'step-line ' + (n < active ? 'done' : 'todo');
       line.style.marginBottom = '16px';
@@ -675,7 +617,8 @@ function renderSteps(containerId, active) {
 // PASSWORD CHECKER
 // ════════════════════
 const PWD_RULES = [
-  { id:'chk-len', test: p => p.length >= 6, label:'至少 6 個字元' },
+  { id:'chk-len', test: p => p.length >= 8, label:'至少 8 個字元' },
+  { id:'chk-upper', test: p => /[A-Z]/.test(p), label:'含大寫字母' },
   { id:'chk-lower', test: p => /[a-z]/.test(p), label:'含小寫字母' },
   { id:'chk-num', test: p => /[0-9]/.test(p), label:'含數字' },
   { id:'chk-sym', test: p => /[^A-Za-z0-9]/.test(p), label:'含特殊符號' },
@@ -694,8 +637,8 @@ function checkPwdStrength() {
     el.classList.toggle('chk-pass', r.ok);
   });
 
-  // score: first 4 rules
-  const score = results.slice(0,4).filter(r => r.ok).length;
+  // score: first 5 rules
+  const score = results.slice(0,5).filter(r => r.ok).length;
   const bars = [document.getElementById('bar0'),document.getElementById('bar1'),document.getElementById('bar2'),document.getElementById('bar3')];
   const lbl = document.getElementById('pwd-label-txt');
   bars.forEach(b => b.className = 'pwd-bar');
@@ -709,6 +652,9 @@ function checkPwdStrength() {
   } else if (score === 3) {
     bars[0].classList.add('warn'); bars[1].classList.add('warn'); bars[2].classList.add('warn');
     lbl.textContent = '強度：普通'; lbl.className = 'pwd-label warn';
+  } else if (score === 4) {
+    bars.forEach(b => b.classList.add('ok'));
+    lbl.textContent = '強度：良好'; lbl.className = 'pwd-label ok';
   } else {
     bars.forEach(b => b.classList.add('ok'));
     lbl.textContent = '強度：強'; lbl.className = 'pwd-label ok';
@@ -734,22 +680,22 @@ function checkPwdMatch() {
 }
 
 function isPasswordValid(p) {
-  return PWD_RULES.slice(0,4).every(r => r.test(p));
+  return PWD_RULES.slice(0,5).every(r => r.test(p));
 }
 
 // ════════════════════
 // OTP
 // ════════════════════
-const OTP_LEN = 8;
 function otpNext(idx) {
   const cur = document.getElementById('otp'+idx);
   const val = cur.value.replace(/\D/g,'');
   cur.value = val.slice(-1);
   cur.classList.toggle('filled', !!cur.value);
-  if (cur.value && idx < OTP_LEN - 1) {
+  if (cur.value && idx < 3) {
     document.getElementById('otp'+(idx+1)).focus();
   }
-  if (Array.from({length:OTP_LEN},(_,i)=>i).every(i => document.getElementById('otp'+i).value)) {
+  // auto verify if all filled
+  if ([0,1,2,3].every(i => document.getElementById('otp'+i).value)) {
     setTimeout(doVerifyOTP, 200);
   }
 }
@@ -759,7 +705,7 @@ function otpKey(e, idx) {
   }
 }
 function clearOTP() {
-  Array.from({length:OTP_LEN},(_,i)=>i).forEach(i => {
+  [0,1,2,3].forEach(i => {
     const el = document.getElementById('otp'+i);
     el.value = ''; el.classList.remove('filled');
   });
@@ -781,10 +727,10 @@ function startCountdown() {
     }
   }, 1000);
 }
-async function resendOTP() {
+function resendOTP() {
   clearOTP();
   startCountdown();
-  await SUPA.auth.signInWithOtp({ email: pendingEmail });
+  // show toast
   const msg = document.getElementById('otp-sent-msg');
   const orig = msg.innerHTML;
   msg.innerHTML += '<br><strong style="color:var(--ok)">✓ 已重新發送</strong>';
@@ -823,90 +769,36 @@ async function doActivatePhone() {
     err.textContent = '請輸入正確的手機號碼格式（09XX-XXX-XXX）';
     err.classList.add('show'); return;
   }
-  const {data: g} = await SUPA.from('guardians').select('id,auth_id,email').eq('phone', dbPhone(phone)).maybeSingle();
+  const {data: g} = await SUPA.from('guardians').select('id,auth_id').eq('phone', dbPhone(phone)).maybeSingle();
   if (!g) {
     err.textContent = '此號碼尚未在系統中，請確認或聯繫教練';
     err.classList.add('show'); return;
   }
-  const hasRealEmail = g.email && !g.email.endsWith('@swimkids.app');
-  if (g.auth_id && hasRealEmail) {
+  if (g.auth_id) {
     err.textContent = '此號碼已完成帳號設定，請直接登入';
     err.classList.add('show'); return;
   }
   err.classList.remove('show');
   pendingPhone = phone;
-  // Pre-fill email if already on file
-  const emailInput = document.getElementById('act-email');
-  emailInput.value = (g.email && !g.email.endsWith('@swimkids.app')) ? g.email : '';
-  renderSteps('steps-email', 2);
-  document.getElementById('auth-sub').textContent = '首次啟用帳號';
-  document.getElementById('email-back-btn').onclick = () => goBack('sc-activate');
-  showScreen('sc-email');
-  setTimeout(() => emailInput.focus(), 100);
+  goToOTP();
 }
 
 async function doForgotPhone() {
   const phone = rawPhone(document.getElementById('forgot-phone').value);
   const err = document.getElementById('forgot-err');
-  if (phone.length !== 10 || !phone.startsWith('09')) {
-    err.textContent = '請輸入正確的手機號碼格式（09XX-XXX-XXX）';
-    err.classList.add('show'); return;
-  }
-  const {data: g} = await SUPA.from('guardians').select('id,auth_id,email').eq('phone', dbPhone(phone)).maybeSingle();
-  if (!g) {
-    err.textContent = '此手機號碼未在系統中，請確認或聯繫教練';
+  const {data: g} = await SUPA.from('guardians').select('id,auth_id').eq('phone', dbPhone(phone)).maybeSingle();
+  if (!g || !g.auth_id) {
     err.classList.add('show'); return;
   }
   err.classList.remove('show');
   pendingPhone = phone;
-  const realEmail = (g.email && !g.email.endsWith('@swimkids.app')) ? g.email : null;
-  if (realEmail) {
-    pendingEmail = realEmail;
-    const {error} = await SUPA.auth.signInWithOtp({ email: pendingEmail });
-    if (error) {
-      err.textContent = '驗證碼發送失敗：' + error.message;
-      err.classList.add('show'); return;
-    }
-    goToOTP();
-  } else {
-    // No email on file — go collect it first
-    const emailInput = document.getElementById('act-email');
-    emailInput.value = '';
-    renderSteps('steps-email', 2);
-    document.getElementById('auth-sub').textContent = '重設密碼';
-    document.getElementById('email-back-btn').onclick = () => goBack('sc-forgot');
-    showScreen('sc-email');
-    setTimeout(() => emailInput.focus(), 100);
-  }
-}
-
-async function doSendEmailOTP() {
-  const email = document.getElementById('act-email').value.trim().toLowerCase();
-  const err = document.getElementById('act-email-err');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    err.textContent = '請輸入正確的 Email 格式';
-    err.classList.add('show'); return;
-  }
-  err.classList.remove('show');
-  const btn = document.getElementById('send-otp-btn');
-  btn.disabled = true; btn.textContent = '發送中…';
-
-  // Save email to DB
-  await SUPA.from('guardians').update({ email }).eq('phone', dbPhone(pendingPhone));
-  pendingEmail = email;
-
-  const { error } = await SUPA.auth.signInWithOtp({ email });
-  btn.disabled = false; btn.textContent = '發送驗證碼';
-  if (error) {
-    err.textContent = '發送失敗：' + error.message;
-    err.classList.add('show'); return;
-  }
   goToOTP();
 }
 
 function goToOTP() {
-  renderSteps('steps-otp', 3);
-  document.getElementById('otp-email-display').textContent = pendingEmail;
+  renderSteps('steps-otp', 2);
+  document.getElementById('otp-phone-display').textContent =
+    pendingPhone.slice(0,4)+'-'+pendingPhone.slice(4,7)+'-'+pendingPhone.slice(7);
   clearOTP();
   startCountdown();
   document.getElementById('auth-sub').textContent = pendingMode==='forgot' ? '重設密碼' : '首次啟用帳號';
@@ -914,21 +806,13 @@ function goToOTP() {
   setTimeout(() => document.getElementById('otp0').focus(), 100);
 }
 
-async function doVerifyOTP() {
-  const code = Array.from({length:OTP_LEN},(_,i)=>i).map(i => document.getElementById('otp'+i).value).join('');
+function doVerifyOTP() {
+  const code = [0,1,2,3].map(i => document.getElementById('otp'+i).value).join('');
   const err = document.getElementById('otp-err');
-  if (code.length < OTP_LEN) { err.classList.add('show'); return; }
-
-  const verifyBtn = document.querySelector('#sc-otp .auth-btn');
-  verifyBtn.disabled = true; verifyBtn.textContent = '驗證中…';
-
-  const { error } = await SUPA.auth.verifyOtp({ email: pendingEmail, token: code, type: 'email' });
-  verifyBtn.disabled = false; verifyBtn.textContent = '驗證';
-
-  if (error) { err.classList.add('show'); return; }
+  if (code !== '8888') { err.classList.add('show'); return; }
   err.classList.remove('show');
   clearInterval(countdownTimer);
-  renderSteps('steps-setpwd', 4);
+  renderSteps('steps-setpwd', 3);
   document.getElementById('pwd1').value = '';
   document.getElementById('pwd2').value = '';
   document.getElementById('pwd-strength').style.display = 'none';
@@ -956,23 +840,35 @@ async function doSetPassword() {
   }
   err.classList.remove('show');
 
-  const setBtn = document.getElementById('set-pwd-btn');
-  setBtn.disabled = true; setBtn.textContent = '儲存中…';
+  const email = 'p' + pendingPhone + '@swimkids.app';
 
-  // User is already signed in via OTP verification
-  const { error: updateErr } = await SUPA.auth.updateUser({ password: p1 });
-  if (updateErr) {
-    setBtn.disabled = false; setBtn.textContent = '完成設定，開始使用';
-    err.textContent = '密碼設定失敗：' + updateErr.message;
-    err.classList.add('show'); return;
+  if (pendingMode === 'forgot') {
+    // 忘記密碼：重新登入後更新密碼
+    const {data: loginData, error: loginErr} = await SUPA.auth.signInWithPassword({email, password: p1});
+    if (loginErr) {
+      // 若舊密碼不知道，需要管理員在後台重設
+      err.textContent = '密碼重設失敗，請聯繫教練或管理員';
+      err.classList.add('show'); return;
+    }
+    const {error: updateErr} = await SUPA.auth.updateUser({password: p1});
+    if (updateErr) {
+      err.textContent = '密碼更新失敗：' + updateErr.message;
+      err.classList.add('show'); return;
+    }
+    await loadParentData(loginData.user.id);
+  } else {
+    // 首次啟用：建立 Supabase Auth 帳號
+    const {data, error} = await SUPA.auth.signUp({email, password: p1});
+    if (error) {
+      err.textContent = '建立帳號失敗：' + error.message;
+      err.classList.add('show'); return;
+    }
+    const userId = data.user?.id;
+    if (userId) {
+      await SUPA.from('guardians').update({auth_id: userId, status: 'active'}).eq('phone', dbPhone(pendingPhone));
+    }
+    await loadParentData(userId);
   }
-
-  const { data: { user } } = await SUPA.auth.getUser();
-  if (user) {
-    await SUPA.from('guardians').update({ auth_id: user.id, status: 'active', email: pendingEmail })
-      .eq('phone', dbPhone(pendingPhone));
-  }
-  await loadParentData(user?.id);
 
   currentChildIdx = 0;
   document.getElementById('auth-shell').style.display = 'none';
@@ -986,21 +882,15 @@ async function doLogin() {
   const pwd = document.getElementById('login-pwd').value;
   const err = document.getElementById('login-err');
 
-  if (phone.length !== 10 || !phone.startsWith('09')) {
-    err.classList.add('show'); return;
-  }
-
-  // Look up real email from DB
-  const { data: g } = await SUPA.from('guardians').select('email').eq('phone', dbPhone(phone)).maybeSingle();
-  const realEmail = (g?.email && !g.email.endsWith('@swimkids.app')) ? g.email : null;
-  if (!realEmail) {
+  const {data: g} = await SUPA.from('guardians').select('email').eq('phone', dbPhone(phone)).maybeSingle();
+  if (!g?.email) {
+    err.textContent = '找不到此手機號碼，請確認後重試';
     err.classList.add('show');
-    document.getElementById('login-pwd').classList.add('input-err');
     return;
   }
-
-  const { data, error } = await SUPA.auth.signInWithPassword({ email: realEmail, password: pwd });
+  const {data, error} = await SUPA.auth.signInWithPassword({email: g.email, password: pwd});
   if (error) {
+    err.textContent = '手機號碼或密碼錯誤，請重新輸入';
     err.classList.add('show');
     document.getElementById('login-pwd').classList.add('input-err');
     return;
@@ -1102,67 +992,9 @@ async function renderApp(showCelebration) {
   renderStats(child);
   renderNextGoal(child);
   renderExamList(child);
-  renderLineNotifySection();
   if (showCelebration) {
     setTimeout(() => showLevelUpCelebration(child), 600);
   }
-}
-
-function renderLineNotifySection() {
-  const g = currentAccount.guardian;
-  const isBound = g.line_user_id || (g.lineBindings && g.lineBindings.length > 0);
-  const unboundCard = document.getElementById('line-unbound-card');
-  const boundCard = document.getElementById('line-bound-card');
-
-  if (!isBound) {
-    unboundCard.style.display = 'block';
-    boundCard.style.display = 'none';
-    const phone = (g.phone || '').replace(/\D/g, '');
-    document.getElementById('line-bind-msg').textContent = '小泳士' + phone;
-    return;
-  }
-
-  unboundCard.style.display = 'none';
-  boundCard.style.display = 'block';
-
-  // 顯示已綁定場館
-  const venuesEl = document.getElementById('line-bound-venues');
-  const boundVenues = (g.lineBindings || []).map(b => venueName(b.venue_id)).filter(Boolean);
-  if (boundVenues.length) {
-    venuesEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
-      + '<span style="color:var(--green);font-weight:600">已綁定：</span>'
-      + boundVenues.join('、');
-  } else {
-    venuesEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
-      + '<span style="color:var(--green);font-weight:600">LINE 已綁定</span>';
-  }
-
-  const enabled = g.notify_enabled !== false;
-  const cb = document.getElementById('notify-toggle');
-  const slider = document.getElementById('notify-slider');
-  const knob = document.getElementById('notify-knob');
-  cb.checked = enabled;
-  slider.style.background = enabled ? 'var(--ocean)' : 'var(--slate5)';
-  knob.style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
-}
-
-async function toggleNotify(cb) {
-  const enabled = cb.checked;
-  const slider = document.getElementById('notify-slider');
-  const knob = document.getElementById('notify-knob');
-  slider.style.background = enabled ? 'var(--ocean)' : 'var(--slate5)';
-  knob.style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
-  const {error} = await SUPA.from('guardians')
-    .update({notify_enabled: enabled})
-    .eq('id', currentAccount.guardian.id);
-  if (error) {
-    cb.checked = !enabled;
-    slider.style.background = !enabled ? 'var(--ocean)' : 'var(--slate5)';
-    knob.style.transform = !enabled ? 'translateX(20px)' : 'translateX(0)';
-    alert('更新失敗，請稍後再試');
-    return;
-  }
-  currentAccount.guardian.notify_enabled = enabled;
 }
 function renderChildSwitcher() {
   const el = document.getElementById('child-switcher');
@@ -1319,39 +1151,12 @@ function renderExamList(child) {
   const el = document.getElementById('exam-list');
   el.innerHTML = '';
 
-  // 只顯示通過紀錄；N 級的失敗紀錄附在 N-1 級通過卡裡
-  // 如果沒有真實的 N-1 通過，則建立合成卡
-  const passedLevels = new Set(child.exams.filter(e=>e.verdict==='pass').map(e=>e.level));
-  const failsByLevel = {};
-  child.exams.forEach(e => {
-    if (e.verdict === 'fail') {
-      if (!failsByLevel[e.level]) failsByLevel[e.level] = [];
-      failsByLevel[e.level].push(e.date);
-    }
-  });
-  // 附加失敗日期到真實通過卡
-  const displayItems = [];
-  child.exams.forEach(e => {
-    if (e.verdict === 'pass') {
-      const nextFailDates = (failsByLevel[e.level + 1] || []).sort((a,b) => b.localeCompare(a));
-      displayItems.push({...e, synthetic: false, nextFailDates});
-    }
-  });
-  // 無真實通過時建立合成卡
-  Object.entries(failsByLevel).forEach(([lvStr, dates]) => {
-    const confirmLv = parseInt(lvStr) - 1;
-    if (confirmLv >= 1 && !passedLevels.has(confirmLv)) {
-      const sortedDates = [...dates].sort((a,b) => b.localeCompare(a));
-      displayItems.push({
-        level: confirmLv, verdict: 'pass', synthetic: true, checks: {},
-        date: sortedDates[0], nextFailDates: sortedDates,
-        teachCoach: '', examCoach: '', venueId: '', note: '',
-      });
-    }
-  });
-  displayItems.sort((a, b) => b.date.localeCompare(a.date));
+  // 家長端只顯示通過的考試
+  const passedExams = child.exams
+    .filter(e => e.verdict === 'pass')
+    .sort((a, b) => b.date.localeCompare(a.date));
 
-  if (!displayItems.length) {
+  if (!passedExams.length) {
     el.innerHTML = `<div style="text-align:center;padding:40px 20px">
       <div style="font-size:32px;margin-bottom:12px">🏊</div>
       <div style="color:var(--slate3);font-size:13px;font-weight:500">尚未通過任何考試</div>
@@ -1360,63 +1165,33 @@ function renderExamList(child) {
     return;
   }
 
-  let firstOpen = true;
-  displayItems.forEach(exam => {
+  passedExams.forEach((exam, idx) => {
     const sd = SKILL_DATA[exam.level];
     const dp = exam.date.split('-');
-
+    // 只顯示達標項目（通過的考試只有達標，不顯示未達標）
     const passItems = [];
-    if (sd && !exam.synthetic) sd.items.forEach((item,i)=>{ if (exam.checks['p'+i]) passItems.push(item.pass); });
-
+    if (sd) sd.items.forEach((item,i)=>{
+      if (exam.checks['p'+i]) passItems.push(item.pass);
+    });
     let bodyHtml = '';
     if (passItems.length) {
-      bodyHtml += `<div class="skill-section"><div class="skill-section-title">通過項目</div><div class="skill-grid">`;
-      passItems.forEach(t => { bodyHtml += `<div class="skill-item-row sk-pass"><div class="sk-icon">✓</div><div class="sk-text">${t}</div></div>`; });
+      bodyHtml += `<div class="skill-section">
+        <div class="skill-section-title">通過項目</div>
+        <div class="skill-grid">`;
+      passItems.forEach(t => {
+        bodyHtml += `<div class="skill-item-row sk-pass"><div class="sk-icon">✓</div><div class="sk-text">${t}</div></div>`;
+      });
       bodyHtml += `</div></div>`;
     }
-    if (exam.nextFailDates?.length) {
-      const nextLv = SKILL_DATA[exam.level + 1];
-      const total = exam.nextFailDates.length;
-      const SHOW = 3;
-      const rowsHtml = exam.nextFailDates.map((d, i) => {
-        const dp2 = d.split('-');
-        const extra = i >= SHOW ? `class="fd-extra-${exam.level}"` : '';
-        const disp = i >= SHOW ? 'none' : 'flex';
-        return `<div ${extra} style="display:${disp};align-items:center;gap:8px;padding:6px 9px;border-radius:8px;background:var(--slate7)">
-          <div style="font-size:11px;color:var(--slate3);font-family:'DM Mono',monospace;flex-shrink:0">第 ${total - i} 次</div>
-          <div style="font-size:12px;color:var(--slate2);flex:1">${dp2[0]} 年 ${parseInt(dp2[1])} 月 ${parseInt(dp2[2])} 日</div>
-          <div style="font-size:10px;color:var(--red)">未通過</div>
-        </div>`;
-      }).join('');
-      const moreBtn = total > SHOW
-        ? `<button onclick="
-            var els=document.querySelectorAll('.fd-extra-${exam.level}');
-            var showing=els[0].style.display!=='none';
-            els.forEach(function(e){e.style.display=showing?'none':'flex'});
-            this.textContent=showing?'顯示全部 ${total} 次 ▾':'收起 ▴';
-          " style="margin-top:6px;font-size:11px;color:var(--ocean);background:none;border:none;cursor:pointer;padding:2px 0">顯示全部 ${total} 次 ▾</button>`
-        : '';
-      bodyHtml += `<div class="skill-section">
-        <div class="skill-section-title">${nextLv?nextLv.label:exam.level+1+'級'} 挑戰紀錄（${total} 次）</div>
-        <div class="skill-grid">${rowsHtml}</div>
-        ${moreBtn}
-      </div>`;
-    }
-    if (!exam.synthetic) {
-      if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${exam.note}</div></div>`;
-      bodyHtml += `<div class="coach-row" style="grid-template-columns:1fr 1fr 1fr">
-        <div><div class="coach-lbl">教學教練</div><div class="coach-name">${exam.teachCoach}</div></div>
-        <div><div class="coach-lbl">考試教練</div><div class="coach-name">${exam.examCoach}</div></div>
-        <div><div class="coach-lbl">考試場館</div><div class="coach-name" style="display:flex;align-items:center;gap:4px">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--slate3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          ${venueName(exam.venueId)}
-        </div></div>
-      </div>`;
-    }
-
-    const levelTxt = exam.synthetic
-      ? `${sd?sd.label:''} 通過`
-      : `${sd?sd.label:''} 通過 🎉`;
+    if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${exam.note}</div></div>`;
+    bodyHtml += `<div class="coach-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div><div class="coach-lbl">教學教練</div><div class="coach-name">${exam.teachCoach}</div></div>
+      <div><div class="coach-lbl">考試教練</div><div class="coach-name">${exam.examCoach}</div></div>
+      <div><div class="coach-lbl">考試場館</div><div class="coach-name" style="display:flex;align-items:center;gap:4px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--slate3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${venueName(exam.venueId)}
+      </div></div>
+    </div>`;
 
     const card = document.createElement('div');
     card.className = 'exam-card';
@@ -1428,47 +1203,24 @@ function renderExamList(child) {
       </div>
       <div class="exam-divider"></div>
       <div class="exam-info">
-        <div class="exam-level">${levelTxt}</div>
-        ${exam.synthetic
-          ? `<div class="exam-coaches" style="color:var(--slate3)">目前已確認通過級數</div>`
-          : `<div class="exam-coaches">${exam.teachCoach} 教學・${exam.examCoach} 監考</div>`}
+        <div class="exam-level">${sd?sd.label:''} 通過 🎉</div>
+        <div class="exam-class">
+          <span>${exam.classId}</span>
+          <span style="margin:0 4px;color:var(--slate5)">·</span>
+          <span style="display:inline-flex;align-items:center;gap:3px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${venueName(exam.venueId)}
+          </span>
+        </div>
+        <div class="exam-coaches">${exam.teachCoach} 教學・${exam.examCoach} 監考</div>
       </div>
       <div class="result-chip chip-pass">通過</div>
       <div class="expand-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
     </div>
     <div class="exam-body">${bodyHtml}</div>`;
-    if (firstOpen) { card.classList.add('open'); firstOpen = false; }
+    if (idx===0) card.classList.add('open');
     el.appendChild(card);
   });
-
-  // 超過 5 筆時折疊，只顯示最新 5 筆
-  const SHOW_EXAMS = 5;
-  const cards = el.querySelectorAll('.exam-card');
-  if (cards.length > SHOW_EXAMS) {
-    for (let i = SHOW_EXAMS; i < cards.length; i++) {
-      cards[i].style.display = 'none';
-      cards[i].dataset.hidden = '1';
-    }
-    const moreBtn = document.createElement('button');
-    moreBtn.style.cssText = 'width:100%;margin-top:8px;padding:10px;background:#fff;border:1px solid var(--slate6);border-radius:12px;font-size:13px;color:var(--ocean);cursor:pointer;font-family:"Noto Sans TC",sans-serif';
-    moreBtn.textContent = `顯示全部 ${cards.length} 筆紀錄 ▾`;
-    moreBtn.onclick = () => {
-      const hidden = el.querySelectorAll('.exam-card[data-hidden="1"]');
-      const isHiding = hidden.length > 0;
-      hidden.forEach(c => { c.style.display = 'block'; delete c.dataset.hidden; });
-      if (isHiding) {
-        moreBtn.textContent = '收起 ▴';
-      } else {
-        for (let i = SHOW_EXAMS; i < cards.length; i++) {
-          cards[i].style.display = 'none';
-          cards[i].dataset.hidden = '1';
-        }
-        moreBtn.textContent = `顯示全部 ${cards.length} 筆紀錄 ▾`;
-        el.scrollIntoView({behavior:'smooth', block:'start'});
-      }
-    };
-    el.appendChild(moreBtn);
-  }
 }
 
 // ════════════════════
@@ -1528,12 +1280,8 @@ async function loadParentData(authId) {
   if (!annsLoaded) await loadAnnsFromSupa();
 
   const {data: guardian} = await SUPA.from('guardians')
-    .select('id, name, phone, notify_enabled, line_user_id').eq('auth_id', authId).single();
+    .select('id, name, phone').eq('auth_id', authId).single();
   if (!guardian) return;
-
-  const {data: lineBindings} = await SUPA.from('guardian_line_bindings')
-    .select('venue_id').eq('guardian_id', guardian.id);
-  guardian.lineBindings = lineBindings || [];
 
   const {data: sg} = await SUPA.from('student_guardian')
     .select('student_id').eq('guardian_id', guardian.id);
