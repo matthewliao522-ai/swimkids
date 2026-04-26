@@ -3002,12 +3002,11 @@ function parseImportRows(rows) {
   // 標記重複班（已存在於 DB）
   classOrder.forEach(key => {
     const cls = classMap[key];
-    const venueId = VENUE_NAME_MAP[cls.venue] || null;
     const ctype = cls.classType||'C';
     const tslot = cls.timeSlot||'A';
     const coachObj = COACHES_DATA.find(c => c.name === cls.teach);
-    const existsBySlot = venueId && CLASSES.find(c =>
-      c.venueId === venueId && c.date === cls.date &&
+    const existsBySlot = cls.venueId && CLASSES.find(c =>
+      c.venueId === cls.venueId && c.date === cls.date &&
       c.classType === ctype && c.timeSlot === tslot &&
       (!coachObj || String(c.coachId) === String(coachObj.id))
     );
