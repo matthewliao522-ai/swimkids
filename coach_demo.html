@@ -390,29 +390,97 @@ select.filter-sel:focus{border-color:var(--brand)}
 <!-- ── LOGIN SCREEN ── -->
 <div id="login-screen" style="position:fixed;inset:0;background:var(--n900);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px">
   <div style="background:var(--white);border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:18px;font-weight:900;color:var(--ink);font-family:'Noto Sans TC',sans-serif;letter-spacing:.02em">
-        SWIMKIDS <span style="font-weight:300;color:var(--ink4);margin:0 4px">·</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--green);letter-spacing:.1em">COACH</span>
+    <!-- 登入表單 -->
+    <div id="login-form-main">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="font-size:18px;font-weight:900;color:var(--ink);font-family:'Noto Sans TC',sans-serif;letter-spacing:.02em">
+          SWIMKIDS <span style="font-weight:300;color:var(--ink4);margin:0 4px">·</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--green);letter-spacing:.1em">COACH</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:6px">教練系統登入</div>
       </div>
-      <div style="font-size:12px;color:var(--ink3);margin-top:6px">教練系統登入</div>
+      <div style="margin-bottom:13px">
+        <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">電子郵件</label>
+        <input id="login-email" type="email" placeholder="yourname@swimkids.app" onkeydown="if(event.key==='Enter')document.getElementById('login-pwd').focus()"
+          style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+          onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'">
+      </div>
+      <div style="margin-bottom:8px">
+        <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">密碼</label>
+        <input id="login-pwd" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"
+          style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+          onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'">
+      </div>
+      <div id="login-err" style="font-size:11px;color:var(--signal);margin-bottom:10px;min-height:16px"></div>
+      <button id="login-btn" onclick="doLogin()"
+        style="width:100%;background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:background .15s"
+        onmouseover="this.style.background='var(--brand-dk)'" onmouseout="this.style.background='var(--brand)'">登入</button>
+      <div style="text-align:center;margin-top:14px">
+        <button onclick="showForgotPwd()" style="background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;text-decoration:underline">忘記密碼？</button>
+      </div>
     </div>
-    <div style="margin-bottom:13px">
-      <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">電子郵件</label>
-      <input id="login-email" type="email" placeholder="yourname@swimkids.app" onkeydown="if(event.key==='Enter')document.getElementById('login-pwd').focus()"
-        style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
-        onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'">
+    <!-- 忘記密碼流程 -->
+    <div id="forgot-section" style="display:none">
+      <div id="forgot-step1">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:16px;font-weight:700;color:var(--ink)">重設密碼</div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:4px">輸入帳號 email，我們將發送驗證碼</div>
+        </div>
+        <div style="margin-bottom:13px">
+          <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">電子郵件</label>
+          <input id="forgot-email" type="email" placeholder="yourname@swimkids.app"
+            style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+            onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'"
+            onkeydown="if(event.key==='Enter')sendForgotOtp()">
+        </div>
+        <div id="forgot-err1" style="font-size:11px;color:var(--signal);margin-bottom:10px;min-height:16px"></div>
+        <button id="forgot-send-btn" onclick="sendForgotOtp()"
+          style="width:100%;background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:background .15s">發送驗證碼</button>
+        <div style="text-align:center;margin-top:12px">
+          <button onclick="showLoginForm()" style="background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">← 返回登入</button>
+        </div>
+      </div>
+      <div id="forgot-step2" style="display:none">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:16px;font-weight:700;color:var(--ink)">輸入驗證碼</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:4px" id="forgot-otp-hint">已發送 8 位數驗證碼至您的信箱</div>
+        </div>
+        <div style="margin-bottom:13px">
+          <input id="forgot-otp" type="text" placeholder="12345678" maxlength="8"
+            style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:12px;font-size:20px;color:var(--ink);outline:none;font-family:'JetBrains Mono',monospace;text-align:center;letter-spacing:.25em;transition:border .15s"
+            onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'"
+            onkeydown="if(event.key==='Enter')verifyForgotOtp()">
+        </div>
+        <div id="forgot-err2" style="font-size:11px;color:var(--signal);margin-bottom:10px;min-height:16px"></div>
+        <button id="forgot-verify-btn" onclick="verifyForgotOtp()"
+          style="width:100%;background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:background .15s">驗證</button>
+        <div style="text-align:center;margin-top:12px">
+          <button onclick="showForgotStep1()" style="background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">← 重新發送</button>
+        </div>
+      </div>
+      <div id="forgot-step3" style="display:none">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:16px;font-weight:700;color:var(--ink)">設定新密碼</div>
+        </div>
+        <div style="margin-bottom:13px">
+          <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">新密碼</label>
+          <input id="forgot-newpwd" type="password" placeholder="••••••••（至少 8 字元）"
+            style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+            onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'"
+            onkeydown="if(event.key==='Enter')document.getElementById('forgot-confirmpwd').focus()">
+        </div>
+        <div style="margin-bottom:8px">
+          <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">確認密碼</label>
+          <input id="forgot-confirmpwd" type="password" placeholder="再輸入一次"
+            style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+            onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'"
+            onkeydown="if(event.key==='Enter')saveForgotPwd()">
+        </div>
+        <div id="forgot-err3" style="font-size:11px;color:var(--signal);margin-bottom:10px;min-height:16px"></div>
+        <button id="forgot-save-btn" onclick="saveForgotPwd()"
+          style="width:100%;background:var(--green);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:background .15s">儲存新密碼</button>
+      </div>
     </div>
-    <div style="margin-bottom:8px">
-      <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">密碼</label>
-      <input id="login-pwd" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"
-        style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
-        onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'">
-    </div>
-    <div id="login-err" style="font-size:11px;color:var(--signal);margin-bottom:10px;min-height:16px"></div>
-    <button id="login-btn" onclick="doLogin()"
-      style="width:100%;background:var(--brand);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:background .15s"
-      onmouseover="this.style.background='var(--brand-dk)'" onmouseout="this.style.background='var(--brand)'">登入</button>
   </div>
 </div>
 
@@ -464,6 +532,9 @@ select.filter-sel:focus{border-color:var(--brand)}
       <div class="sb-name" id="sb-name-text">—</div>
       <div class="sb-role" id="sb-role-text">—</div>
     </div>
+    <button onclick="openChangePwdModal()" title="修改密碼" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);padding:4px;border-radius:6px;display:flex;align-items:center;transition:color .15s" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </button>
     <button onclick="doLogout()" title="登出" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);padding:4px;border-radius:6px;display:flex;align-items:center;transition:color .15s" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </button>
@@ -735,6 +806,34 @@ select.filter-sel:focus{border-color:var(--brand)}
 </main>
 
 <div class="toast" id="toast"></div>
+
+<!-- ══ CHANGE PASSWORD MODAL ══ -->
+<div class="im-backdrop" id="change-pwd-backdrop" onclick="if(event.target===this)closeChangePwdModal()">
+  <div style="background:var(--white);border:1px solid var(--line2);border-radius:16px;width:100%;max-width:380px;margin:16px;padding:24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;color:var(--ink)">修改密碼</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeChangePwdModal()" style="padding:3px 8px">✕</button>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">新密碼</label>
+      <input id="cp-newpwd" type="password" placeholder="至少 8 字元"
+        style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+        onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'">
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:5px">確認密碼</label>
+      <input id="cp-confirmpwd" type="password" placeholder="再輸入一次新密碼"
+        style="width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border .15s"
+        onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--line2)'"
+        onkeydown="if(event.key==='Enter')saveChangePwd()">
+    </div>
+    <div id="cp-err" style="font-size:11px;color:var(--signal);margin-bottom:10px;min-height:16px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="closeChangePwdModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveChangePwd()">儲存</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ IMPORT MODAL ══ -->
 <div class="im-backdrop" id="im-backdrop" onclick="if(event.target===this)closeImportModal()">
@@ -2337,6 +2436,114 @@ async function doLogout() {
   await SUPA.auth.signOut();
   currentStaff = null;
   document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ── 忘記密碼 ──
+let forgotEmail = '';
+
+function showLoginForm() {
+  document.getElementById('login-form-main').style.display = 'block';
+  document.getElementById('forgot-section').style.display = 'none';
+  document.getElementById('login-err').textContent = '';
+}
+
+function showForgotPwd() {
+  document.getElementById('login-form-main').style.display = 'none';
+  document.getElementById('forgot-section').style.display = 'block';
+  showForgotStep1();
+}
+
+function showForgotStep1() {
+  document.getElementById('forgot-step1').style.display = 'block';
+  document.getElementById('forgot-step2').style.display = 'none';
+  document.getElementById('forgot-step3').style.display = 'none';
+  document.getElementById('forgot-err1').textContent = '';
+  document.getElementById('forgot-email').value = forgotEmail || '';
+}
+
+async function sendForgotOtp() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const errEl = document.getElementById('forgot-err1');
+  const btn = document.getElementById('forgot-send-btn');
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = '請輸入電子郵件'; return; }
+  forgotEmail = email;
+  btn.textContent = '發送中…'; btn.disabled = true;
+  const { error } = await SUPA.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+  btn.textContent = '發送驗證碼'; btn.disabled = false;
+  if (error) { errEl.textContent = '找不到此帳號，請確認 email 是否正確'; return; }
+  document.getElementById('forgot-otp-hint').textContent = '已發送 8 位數驗證碼至 ' + email;
+  document.getElementById('forgot-step1').style.display = 'none';
+  document.getElementById('forgot-step2').style.display = 'block';
+  document.getElementById('forgot-err2').textContent = '';
+  document.getElementById('forgot-otp').value = '';
+  document.getElementById('forgot-otp').focus();
+}
+
+async function verifyForgotOtp() {
+  const otp = document.getElementById('forgot-otp').value.trim();
+  const errEl = document.getElementById('forgot-err2');
+  const btn = document.getElementById('forgot-verify-btn');
+  errEl.textContent = '';
+  if (!otp || otp.length < 6) { errEl.textContent = '請輸入驗證碼'; return; }
+  btn.textContent = '驗證中…'; btn.disabled = true;
+  const { error } = await SUPA.auth.verifyOtp({ email: forgotEmail, token: otp, type: 'email' });
+  btn.textContent = '驗證'; btn.disabled = false;
+  if (error) { errEl.textContent = '驗證碼錯誤或已過期'; return; }
+  document.getElementById('forgot-step2').style.display = 'none';
+  document.getElementById('forgot-step3').style.display = 'block';
+  document.getElementById('forgot-err3').textContent = '';
+  document.getElementById('forgot-newpwd').value = '';
+  document.getElementById('forgot-confirmpwd').value = '';
+  document.getElementById('forgot-newpwd').focus();
+}
+
+async function saveForgotPwd() {
+  const pwd = document.getElementById('forgot-newpwd').value;
+  const confirm = document.getElementById('forgot-confirmpwd').value;
+  const errEl = document.getElementById('forgot-err3');
+  const btn = document.getElementById('forgot-save-btn');
+  errEl.textContent = '';
+  if (pwd.length < 8) { errEl.textContent = '密碼至少 8 字元'; return; }
+  if (pwd !== confirm) { errEl.textContent = '兩次密碼不一致'; return; }
+  btn.textContent = '儲存中…'; btn.disabled = true;
+  const { error } = await SUPA.auth.updateUser({ password: pwd });
+  btn.textContent = '儲存新密碼'; btn.disabled = false;
+  if (error) { errEl.textContent = error.message; return; }
+  const { data: { session } } = await SUPA.auth.getSession();
+  if (session) {
+    document.getElementById('forgot-section').style.display = 'none';
+    document.getElementById('login-form-main').style.display = 'block';
+    await initAfterAuth(session.user.id);
+  } else {
+    showLoginForm();
+    document.getElementById('login-err').textContent = '密碼已更新，請重新登入';
+  }
+}
+
+// ── 修改密碼（登入後）──
+function openChangePwdModal() {
+  document.getElementById('cp-newpwd').value = '';
+  document.getElementById('cp-confirmpwd').value = '';
+  document.getElementById('cp-err').textContent = '';
+  document.getElementById('change-pwd-backdrop').classList.add('show');
+}
+
+function closeChangePwdModal() {
+  document.getElementById('change-pwd-backdrop').classList.remove('show');
+}
+
+async function saveChangePwd() {
+  const pwd = document.getElementById('cp-newpwd').value;
+  const confirm = document.getElementById('cp-confirmpwd').value;
+  const errEl = document.getElementById('cp-err');
+  errEl.textContent = '';
+  if (pwd.length < 8) { errEl.textContent = '密碼至少 8 字元'; return; }
+  if (pwd !== confirm) { errEl.textContent = '兩次密碼不一致'; return; }
+  const { error } = await SUPA.auth.updateUser({ password: pwd });
+  if (error) { errEl.textContent = error.message; return; }
+  closeChangePwdModal();
+  showToast('密碼已更新', 'ok');
 }
 
 // ════════════════════════════════
