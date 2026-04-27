@@ -1621,7 +1621,7 @@ async function loadParentData(authId) {
     if (currentAccount) {
       document.getElementById('auth-shell').style.display = 'none';
       document.getElementById('app-page').style.display = 'block';
-      await renderApp(false);
+      await renderApp(true);
       startIdleTimer();
     }
   }
