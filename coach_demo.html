@@ -230,24 +230,24 @@ select.filter-sel:focus{border-color:var(--brand)}
 
 .skill-scroll{overflow-y:auto;padding:0 16px 8px;flex:1;min-height:0}
 .skill-dual{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:5px}
-.crit{display:flex;align-items:flex-start;gap:7px;padding:8px 10px;cursor:pointer;transition:background .1s}
+.crit{display:flex;align-items:center;gap:10px;padding:14px 12px;cursor:pointer;transition:background .1s;min-height:48px}
 .crit:first-child{border-right:1px solid var(--line)}
 .crit:hover{background:var(--n50)}
 .crit.chk-p{background:var(--green-bg)}
 .crit.chk-f{background:var(--signal-lt)}
 .crit.was-fail{border-left:2px solid var(--gold-100)}
-.crit-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--ink4);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s;margin-top:1px}
+.crit-box{width:22px;height:22px;border-radius:5px;border:1.5px solid var(--ink4);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s}
 .crit-box.cp{background:var(--green);border-color:var(--green)}
 .crit-box.cf{background:var(--signal);border-color:var(--signal)}
 .crit-box svg{display:none}.crit-box.cp svg,.crit-box.cf svg{display:block}
-.crit-txt{font-size:11.5px;color:var(--ink2);line-height:1.4}
+.crit-txt{font-size:13px;color:var(--ink2);line-height:1.4}
 .crit.chk-p .crit-txt{color:var(--green)}
 .crit.chk-f .crit-txt{color:var(--signal)}
 .was-fail-badge{font-size:9px;color:var(--gold-dk);background:var(--gold-100);border-radius:3px;padding:0 4px;margin-top:2px;display:inline-block;white-space:nowrap;font-weight:600}
 
 .verdict-section{padding:10px 16px;border-top:1px solid var(--line);flex-shrink:0}
 .verdict-row{display:flex;gap:8px;margin-bottom:8px}
-.vbtn{flex:1;padding:9px;border-radius:6px;border:1px solid var(--line2);background:var(--n50);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink3);font-family:'Noto Sans TC',sans-serif;transition:all .15s;text-align:center}
+.vbtn{flex:1;padding:14px 9px;border-radius:8px;border:1px solid var(--line2);background:var(--n50);cursor:pointer;font-size:15px;font-weight:700;color:var(--ink3);font-family:'Noto Sans TC',sans-serif;transition:all .15s;text-align:center}
 .vbtn:hover{background:var(--n100);color:var(--ink)}
 .vbtn.vp{background:var(--green-bg);border-color:var(--green);color:var(--green)}
 .vbtn.vf{background:var(--signal-lt);border-color:var(--signal);color:var(--signal)}
@@ -2327,13 +2327,13 @@ function renderExamForm() {
     div.innerHTML = `
       <div class="crit${pChk?' chk-p':''}" id="cp${i}" onclick="toggleCrit('p',${i})">
         <div class="crit-box${pChk?' cp':''}">
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
         </div>
         <div><div class="crit-txt">${item.pass}</div></div>
       </div>
       <div class="crit${fChk?' chk-f':''}${wasFailF?' was-fail':''}" id="cf${i}" onclick="toggleCrit('f',${i})">
         <div class="crit-box${fChk?' cf':''}">
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>
         </div>
         <div>
           <div class="crit-txt">${item.fail}</div>
