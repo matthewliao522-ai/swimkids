@@ -231,13 +231,31 @@ tr:hover td{background:#fafaf8}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.toast-ok{background:#16a34a}
 .toast.toast-warn{background:#dc2626}
+
+/* ── TOPBAR LOCK BTN (mobile only) ── */
+.topbar-lock-btn{display:none}
+@media(max-width:768px){
+  .topbar-lock-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:none;border:none;cursor:pointer;color:var(--ink3);transition:all .15s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+  .topbar-lock-btn:active{background:var(--bg);color:var(--ink)}
+  /* 手機版隱藏日期，保留鎖頭空間 */
+  .topbar-date{display:none}
+  /* 場館選單縮小 */
+  #venue-switcher{min-width:80px !important;font-size:11px !important}
+}
+
+/* ── LOGIN SCREEN MOBILE ── */
+@media(max-width:480px){
+  #login-screen{padding:0 !important;align-items:flex-end !important;justify-content:flex-end !important}
+  .login-card{border-radius:24px 24px 0 0 !important;padding:28px 22px max(40px,env(safe-area-inset-bottom)) !important;max-width:100% !important;box-shadow:0 -8px 40px rgba(0,0,0,.35) !important;max-height:92vh;overflow-y:auto}
+  .login-card input{font-size:16px !important;padding:13px 14px !important}
+}
 </style>
 </head>
 <body>
 
 <!-- ── LOGIN SCREEN ── -->
 <div id="login-screen" style="position:fixed;inset:0;background:#1a1a1a;display:flex;align-items:center;justify-content:center;z-index:999;padding:20px">
-  <div style="background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+  <div class="login-card" style="background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
     <!-- 登入表單 -->
     <div id="login-form-main">
       <div style="text-align:center;margin-bottom:28px">
@@ -420,6 +438,9 @@ tr:hover td{background:#fafaf8}
           <option value="3">桃園館</option>
         </select>
       </div>
+      <button class="topbar-lock-btn" onclick="openChangePwdModal()" title="修改密碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </button>
       <div class="topbar-date" id="topbar-date"></div>
     </div>
   </div>
