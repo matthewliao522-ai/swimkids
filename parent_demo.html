@@ -1518,8 +1518,13 @@ function launchConfetti(container) {
   }
 }
 
+function seenLevelKey(child) { return `sk_seen_lv_${child.id}`; }
+function getSeenLevel(child) { return parseInt(localStorage.getItem(seenLevelKey(child)) || '0'); }
+function markLevelSeen(child) { localStorage.setItem(seenLevelKey(child), String(getPassedLevel(child))); }
+
 function showLevelUpCelebration(child) {
   const lv = getPassedLevel(child);
+  if (lv <= getSeenLevel(child)) return;   // 這個級數已慶祝過，略過
   const sd = SKILL_DATA[lv];
   const hatName = HAT_MAP[lv];
   const passCount = child.exams.filter(e=>e.verdict==='pass').length;
@@ -1533,6 +1538,8 @@ function showLevelUpCelebration(child) {
 }
 
 function closeLevelUp() {
+  const child = currentAccount?.children[currentChildIdx];
+  if (child) markLevelSeen(child);   // 關閉時記錄已看過的級數
   document.getElementById('levelup-overlay').classList.remove('show');
 }
 
