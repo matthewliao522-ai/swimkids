@@ -383,6 +383,100 @@ select.filter-sel:focus{border-color:var(--brand)}
 }
 .d-mobile{display:none}
 @media(max-width:768px){.d-mobile{display:block}}
+
+/* ── COACH AVATAR BTN ── */
+.coach-av-btn{width:32px;height:32px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:'Noto Sans TC',sans-serif;flex-shrink:0;transition:opacity .15s}
+.coach-av-btn:hover{opacity:.82}
+
+/* ── PROFILE CHIP BASE ── */
+.pc-chip{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;line-height:1.5}
+.pc-chip-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.pc-chip-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.pc-chip-amber{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}
+.pc-chip-brand{background:var(--brand-lt);color:var(--brand-dk);border:1px solid var(--brand-100)}
+.pc-chip-gray{background:var(--n100);color:var(--ink3);border:1px solid var(--line2)}
+
+/* ── COACH PROFILE DRAWER ── */
+.cp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:cpFade .2s}
+.cp-overlay.hidden{display:none}
+@keyframes cpFade{from{opacity:0}to{opacity:1}}
+@keyframes cpSlide{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.cp-panel{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 -4px 40px rgba(0,0,0,.2);animation:cpSlide .22s cubic-bezier(.22,1,.36,1)}
+.cp-handle{width:40px;height:5px;background:var(--line2);border-radius:3px;margin:12px auto 0;flex-shrink:0}
+.cp-hd{padding:16px 18px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.cp-hd-left{display:flex;align-items:center;gap:14px}
+.cp-coach-name{font-size:19px;font-weight:700;color:var(--ink)}
+.cp-coach-meta{font-size:13px;color:var(--ink3);margin-top:3px}
+.cp-close{background:none;border:none;cursor:pointer;color:var(--ink3);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:background .15s}
+.cp-close:hover{background:var(--n100)}
+.cp-body{flex:1;overflow-y:auto;padding:18px 16px 8px}
+.cp-stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:22px}
+.cp-stat-card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 10px 12px;text-align:center}
+.cp-stat-num{font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+.cp-stat-lbl{font-size:12px;font-weight:600;color:var(--ink2);margin-top:8px;line-height:1.4}
+.cp-stat-sub{font-size:10px;color:var(--ink3);margin-top:3px;line-height:1.3}
+.cp-sec{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin:0 0 10px;display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace}
+.cp-sec-count{background:var(--line);color:var(--ink3);font-size:10px;padding:1px 7px;border-radius:10px;font-family:'JetBrains Mono',monospace}
+.cp-risk-list{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:24px}
+.cp-risk-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.cp-risk-row:last-child{border-bottom:none}
+.cp-risk-name{font-size:14px;font-weight:600;color:var(--brand);flex:1;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.cp-risk-detail{font-size:11px;color:var(--ink3);margin-top:2px}
+.cp-class-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.cp-class-row{border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden}
+.cp-class-row.upcoming{background:var(--brand-lt);border-color:var(--brand-100)}
+.cp-class-row.past{opacity:.7}
+.cp-class-main{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;user-select:none}
+.cp-class-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);flex-shrink:0;width:46px;text-align:center;line-height:1.4}
+.cp-class-date strong{display:block;font-size:17px;color:var(--ink2);font-weight:700}
+.cp-class-row.upcoming .cp-class-date,.cp-class-row.upcoming .cp-class-date strong{color:var(--brand-dk)}
+.cp-class-info{flex:1;min-width:0}
+.cp-class-code{font-size:14px;font-weight:600;color:var(--ink)}
+.cp-class-venue{font-size:12px;color:var(--ink3);margin-top:2px}
+.cp-class-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.cp-class-cnt{font-size:12px;color:var(--ink3);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:4px}
+.cp-expand-icon{transition:transform .2s;display:inline-block;font-size:11px;color:var(--ink4)}
+.cp-class-row.open .cp-expand-icon{transform:rotate(180deg)}
+.cp-stu-list{display:none;border-top:1px solid rgba(0,0,0,.07);padding:10px 14px 12px;background:rgba(255,255,255,.7)}
+.cp-class-row.open .cp-stu-list{display:block}
+.cp-stu-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.cp-stu-row:last-child{border-bottom:none}
+.cp-stu-name{font-size:13px;font-weight:600;color:var(--brand);flex:1;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.cp-stu-lv{font-size:12px;color:var(--ink3);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.cp-today-divider{display:flex;align-items:center;gap:8px;margin:6px 0}
+.cp-today-divider::before,.cp-today-divider::after{content:'';flex:1;height:1px;background:var(--brand);opacity:.25}
+.cp-today-label{font-size:10px;font-weight:700;color:var(--brand);letter-spacing:.05em;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.cp-show-more{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:1px dashed var(--line2);background:none;width:100%;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink3);font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.cp-show-more:hover{background:var(--bg);color:var(--ink2)}
+.cp-footer{flex-shrink:0;border-top:1px solid var(--line);padding:14px 16px 28px;display:flex;gap:8px}
+.cp-btn{flex:1;padding:13px 10px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:'Noto Sans TC',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}
+.cp-btn:hover{opacity:.82}
+.cp-btn-ghost{background:var(--n100);color:var(--ink2);border:1px solid var(--line2)}
+.cp-btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+/* ── EXAM HISTORY SHEET ── */
+.eh-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:flex;align-items:flex-end;justify-content:center;animation:cpFade .18s}
+.eh-overlay.hidden{display:none}
+.eh-panel{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 -4px 40px rgba(0,0,0,.2);animation:cpSlide .22s cubic-bezier(.22,1,.36,1)}
+.eh-handle{width:40px;height:5px;background:var(--line2);border-radius:3px;margin:12px auto 0;flex-shrink:0}
+.eh-hd{padding:14px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.eh-hd-left{display:flex;align-items:center;gap:12px}
+.eh-stu-name{font-size:17px;font-weight:700;color:var(--ink)}
+.eh-stu-meta{font-size:12px;color:var(--ink3);margin-top:2px}
+.eh-close{background:none;border:none;cursor:pointer;color:var(--ink3);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s}
+.eh-close:hover{background:var(--n100)}
+.eh-body{flex:1;overflow-y:auto;padding:16px 16px 24px}
+.eh-summary{display:flex;gap:6px;margin-bottom:16px}
+.eh-summary-card{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 8px;text-align:center}
+.eh-summary-num{font-size:22px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+.eh-summary-lbl{font-size:11px;color:var(--ink3);margin-top:5px;font-weight:500}
+.eh-list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.eh-row{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.eh-row:last-child{border-bottom:none}
+.eh-date{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--ink3);flex-shrink:0;width:72px;padding-top:2px}
+.eh-lv{font-size:14px;font-weight:700;color:var(--ink);flex-shrink:0;width:36px;padding-top:2px}
+.eh-venue{font-size:12px;color:var(--ink3)}
+.eh-note{font-size:11px;color:var(--ink3);margin-top:3px;line-height:1.5;font-style:italic}
 </style>
 </head>
 <body>
@@ -553,9 +647,7 @@ select.filter-sel:focus{border-color:var(--brand)}
     </div>
     <div class="topbar-right">
       <div class="topbar-date" id="date-badge"></div>
-      <button class="d-mobile" onclick="openChangePwdModal()" title="修改密碼" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:6px;border-radius:6px;align-items:center;transition:color .15s">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      </button>
+      <button class="d-mobile coach-av-btn" id="topbar-av-btn" onclick="openCoachProfile()" title="我的資料" style="display:none">?</button>
     </div>
   </div>
   <div class="content" id="content-area">
@@ -897,6 +989,64 @@ select.filter-sel:focus{border-color:var(--brand)}
   </div>
 </div>
 
+<!-- ══ COACH PROFILE DRAWER ══ -->
+<div class="cp-overlay hidden" id="cp-overlay" onclick="if(event.target===this)closeCoachProfile()">
+  <div class="cp-panel">
+    <div class="cp-handle"></div>
+    <div class="cp-hd">
+      <div class="cp-hd-left">
+        <div class="av av-coach" style="width:46px;height:46px;font-size:18px" id="cp-av">?</div>
+        <div>
+          <div class="cp-coach-name" id="cp-name">—</div>
+          <div class="cp-coach-meta" id="cp-meta">—</div>
+        </div>
+      </div>
+      <button class="cp-close" onclick="closeCoachProfile()">✕</button>
+    </div>
+    <div class="cp-body">
+      <div class="cp-stat-grid" id="cp-stat-grid"></div>
+      <div id="cp-risk-section">
+        <div class="cp-sec">需關注學員 <span class="cp-sec-count" id="cp-risk-count">0</span></div>
+        <div class="cp-risk-list" id="cp-risk-list"></div>
+      </div>
+      <div style="margin-top:20px" id="cp-class-section">
+        <div class="cp-sec">我的授課班 <span class="cp-sec-count" id="cp-class-count">0</span></div>
+        <div class="cp-class-list" id="cp-class-list"></div>
+        <div id="cp-older-wrap" style="display:none;flex-direction:column;gap:6px"></div>
+        <button class="cp-show-more" id="cp-show-more" onclick="toggleCpOlderClasses()" style="display:none"></button>
+      </div>
+    </div>
+    <div class="cp-footer">
+      <button class="cp-btn cp-btn-ghost" onclick="closeCoachProfile();openChangePwdModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        修改密碼
+      </button>
+      <button class="cp-btn cp-btn-danger" onclick="closeCoachProfile();doLogout()">登出</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXAM HISTORY SHEET ══ -->
+<div class="eh-overlay hidden" id="eh-overlay" onclick="if(event.target===this)closeExamHistorySheet()">
+  <div class="eh-panel">
+    <div class="eh-handle"></div>
+    <div class="eh-hd">
+      <div class="eh-hd-left">
+        <div class="av av-coach" style="width:40px;height:40px;font-size:15px" id="eh-av">?</div>
+        <div>
+          <div class="eh-stu-name" id="eh-name">—</div>
+          <div class="eh-stu-meta" id="eh-meta">—</div>
+        </div>
+      </div>
+      <button class="eh-close" onclick="closeExamHistorySheet()">✕</button>
+    </div>
+    <div class="eh-body">
+      <div class="eh-summary" id="eh-summary"></div>
+      <div class="eh-list" id="eh-list"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════
 // DATA
@@ -941,7 +1091,7 @@ async function loadCoaches() {
 async function loadStudents() {
   const [{data:students},{data:exams}] = await Promise.all([
     SUPA.from('students').select('*').order('name'),
-    SUPA.from('exams').select('id,student_id,exam_date,level,result,fail_items').order('exam_date',{ascending:false})
+    SUPA.from('exams').select('id,student_id,exam_date,level,result,fail_items,venue_id').order('exam_date',{ascending:false})
   ]);
   const stuIds = (students||[]).map(s=>s.id);
   let guardianMap = {};
@@ -953,7 +1103,7 @@ async function loadStudents() {
   const examMap = {};
   (exams||[]).forEach(e=>{
     if(!examMap[e.student_id]) examMap[e.student_id]=[];
-    examMap[e.student_id].push({level:e.level, date:e.exam_date, verdict:e.result, failItems:e.fail_items||[]});
+    examMap[e.student_id].push({level:e.level, date:e.exam_date, verdict:e.result, failItems:e.fail_items||[], venueId:e.venue_id||null});
   });
   STUDENTS = (students||[]).map(s=>{
     const coach = COACHES_DATA.find(c=>String(c.id)===String(s.teach_coach_id));
@@ -2387,20 +2537,22 @@ async function initAfterAuth(userId) {
   currentStaff = { auth_id: userId, ...staffRole };
 
   if (staffRole.coach_id) {
-    const { data: coach } = await SUPA.from('coaches').select('name, role').eq('id', staffRole.coach_id).maybeSingle();
+    const { data: coach } = await SUPA.from('coaches').select('name, role, phone').eq('id', staffRole.coach_id).maybeSingle();
     if (coach) {
-      // 教學教練無法使用此系統
-      if (coach.role === 'teach') {
-        await SUPA.auth.signOut();
-        document.getElementById('login-err').textContent = '教學教練請使用管理系統，考試系統僅限考官與管理員';
-        return;
-      }
       currentStaff.coachName = coach.name;
-      currentStaff.coachRoleLabel = '考試教練';
+      currentStaff.coachPhone = coach.phone || '';
+      if (coach.role === 'teach') {
+        currentStaff.coachRoleLabel = '教學教練';
+        currentStaff.isTeachCoach = true;
+      } else {
+        currentStaff.coachRoleLabel = '考試教練';
+        currentStaff.isTeachCoach = false;
+      }
     }
   } else {
     currentStaff.coachName = '系統管理員';
     currentStaff.coachRoleLabel = '管理員';
+    currentStaff.isTeachCoach = false;
   }
 
   document.getElementById('login-screen').style.display = 'none';
@@ -2545,7 +2697,12 @@ async function init() {
   await loadAll();
   updateSidebarProfile();
   renderSidebarVenue();
-  renderPrepList();
+  setupTopbarAvatar();
+  if (currentStaff?.isTeachCoach) {
+    setupTeachCoachMode();
+  } else {
+    renderPrepList();
+  }
 }
 
 // ════════════════════════════════
@@ -3354,6 +3511,264 @@ function confirmQuickExam() {
   });
   closeQuickExam();
   startExam(tempId);
+}
+
+// ════════════════════════════════
+// TEACH COACH MODE
+// ════════════════════════════════
+function setupTeachCoachMode() {
+  // 隱藏考試相關 nav，只留學員管理
+  ['nav-prep','nav-day','nav-exam'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  showScreen('students');
+}
+
+// ════════════════════════════════
+// TOPBAR AVATAR
+// ════════════════════════════════
+function setupTopbarAvatar() {
+  const btn = document.getElementById('topbar-av-btn');
+  if (!btn) return;
+  const name = currentStaff?.coachName || '?';
+  btn.textContent = name.charAt(0);
+  btn.style.display = ''; // 清除 inline style，讓 .d-mobile CSS 接管（手機才顯示）
+}
+
+// ════════════════════════════════
+// COACH PROFILE DRAWER
+// ════════════════════════════════
+let cpOlderOpen = false;
+
+function openCoachProfile() {
+  renderCoachProfile();
+  document.getElementById('cp-overlay').classList.remove('hidden');
+}
+function closeCoachProfile() {
+  document.getElementById('cp-overlay').classList.add('hidden');
+}
+
+function renderCoachProfile() {
+  const name  = currentStaff?.coachName  || '—';
+  const role  = currentStaff?.coachRoleLabel || '—';
+  const phone = currentStaff?.coachPhone || '';
+
+  document.getElementById('cp-av').textContent   = name.charAt(0);
+  document.getElementById('cp-name').textContent  = name;
+  document.getElementById('cp-meta').textContent  = role + (phone ? ' · ' + phone : '');
+
+  // ── Stat Cards ──
+  const myStudents = STUDENTS.filter(s => String(s.teachCoachId) === String(currentStaff?.coach_id));
+  const stuck3  = myStudents.filter(s => getStuckStatus(s)?.type === 'stuck').length;
+  const warn2   = myStudents.filter(s => getStuckStatus(s)?.type === 'warn').length;
+  const stuck6m = myStudents.filter(s => isStuckSixMonths(s)).length;
+  document.getElementById('cp-stat-grid').innerHTML = `
+    <div class="cp-stat-card">
+      <div class="cp-stat-num" style="color:var(--gold-dk)">${stuck6m}</div>
+      <div class="cp-stat-lbl">半年<br>停留同級</div>
+      <div class="cp-stat-sub">有考試未升級</div>
+    </div>
+    <div class="cp-stat-card">
+      <div class="cp-stat-num" style="color:var(--gold-dk)">${warn2}</div>
+      <div class="cp-stat-lbl">連續 2 次<br>未通過</div>
+    </div>
+    <div class="cp-stat-card">
+      <div class="cp-stat-num" style="color:var(--red)">${stuck3}</div>
+      <div class="cp-stat-lbl">連續 3 次<br>未通過</div>
+    </div>`;
+
+  // ── Risk Students ──
+  const riskList = myStudents
+    .map(s => ({ s, status: getStuckStatus(s), sixm: isStuckSixMonths(s) }))
+    .filter(x => x.status || x.sixm)
+    .sort((a, b) => {
+      const rank = r => r.status?.type === 'stuck' ? 0 : r.status?.type === 'warn' ? 1 : 2;
+      return rank(a) - rank(b);
+    });
+  document.getElementById('cp-risk-count').textContent = riskList.length;
+  const riskEl = document.getElementById('cp-risk-list');
+  if (!riskList.length) {
+    riskEl.innerHTML = '<div style="padding:14px 16px;font-size:12px;color:var(--ink3)">目前沒有需關注的學員 👍</div>';
+  } else {
+    riskEl.innerHTML = riskList.map(({ s, status, sixm }) => {
+      const lastExam = s.examHistory?.[0];
+      const lastDate = lastExam ? lastExam.date.replace(/-/g,'/') : '—';
+      let chipHtml = '';
+      if (status?.type === 'stuck') chipHtml = `<span class="pc-chip pc-chip-red">卡關 ${status.count} 次</span>`;
+      else if (status?.type === 'warn') chipHtml = `<span class="pc-chip pc-chip-amber">警示 ${status.count} 次</span>`;
+      else if (sixm) chipHtml = `<span class="pc-chip pc-chip-amber">停留過久</span>`;
+      return `<div class="cp-risk-row">
+        <div class="av av-coach" style="width:32px;height:32px;font-size:12px">${s.name.charAt(0)}</div>
+        <div style="flex:1">
+          <div class="cp-risk-name" onclick="openExamHistorySheet('${s.id}')">${s.name}</div>
+          <div class="cp-risk-detail">${s.level} 級 · 最近考試 ${lastDate}</div>
+        </div>
+        ${chipHtml}
+      </div>`;
+    }).join('');
+  }
+
+  // ── Classes ──
+  renderCpClasses();
+}
+
+function isStuckSixMonths(s) {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const recent = (s.examHistory || []).filter(e => new Date(e.date) >= sixMonthsAgo && e.level === s.level);
+  return recent.length > 0 && !recent.some(e => e.verdict === 'pass');
+}
+
+function renderCpClasses() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const past130 = new Date(today); past130.setDate(past130.getDate() - 130);
+  const future70 = new Date(today); future70.setDate(future70.getDate() + 70);
+  const DAY_NAMES = ['日','一','二','三','四','五','六'];
+
+  const myClasses = CLASSES.filter(c => {
+    if (c.isQuickExam) return false;
+    if (String(c.coachId) !== String(currentStaff?.coach_id)) return false;
+    const d = new Date(c.date); d.setHours(0,0,0,0);
+    return d >= past130 && d <= future70;
+  }).sort((a, b) => b.date.localeCompare(a.date));
+
+  const upcoming = myClasses.filter(c => new Date(c.date) >= today);
+  const past     = myClasses.filter(c => new Date(c.date) <  today);
+
+  document.getElementById('cp-class-count').textContent = myClasses.length;
+
+  function classRowHtml(c) {
+    const d = new Date(c.date);
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const dayName = DAY_NAMES[d.getDay()];
+    const isPast = new Date(c.date) < today;
+    let chipHtml = isPast
+      ? `<span class="pc-chip pc-chip-green">已完成</span>`
+      : `<span class="pc-chip pc-chip-brand">即將到來</span>`;
+    const stuRows = (c.members || []).map(m => {
+      const risk = getStuckStatus(m);
+      const riskChip = risk?.type === 'stuck'
+        ? `<span class="pc-chip pc-chip-red" style="font-size:10px;padding:2px 7px">卡關</span>`
+        : risk?.type === 'warn'
+        ? `<span class="pc-chip pc-chip-amber" style="font-size:10px;padding:2px 7px">警示</span>`
+        : '';
+      return `<div class="cp-stu-row">
+        <div class="av av-coach" style="width:26px;height:26px;font-size:10px">${m.name.charAt(0)}</div>
+        <div class="cp-stu-name" onclick="openExamHistorySheet('${m.id}');event.stopPropagation()">${m.name}</div>
+        <div class="cp-stu-lv">${m.level} 級</div>
+        ${riskChip}
+      </div>`;
+    }).join('');
+    return `<div class="cp-class-row${isPast?' past':' upcoming'}" onclick="this.classList.toggle('open')">
+      <div class="cp-class-main">
+        <div class="cp-class-date">${mm}/${dd}<strong>${dayName}</strong></div>
+        <div class="cp-class-info">
+          <div class="cp-class-code">${c.label || c.code || '—'}</div>
+          <div class="cp-class-venue">${VENUES.find(v=>v.id===c.venueId)?.name || '—'}</div>
+        </div>
+        <div class="cp-class-right">
+          ${chipHtml}
+          <div class="cp-class-cnt">${(c.members||[]).length} 人 <span class="cp-expand-icon">▾</span></div>
+        </div>
+      </div>
+      <div class="cp-stu-list">${stuRows}</div>
+    </div>`;
+  }
+
+  // 未來班（由近到遠）
+  const upcomingHtml = [...upcoming].reverse().map(classRowHtml).join('');
+  // 過去班前 2 筆
+  const recentPast = past.slice(0, 2);
+  const olderPast  = past.slice(2);
+  const recentHtml = recentPast.map(classRowHtml).join('');
+  const olderHtml  = olderPast.map(classRowHtml).join('');
+
+  const listEl = document.getElementById('cp-class-list');
+  listEl.innerHTML = upcomingHtml
+    + `<div class="cp-today-divider"><span class="cp-today-label">今天 ${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}</span></div>`
+    + recentHtml;
+
+  // 更早的班
+  const olderWrap = document.getElementById('cp-older-wrap');
+  const showMoreBtn = document.getElementById('cp-show-more');
+  if (olderPast.length > 0) {
+    olderWrap.innerHTML = olderHtml;
+    olderWrap.style.display = 'none';
+    cpOlderOpen = false;
+    showMoreBtn.style.display = 'flex';
+    showMoreBtn.innerHTML = `▾ 展開更早的紀錄（${olderPast.length} 筆）`;
+  } else {
+    olderWrap.style.display = 'none';
+    showMoreBtn.style.display = 'none';
+  }
+}
+
+function toggleCpOlderClasses() {
+  const wrap = document.getElementById('cp-older-wrap');
+  const btn  = document.getElementById('cp-show-more');
+  cpOlderOpen = !cpOlderOpen;
+  wrap.style.display = cpOlderOpen ? 'flex' : 'none';
+  if (cpOlderOpen) {
+    const cnt = wrap.querySelectorAll('.cp-class-row').length;
+    btn.innerHTML = `▴ 收起`;
+  } else {
+    const cnt = wrap.querySelectorAll('.cp-class-row').length;
+    btn.innerHTML = `▾ 展開更早的紀錄（${cnt} 筆）`;
+  }
+}
+
+// ════════════════════════════════
+// EXAM HISTORY SHEET
+// ════════════════════════════════
+function openExamHistorySheet(studentId) {
+  const s = STUDENTS.find(x => String(x.id) === String(studentId));
+  if (!s) return;
+  document.getElementById('eh-av').textContent   = s.name.charAt(0);
+  document.getElementById('eh-name').textContent  = s.name;
+  document.getElementById('eh-meta').textContent  = s.level + ' 級 · 教學教練：' + s.teachCoach;
+
+  const history = s.examHistory || [];
+  const total   = history.length;
+  const pass    = history.filter(e => e.verdict === 'pass').length;
+  const fail    = history.filter(e => e.verdict === 'fail').length;
+  const absent  = history.filter(e => e.verdict === 'absent').length;
+
+  document.getElementById('eh-summary').innerHTML = `
+    <div class="eh-summary-card"><div class="eh-summary-num" style="color:var(--ink)">${total}</div><div class="eh-summary-lbl">總考試次數</div></div>
+    <div class="eh-summary-card"><div class="eh-summary-num" style="color:var(--green)">${pass}</div><div class="eh-summary-lbl">通過</div></div>
+    <div class="eh-summary-card"><div class="eh-summary-num" style="color:var(--red)">${fail}</div><div class="eh-summary-lbl">未通過</div></div>
+    <div class="eh-summary-card"><div class="eh-summary-num" style="color:var(--ink3)">${absent}</div><div class="eh-summary-lbl">未出席</div></div>`;
+
+  const VENUE_MAP = {};
+  VENUES.forEach(v => { VENUE_MAP[v.id] = v.name; });
+
+  if (!history.length) {
+    document.getElementById('eh-list').innerHTML = '<div style="padding:16px;font-size:12px;color:var(--ink3)">尚無考試紀錄</div>';
+  } else {
+    document.getElementById('eh-list').innerHTML = history.map(e => {
+      const dateStr = (e.date || '').replace(/-/g, '/');
+      const verdictMap = { pass:'通過', fail:'未通過', absent:'未出席' };
+      const chipMap = { pass:'pc-chip-green', fail:'pc-chip-red', absent:'pc-chip-gray' };
+      const venueName = VENUE_MAP[e.venueId] || e.venue || '—';
+      return `<div class="eh-row">
+        <div class="eh-date">${dateStr}</div>
+        <div class="eh-lv">${e.level} 級</div>
+        <div style="flex:1">
+          <div class="eh-venue">${venueName}</div>
+          ${e.failItems?.length ? `<div class="eh-note">${e.failItems.join('、')}</div>` : ''}
+        </div>
+        <span class="pc-chip ${chipMap[e.verdict]||'pc-chip-gray'}">${verdictMap[e.verdict]||e.verdict}</span>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('eh-overlay').classList.remove('hidden');
+}
+
+function closeExamHistorySheet() {
+  document.getElementById('eh-overlay').classList.add('hidden');
 }
 
 (async () => {
