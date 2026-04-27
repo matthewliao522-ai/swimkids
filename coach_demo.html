@@ -1163,11 +1163,9 @@ async function loadCoaches() {
   COACHES = COACHES_DATA.filter(c=>c.role==='teach').map(c=>c.name);
   EXAM_COACHES = COACHES_DATA.filter(c=>c.role==='exam'||c.role==='supervisor').map(c=>c.name);
   const tSel = document.getElementById('teach-coach-sel');
-  tSel.innerHTML = '';
-  COACHES.forEach(c => { const o=document.createElement('option'); o.textContent=c; tSel.appendChild(o); });
+  if(tSel){ tSel.innerHTML = ''; COACHES.forEach(c => { const o=document.createElement('option'); o.textContent=c; tSel.appendChild(o); }); }
   const eSel = document.getElementById('exam-coach-sel');
-  eSel.innerHTML = '';
-  EXAM_COACHES.forEach(c => { const o=document.createElement('option'); o.textContent=c; eSel.appendChild(o); });
+  if(eSel){ eSel.innerHTML = ''; EXAM_COACHES.forEach(c => { const o=document.createElement('option'); o.textContent=c; eSel.appendChild(o); }); }
 }
 
 async function loadStudents() {
@@ -3197,7 +3195,7 @@ function handleImportFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const wb = XLSX.read(e.target.result, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
       parseImportRows(rows);
@@ -3205,7 +3203,7 @@ function handleImportFile(file) {
       showImportError('檔案讀取失敗：' + err.message);
     }
   };
-  reader.readAsBinaryString(file);
+  reader.readAsArrayBuffer(file);
 }
 
 let VENUE_NAME_MAP = {};
