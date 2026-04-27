@@ -2714,11 +2714,23 @@ async function init() {
   const d = new Date();
   document.getElementById('date-badge').textContent =
     d.getFullYear()+'/'+(d.getMonth()+1)+'/'+(d.getDate());
-  if(localStorage.getItem('sb-collapsed')==='1'){
-    document.getElementById('sidebar')?.classList.add('collapsed');
+
+  // 教學教練：登入後立即隱藏 sidebar，不等 loadAll() 完成（避免桌機版短暫顯示完整介面）
+  if (currentStaff?.isTeachCoach) {
+    document.getElementById('sidebar')?.style.setProperty('display','none');
+    document.querySelector('.sb-toggle-btn')?.style.setProperty('display','none');
+    document.querySelector('.menu-toggle')?.style.setProperty('display','none');
+    const content = document.getElementById('content-area');
+    if (content) content.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;padding:0';
+    if (content) content.innerHTML = '<div style="color:var(--ink3);font-size:14px">載入中…</div>';
+  } else {
+    if(localStorage.getItem('sb-collapsed')==='1'){
+      document.getElementById('sidebar')?.classList.add('collapsed');
+    }
+    document.getElementById('prep-class-list').innerHTML =
+      '<div style="text-align:center;padding:30px 16px;color:var(--ink3);font-size:12px">載入中…</div>';
   }
-  document.getElementById('prep-class-list').innerHTML =
-    '<div style="text-align:center;padding:30px 16px;color:var(--ink3);font-size:12px">載入中…</div>';
+
   await loadAll();
   updateSidebarProfile();
   renderSidebarVenue();
