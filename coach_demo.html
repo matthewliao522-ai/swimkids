@@ -1486,7 +1486,7 @@ function renderPrepList() {
 function showPrepDetail(id) {
   const cls = CLASSES.find(c=>c.id===id);
   if (!cls) return;
-  document.getElementById('prep-form-title').textContent = cls.id + ' · ' + cls.label;
+  document.getElementById('prep-form-title').textContent = cls.label || cls.name || '—';
   const acts = document.getElementById('prep-form-actions');
   acts.innerHTML = '';
   if (cls.status !== 'done') {
@@ -1831,7 +1831,7 @@ function openEditClass(id) {
   const cls = CLASSES.find(c=>c.id===id);
   if (!cls) return;
   newClassSelectedStudents = cls.members.map(m=>m.id);
-  document.getElementById('prep-form-title').textContent = '編輯 ' + cls.id;
+  document.getElementById('prep-form-title').textContent = '編輯 ' + (cls.label || cls.name || '—');
   const body = document.getElementById('prep-form-body');
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
