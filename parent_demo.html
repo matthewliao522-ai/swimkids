@@ -992,7 +992,10 @@ async function doSetPassword() {
   const { error: updateErr } = await SUPA.auth.updateUser({ password: p1 });
   if (updateErr) {
     setBtn.disabled = false; setBtn.textContent = '完成設定，開始使用';
-    err.textContent = '密碼設定失敗：' + updateErr.message;
+    const errMsg = /different from the old|same as the old/i.test(updateErr.message)
+      ? '新密碼不能與舊密碼相同，請重新輸入'
+      : '密碼設定失敗：' + updateErr.message;
+    err.textContent = errMsg;
     err.classList.add('show'); return;
   }
 

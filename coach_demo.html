@@ -2662,7 +2662,11 @@ async function saveForgotPwd() {
   btn.textContent = '儲存中…'; btn.disabled = true;
   const { error } = await SUPA.auth.updateUser({ password: pwd });
   btn.textContent = '儲存新密碼'; btn.disabled = false;
-  if (error) { errEl.textContent = error.message; return; }
+  if (error) {
+    errEl.textContent = /different from the old|same as the old/i.test(error.message)
+      ? '新密碼不能與舊密碼相同，請重新輸入' : error.message;
+    return;
+  }
   const { data: { session } } = await SUPA.auth.getSession();
   if (session) {
     document.getElementById('forgot-section').style.display = 'none';
@@ -2694,7 +2698,11 @@ async function saveChangePwd() {
   if (pwd.length < 8) { errEl.textContent = '密碼至少 8 字元'; return; }
   if (pwd !== confirm) { errEl.textContent = '兩次密碼不一致'; return; }
   const { error } = await SUPA.auth.updateUser({ password: pwd });
-  if (error) { errEl.textContent = error.message; return; }
+  if (error) {
+    errEl.textContent = /different from the old|same as the old/i.test(error.message)
+      ? '新密碼不能與舊密碼相同，請重新輸入' : error.message;
+    return;
+  }
   closeChangePwdModal();
   showToast('密碼已更新', 'ok');
 }
