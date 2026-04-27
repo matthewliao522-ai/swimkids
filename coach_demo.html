@@ -807,12 +807,7 @@ select.filter-sel:focus{border-color:var(--brand)}
             <div class="estep-connector"></div>
             <div class="estep-item" id="estep-2">
               <div class="estep-num">2</div>
-              <div class="estep-lbl">評語</div>
-            </div>
-            <div class="estep-connector"></div>
-            <div class="estep-item" id="estep-3">
-              <div class="estep-num">3</div>
-              <div class="estep-lbl">確認送出</div>
+              <div class="estep-lbl">評語 & 送出</div>
             </div>
           </div>
 
@@ -865,26 +860,24 @@ select.filter-sel:focus{border-color:var(--brand)}
               </div>
             </div><!-- end exam-form-inner -->
 
-            <!-- Step 2：考試評語 -->
-            <div id="exam-note-step" style="display:none;flex:1;display:none;flex-direction:column">
-              <div class="note-step-wrap" style="flex:1">
+            <!-- Step 2：預覽 + 評語 + 送出 -->
+            <div id="exam-note-step" style="display:none;flex-direction:column">
+              <!-- Step 1 結果預覽 -->
+              <div id="note-step-preview" style="border-bottom:1px solid var(--line);padding:16px 16px 14px"></div>
+              <!-- 評語 -->
+              <div class="note-step-wrap">
                 <div class="note-step-title">考試評語（選填）</div>
-                <div class="note-step-sub">可記錄今天的表現、需要加強的地方，或給家長的建議。<br>不填也沒關係，直接點「下一步」即可。</div>
-                <textarea class="note-ta" id="ex-note" placeholder="例：換氣動作進步很多，繼續加油！" oninput="saveNote();saveDraft()" style="min-height:120px"></textarea>
+                <div class="note-step-sub">可記錄今天的表現、需要加強的地方，或給家長的建議。</div>
+                <textarea class="note-ta" id="ex-note" placeholder="例：換氣動作進步很多，繼續加油！" oninput="saveNote();saveDraft()" style="min-height:110px"></textarea>
               </div>
               <div class="action-bar">
                 <div></div>
                 <div style="display:flex;gap:8px">
                   <button class="btn btn-ghost btn-sm" onclick="setExamStep(1)">← 返回</button>
-                  <button class="btn btn-primary btn-sm" onclick="goPreviewInline()">下一步 →</button>
+                  <button class="btn btn-success btn-sm" onclick="submitFromNote()">確認送出</button>
                 </div>
               </div>
             </div><!-- end exam-note-step -->
-
-            <!-- Step 3：總預覽 -->
-            <div id="exam-preview-step" style="display:none">
-              <div id="preview-inline-card" style="padding:16px 16px 0"></div>
-            </div><!-- end exam-preview-step -->
 
           </div><!-- end form-card -->
         </div><!-- end ex-right -->
@@ -2234,7 +2227,7 @@ function renderExamForm() {
     lockedView.style.display = 'block';
     formInner.style.display = 'none';
     document.getElementById('exam-note-step').style.display = 'none';
-    document.getElementById('exam-preview-step').style.display = 'none';
+    document.getElementById('exam-note-step').style.display = 'none';
     if (stepper) stepper.style.display = 'none';
     const vtxt = r.verdict==='pass'?'通過':r.verdict==='fail'?'未通過':r.verdict==='absent'?'未出席':'未判定';
     const vColor = r.verdict==='pass'?'var(--green)':r.verdict==='fail'?'var(--signal)':'var(--gold-dk)';
@@ -2383,10 +2376,9 @@ function updateProgress() {
 // EXAM STEP NAVIGATION
 // ════════════════════════════════
 function setExamStep(n) {
-  document.getElementById('exam-form-inner').style.display    = n===1 ? '' : 'none';
-  document.getElementById('exam-note-step').style.display     = n===2 ? 'flex' : 'none';
-  document.getElementById('exam-preview-step').style.display  = n===3 ? '' : 'none';
-  [1,2,3].forEach(i => {
+  document.getElementById('exam-form-inner').style.display = n===1 ? '' : 'none';
+  document.getElementById('exam-note-step').style.display  = n===2 ? 'flex' : 'none';
+  [1,2].forEach(i => {
     const el = document.getElementById('estep-'+i);
     if (!el) return;
     el.className = 'estep-item' + (i===n?' active':i<n?' done':'');
@@ -2394,24 +2386,7 @@ function setExamStep(n) {
   document.querySelector('.form-card')?.scrollTo(0,0);
 }
 
-function goNoteStep() {
-  const cls = CLASSES.find(c=>c.id===currentClassId);
-  const m = cls.members[currentStudentIdx];
-  const r = examState[m.id];
-  if (!r.verdict) {
-    showToast('請先選擇考試結果（通過 / 未通過 / 未出席）', 'warn');
-    document.querySelector('.verdict-section')?.scrollIntoView({behavior:'smooth', block:'nearest'});
-    return;
-  }
-  document.getElementById('ex-note').value = r.note || '';
-  setExamStep(2);
-}
-
-function goPreviewInline() {
-  saveNote();
-  const cls = CLASSES.find(c=>c.id===currentClassId);
-  const m = cls.members[currentStudentIdx];
-  const r = examState[m.id];
+function buildPreviewHtml(cls, m, r, backFn) {
   const examLv = r.examLevel || m.examLevel;
   const sd = SKILL_DATA[examLv];
   const pCount = sd.items.filter((_,i)=>r.checks['p'+i]).length;
@@ -2427,7 +2402,7 @@ function goPreviewInline() {
       ${f?`<span class="it-tag it-f">未達標</span><span style="color:var(--ink2)">${item.fail}</span>`:''}
     </div>`;
   }).filter(Boolean).join('');
-  document.getElementById('preview-inline-card').innerHTML = `
+  return `
     <div class="ph-hero">
       <div class="ph-av ${AV_MAP[examLv]}">${m.name[0]}</div>
       <div>
@@ -2440,18 +2415,31 @@ function goPreviewInline() {
       </div>
       <div class="res-badge ${rbCls}">${rbTxt}</div>
     </div>
-    ${itemsHtml?`<div class="ph-items">${itemsHtml}</div>`:''}
-    ${r.note?`<div class="ph-note"><span style="color:var(--ink);font-weight:500">評語：</span>${r.note}</div>`:''}
-    <div class="warn-notice">${r.editing?'更新後家長立即可見，請確認資料無誤。':'送出後約一小時，家長即可查詢結果，請確認資料無誤。'}</div>
-    <div class="ph-actions">
-      <button class="btn btn-ghost btn-sm" onclick="setExamStep(2)">← 返回</button>
-      <div style="flex:1"></div>
-      <button class="btn btn-success btn-sm" onclick="doSubmit()">${r.editing?'確認更新':'確認送出'}</button>
-    </div>`;
-  setExamStep(3);
+    ${itemsHtml?`<div class="ph-items">${itemsHtml}</div>`:''}`;
 }
 
-// PREVIEW (legacy wrapper — no longer navigates to screen-preview)
+function goNoteStep() {
+  const cls = CLASSES.find(c=>c.id===currentClassId);
+  const m = cls.members[currentStudentIdx];
+  const r = examState[m.id];
+  if (!r.verdict) {
+    showToast('請先選擇考試結果（通過 / 未通過 / 未出席）', 'warn');
+    document.querySelector('.verdict-section')?.scrollIntoView({behavior:'smooth', block:'nearest'});
+    return;
+  }
+  // 渲染 Step 1 結果預覽
+  document.getElementById('note-step-preview').innerHTML = buildPreviewHtml(cls, m, r);
+  // 帶入已有評語
+  document.getElementById('ex-note').value = r.note || '';
+  setExamStep(2);
+}
+
+function submitFromNote() {
+  saveNote();
+  doSubmit();
+}
+
+// legacy wrapper
 function goPreview() { goNoteStep(); }
 
 async function cancelNotify(studentId) {
