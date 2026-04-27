@@ -769,6 +769,11 @@ tr:hover td{background:#fafaf8}
 
       <!-- ── Tab 5：各級通過率 ── -->
       <div class="tab-panel" id="rpt-level">
+        <div class="filter-bar" style="margin-bottom:14px">
+          <select class="filter-sel" id="level-venue-filter" onchange="renderRptLevel()">
+            <option value="">全部場館</option>
+          </select>
+        </div>
         <div class="card">
           <div class="card-hd">
             <div class="card-title">各級數考試通過率</div>
@@ -785,6 +790,11 @@ tr:hover td{background:#fafaf8}
 
       <!-- ── Tab 6：升級速度 ── -->
       <div class="tab-panel" id="rpt-speed">
+        <div class="filter-bar" style="margin-bottom:14px">
+          <select class="filter-sel" id="speed-venue-filter" onchange="renderRptSpeed()">
+            <option value="">全部場館</option>
+          </select>
+        </div>
         <div class="stat-grid" id="rpt-speed-cards" style="grid-template-columns:repeat(3,1fr)"></div>
         <div class="two-col">
           <div class="card">
@@ -2614,9 +2624,9 @@ function getRiskStudents(){
   }).filter(s=>s.risks.length>0);
 }
 
-function computeProgressionSpeed(){
+function computeProgressionSpeed(venueStudentIds){
   const byStudent={};
-  EXAM_DATA.filter(e=>e.verdict==='pass').forEach(e=>{
+  EXAM_DATA.filter(e=>e.verdict==='pass'&&(!venueStudentIds||venueStudentIds.has(e.studentId))).forEach(e=>{
     if(!byStudent[e.studentId]) byStudent[e.studentId]={};
     if(!byStudent[e.studentId][e.level]||e.date<byStudent[e.studentId][e.level])
       byStudent[e.studentId][e.level]=e.date;
@@ -2910,10 +2920,14 @@ function renderRptCoach(){
 function renderRptLevel(){
   const tbody=document.getElementById('rpt-level-table');
   if(!tbody) return;
+  const lvVsel=document.getElementById('level-venue-filter');
+  if(lvVsel&&lvVsel.options.length<=1) VENUES_DATA.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;lvVsel.appendChild(o);});
+  const venueF=lvVsel?.value||'';
+  const base=venueF?EXAM_DATA.filter(e=>String(e.venueId)===venueF):EXAM_DATA;
   tbody.innerHTML='';
   for(let lv=1;lv<=10;lv++){
-    const tm=EXAM_DATA.filter(e=>e.level===lv&&isThisMonth(e.date));
-    const lm=EXAM_DATA.filter(e=>e.level===lv&&isLastMonth(e.date));
+    const tm=base.filter(e=>e.level===lv&&isThisMonth(e.date));
+    const lm=base.filter(e=>e.level===lv&&isLastMonth(e.date));
     const tmP=tm.filter(e=>e.verdict==='pass').length;
     const lmP=lm.filter(e=>e.verdict==='pass').length;
     const tmR=tm.length?Math.round(tmP/tm.length*100):null;
@@ -2932,7 +2946,11 @@ function renderRptLevel(){
 }
 
 function renderRptSpeed(){
-  const speedData=computeProgressionSpeed();
+  const spVsel=document.getElementById('speed-venue-filter');
+  if(spVsel&&spVsel.options.length<=1) VENUES_DATA.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;spVsel.appendChild(o);});
+  const venueF=spVsel?.value||'';
+  const venueStudentIds=venueF?new Set(STUDENTS_DATA.filter(s=>String(s.defaultVenueId)===venueF).map(s=>s.id)):null;
+  const speedData=computeProgressionSpeed(venueStudentIds);
   const allDays=Object.values(speedData).flat().map(x=>x.days);
   const globalAvg=allDays.length?Math.round(allDays.reduce((a,b)=>a+b,0)/allDays.length):null;
   let fastestLv=null,slowestLv=null,fastestDays=Infinity,slowestDays=0;
@@ -2968,7 +2986,8 @@ function renderRptSpeed(){
     COACHES_DATA.filter(c=>c.role==='teach'&&c.status==='active').forEach(c=>{
       const cDays=Object.values(speedData).flat().filter(x=>x.coach===c.name).map(x=>x.days);
       const avg=cDays.length?Math.round(cDays.reduce((a,b)=>a+b,0)/cDays.length):null;
-      const cStu=STUDENTS_DATA.filter(s=>s.teachCoach===c.name).length;
+      const stuPool=venueStudentIds?STUDENTS_DATA.filter(s=>venueStudentIds.has(s.id)):STUDENTS_DATA;
+      const cStu=stuPool.filter(s=>s.teachCoach===c.name).length;
       coachTbody.innerHTML+=`<tr>
         <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${c.name[0]}</div><span style="font-weight:500">${c.name}</span></div></td>
         <td class="mono">${cStu}</td>
