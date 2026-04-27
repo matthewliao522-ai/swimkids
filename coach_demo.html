@@ -3517,12 +3517,27 @@ function confirmQuickExam() {
 // TEACH COACH MODE
 // ════════════════════════════════
 function setupTeachCoachMode() {
-  // 隱藏考試相關 nav，只留學員管理
-  ['nav-prep','nav-day','nav-exam'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
-  showScreen('students');
+  // 隱藏側邊欄與漢堡按鈕
+  const sb = document.getElementById('sidebar');
+  if (sb) sb.style.display = 'none';
+  const toggle = document.querySelector('.menu-toggle');
+  if (toggle) toggle.style.display = 'none';
+
+  // 隱藏 sb-toggle（桌面收合按鈕）
+  const sbToggle = document.querySelector('.sb-toggle-btn');
+  if (sbToggle) sbToggle.style.display = 'none';
+
+  // 清空主畫面，只顯示佔位提示
+  const content = document.getElementById('content-area');
+  if (content) {
+    content.innerHTML = `<div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--ink3);padding:40px 20px;text-align:center">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.35"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <div style="font-size:13px">點右上角頭像查看個人資料</div>
+    </div>`;
+  }
+
+  // 自動打開 Drawer
+  openCoachProfile();
 }
 
 // ════════════════════════════════
