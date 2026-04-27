@@ -689,6 +689,7 @@ tr:hover td{background:#fafaf8}
         <div class="tab" onclick="switchRptTab('level',this)">各級通過率</div>
         <div class="tab" onclick="switchRptTab('speed',this)">升級速度</div>
         <div class="tab" onclick="switchRptTab('parent',this)">家長帳號</div>
+        <div class="tab" onclick="switchRptTab('class-ratio',this)">班型人數</div>
       </div>
 
       <!-- ── Tab 1：總覽 ── -->
@@ -836,6 +837,29 @@ tr:hover td{background:#fafaf8}
           </div>
         </div>
         <div id="rpt-parent-pager"></div>
+      </div>
+
+      <!-- ── Tab 8：班型人數 ── -->
+      <div class="tab-panel" id="rpt-class-ratio">
+        <div class="filter-bar" style="margin-bottom:14px">
+          <label style="font-size:12px;color:var(--ink3);flex-shrink:0">考試日期</label>
+          <input type="date" class="filter-sel" id="cr-from" onchange="renderRptClassRatio()" style="font-size:12px">
+          <span style="font-size:12px;color:var(--ink3);flex-shrink:0">至</span>
+          <input type="date" class="filter-sel" id="cr-to" onchange="renderRptClassRatio()" style="font-size:12px">
+          <select class="filter-sel" id="cr-venue" onchange="renderRptClassRatio()">
+            <option value="">全部場館</option>
+          </select>
+        </div>
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px" id="cr-cards"></div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">班型明細</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>班型</th><th>班數</th><th>總學員人次</th><th>平均人數／班</th><th>最少</th><th>最多</th></tr></thead>
+              <tbody id="cr-tbody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1702,7 +1726,7 @@ function go(screen){
     const bn=document.getElementById('bn-'+s);
     if(bn) bn.classList.toggle('active',s===screen);
   });
-  const titles={dashboard:'儀表板',coaches:'教練帳號管理',guardians:'家長帳號管理',students:'學員資料管理',exams:'考試紀錄瀏覽',reports:'統計報表',venues:'場館管理',announcements:'公告管理','print-requests':'印製申請'};
+  const titles={dashboard:'儀表板',coaches:'教練帳號管理',guardians:'家長帳號管理',students:'學員資料管理',exams:'考試紀錄瀏覽',reports:'統計報表',venues:'場館管理',announcements:'公告管理','print-requests':'印製申請','class-ratio':'班型人數統計'};
   const vLabel=currentVenueId==='all'?'':' · '+venueLabel(currentVenueId);
   document.getElementById('topbar-title').textContent=(titles[screen]||'')+vLabel;
   if(screen==='coaches') renderCoaches();
@@ -2756,7 +2780,7 @@ function switchRptTab(name,el){
   el.classList.add('active');
   document.querySelectorAll('#screen-reports .tab-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('rpt-'+name).classList.add('active');
-  const fns={overview:renderRptOverview,risk:renderRptRisk,venue:renderRptVenue,'coach-ana':renderRptCoach,level:renderRptLevel,speed:renderRptSpeed,parent:renderRptParent};
+  const fns={overview:renderRptOverview,risk:renderRptRisk,venue:renderRptVenue,'coach-ana':renderRptCoach,level:renderRptLevel,speed:renderRptSpeed,parent:renderRptParent,'class-ratio':renderRptClassRatio};
   if(fns[name]) fns[name]();
 }
 
@@ -3247,6 +3271,79 @@ function syncVenueSwitcher(){
   sw.value=cur;
 }
 
+// ════ CLASS RATIO ════
+let PREP_CLASS_STATS_DATA = [];
+
+async function loadPrepClassStats(){
+  const {data,error} = await SUPA.from('prep_classes')
+    .select('id,code,exam_date,venue_id,prep_enrollments(count)')
+    .order('exam_date',{ascending:false});
+  if(error){ return; }
+  PREP_CLASS_STATS_DATA = (data||[]).map(pc=>({
+    id: pc.id,
+    code: pc.code||'',
+    prefix: (pc.code||'').charAt(0).toUpperCase(),
+    examDate: pc.exam_date||'',
+    venueId: pc.venue_id,
+    memberCount: pc.prep_enrollments?.[0]?.count ?? 0,
+  }));
+}
+
+function initCrVenueFilter(){
+  const sel=document.getElementById('cr-venue');
+  if(!sel||sel.options.length>1) return;
+  VENUES_DATA.forEach(v=>{const o=document.createElement('option');o.value=v.id;o.textContent=v.name;sel.appendChild(o);});
+}
+
+function renderRptClassRatio(){
+  initCrVenueFilter();
+  const from = document.getElementById('cr-from')?.value||'';
+  const to   = document.getElementById('cr-to')?.value||'';
+  const venue= document.getElementById('cr-venue')?.value||'';
+
+  let rows = PREP_CLASS_STATS_DATA;
+  if(from) rows = rows.filter(c=>c.examDate>=from);
+  if(to)   rows = rows.filter(c=>c.examDate<=to);
+  if(venue) rows = rows.filter(c=>String(c.venueId)===venue);
+
+  const types=[
+    {prefix:'U',label:'U 幼兒班',chip:'chip-amber'},
+    {prefix:'C',label:'C 初階班',chip:'chip-ocean'},
+    {prefix:'J',label:'J 進階班',chip:'chip-green'},
+  ];
+
+  let cardsHtml='', tbodyHtml='';
+  types.forEach(t=>{
+    const cls=rows.filter(c=>c.prefix===t.prefix);
+    const count=cls.length;
+    const total=cls.reduce((s,c)=>s+Number(c.memberCount),0);
+    const avg=count?(total/count).toFixed(1):'—';
+    const counts=cls.map(c=>Number(c.memberCount));
+    const min=count?Math.min(...counts):'—';
+    const max=count?Math.max(...counts):'—';
+
+    cardsHtml+=`<div class="stat-card">
+      <div class="stat-label">${t.label} 平均人數</div>
+      <div class="stat-num">${avg}<span style="font-size:14px;font-weight:400;color:var(--ink3)"> 人／班</span></div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">${count} 班・共 ${total} 人次</div>
+    </div>`;
+
+    tbodyHtml+=`<tr>
+      <td><span class="chip ${t.chip}">${t.label}</span></td>
+      <td>${count}</td>
+      <td>${total}</td>
+      <td style="font-weight:700;font-size:14px">${avg}</td>
+      <td>${count?min:'—'}</td>
+      <td>${count?max:'—'}</td>
+    </tr>`;
+  });
+
+  const cards=document.getElementById('cr-cards');
+  const tbody=document.getElementById('cr-tbody');
+  if(cards) cards.innerHTML=cardsHtml;
+  if(tbody) tbody.innerHTML=tbodyHtml||'<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px">此期間無班級資料</td></tr>';
+}
+
 // ════ PRINT REQUESTS ════
 const PRINT_REQUESTS_DATA = [
   { id:'pr1', time:'2026-04-28 10:23', student:'林柔安', level:6, venue:'江翠館', guardian:'林媽媽', phone:'0921-111-222', status:'pending' },
@@ -3607,6 +3704,7 @@ async function init(roleKey='admin', displayName='系統管理員', roleLabel='�
   await loadStudents();
   await loadExams();
   await loadAnnouncements();
+  await loadPrepClassStats();
   renderDashExams();
   switchRole(roleKey);
   // 覆寫為真實姓名
