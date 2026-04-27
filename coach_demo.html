@@ -2364,13 +2364,8 @@ function goPreview() {
       <div class="res-badge ${rbCls}">${rbTxt}</div>
     </div>
     ${itemsHtml?`<div class="ph-items">${itemsHtml}</div>`:''}
-    <div class="ph-coaches">
-      <div class="pc"><div class="pc-lbl pc-teach">教學教練</div><div class="pc-name">${teachCoach}</div></div>
-      <div class="pc"><div class="pc-lbl pc-exam">考試教練</div><div class="pc-name">${examCoach}</div></div>
-    </div>
     ${r.note?`<div class="ph-note"><span style="color:var(--ink);font-weight:500">評語：</span>${r.note}</div>`:''}
-    <div class="editable-notice">※ 送出後仍可在學員資料中修改考試結果</div>
-    <div class="warn-notice">${r.editing?'更新後家長立即可見，請確認資料無誤。':'送出後家長即可查詢，請確認資料無誤。'}</div>
+    <div class="warn-notice">${r.editing?'更新後家長立即可見，請確認資料無誤。':'送出後約一小時，家長即可查詢結果，請確認資料無誤。'}</div>
     <div class="ph-actions">
       <button class="btn btn-ghost btn-sm" onclick="showScreen('exam')">← 返回修改</button>
       <div style="flex:1"></div>
