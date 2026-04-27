@@ -1711,15 +1711,18 @@ function closeCertModal() {
 }
 
 function onCertRecipientChange(val) {
-  const child = currentAccount?.children[currentChildIdx];
   const emailEl = document.getElementById('cert-email-display');
   const noteEl = document.getElementById('cert-venue-note');
+  const btn = document.getElementById('cert-send-btn');
   if (val === 'self') {
+    emailEl.style.display = '';
     emailEl.textContent = currentAccount?.guardian?.email || '（登入信箱）';
     noteEl.style.display = 'none';
+    btn.textContent = '寄出';
   } else {
-    emailEl.textContent = (child?.venueName && VENUE_EMAILS[child.venueName]) || 'venue@handlepower.com.tw';
+    emailEl.style.display = 'none';
     noteEl.style.display = 'block';
+    btn.textContent = '送出申請';
   }
 }
 
@@ -1734,14 +1737,15 @@ function downloadCert() {
 
 async function sendCert(btn) {
   if (!certDataUrl) { showToastP('請稍候，證書仍在生成中'); return; }
+  const isVenue = document.getElementById('cert-recipient').value === 'venue';
   btn.disabled = true;
-  btn.textContent = '傳送中…';
+  btn.textContent = isVenue ? '送出中…' : '傳送中…';
   await new Promise(r => setTimeout(r, 1400));
   btn.disabled = false;
-  btn.textContent = '寄出';
-  const isVenue = document.getElementById('cert-recipient').value === 'venue';
   closeCertModal();
-  showToastP(isVenue ? '✅ 已通知場館，將主動聯繫您確認印刷' : '✅ 證書已寄至您的信箱', true);
+  showToastP(isVenue
+    ? '✅ 已送出申請，場館安排後以 LINE 通知您領取'
+    : '✅ 證書已寄至您的信箱', true);
 }
 
 function drawCertificate(name, lv, vName) {
@@ -1887,12 +1891,12 @@ function certHexPath(ctx, cx, cy, r) {
         <div style="margin-bottom:10px">
           <select id="cert-recipient" onchange="onCertRecipientChange(this.value)" style="width:100%;background:var(--slate7);border:1.5px solid var(--slate6);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--slate);font-family:'Noto Sans TC',sans-serif;outline:none">
             <option value="self">寄到我的信箱</option>
-            <option value="venue">請場館協助印刷（寄給場館）</option>
+            <option value="venue">申請場館印製</option>
           </select>
         </div>
         <div id="cert-email-display" style="background:var(--slate7);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--slate2);margin-bottom:10px;font-family:'DM Mono',monospace;word-break:break-all"></div>
         <div id="cert-venue-note" style="display:none;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:8px;padding:10px 12px;font-size:11px;color:#92400e;margin-bottom:10px;line-height:1.7">
-          場館收到後會主動聯繫確認印刷規格，費用約 NT$50–100，現場取件。
+          場館收到 LINE 通知後會安排印製，完成後以 LINE 通知您前往領取。費用約 NT$50–100，現場取件。
         </div>
         <button id="cert-send-btn" onclick="sendCert(this)" style="width:100%;background:var(--ocean);color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer">寄出</button>
       </div>

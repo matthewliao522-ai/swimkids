@@ -401,6 +401,13 @@ tr:hover td{background:#fafaf8}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
     公告管理
   </div>
+  <div class="sb-item role-admin" id="nav-print-requests" onclick="go('print-requests')" style="justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      印製申請
+    </div>
+    <span class="sb-badge" id="print-badge">2</span>
+  </div>
 
   <div class="sb-section role-admin">系統設定</div>
   <div class="sb-item role-admin" id="nav-venues" onclick="go('venues')">
@@ -847,6 +854,25 @@ tr:hover td{background:#fafaf8}
         </div>
       </div>
       <div id="ann-list"></div>
+    </div>
+
+    <!-- ═══ PRINT REQUESTS ═══ -->
+    <div class="screen" id="screen-print-requests">
+      <div style="font-size:13px;color:var(--ink3);margin-bottom:16px">家長申請印製學習成就證書的紀錄。標記完成後，系統將透過 LINE 通知家長前往領取。</div>
+      <div class="card tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>申請時間</th>
+            <th>學員</th>
+            <th>級別</th>
+            <th>場館</th>
+            <th>家長／手機</th>
+            <th>狀態</th>
+            <th>操作</th>
+          </tr></thead>
+          <tbody id="print-req-tbody"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ═══ VENUES ═══ -->
@@ -1676,7 +1702,7 @@ function go(screen){
     const bn=document.getElementById('bn-'+s);
     if(bn) bn.classList.toggle('active',s===screen);
   });
-  const titles={dashboard:'儀表板',coaches:'教練帳號管理',guardians:'家長帳號管理',students:'學員資料管理',exams:'考試紀錄瀏覽',reports:'統計報表',venues:'場館管理',announcements:'公告管理'};
+  const titles={dashboard:'儀表板',coaches:'教練帳號管理',guardians:'家長帳號管理',students:'學員資料管理',exams:'考試紀錄瀏覽',reports:'統計報表',venues:'場館管理',announcements:'公告管理','print-requests':'印製申請'};
   const vLabel=currentVenueId==='all'?'':' · '+venueLabel(currentVenueId);
   document.getElementById('topbar-title').textContent=(titles[screen]||'')+vLabel;
   if(screen==='coaches') renderCoaches();
@@ -1687,6 +1713,7 @@ function go(screen){
   if(screen==='venues') renderVenues();
   if(screen==='announcements') renderAnnouncements();
   if(screen==='reports') renderRptOverview();
+  if(screen==='print-requests') renderPrintRequests();
 }
 
 // ════ STAGNANT LOGIC ════
@@ -3218,6 +3245,41 @@ function syncVenueSwitcher(){
     sw.appendChild(o);
   });
   sw.value=cur;
+}
+
+// ════ PRINT REQUESTS ════
+const PRINT_REQUESTS_DATA = [
+  { id:'pr1', time:'2026-04-28 10:23', student:'林柔安', level:6, venue:'江翠館', guardian:'林媽媽', phone:'0921-111-222', status:'pending' },
+  { id:'pr2', time:'2026-04-27 15:44', student:'陳建豪', level:3, venue:'台北館', guardian:'陳爸爸', phone:'0930-333-444', status:'pending' },
+  { id:'pr3', time:'2026-04-25 09:10', student:'王子涵', level:8, venue:'江翠館', guardian:'王媽媽', phone:'0912-555-666', status:'done' },
+];
+
+function renderPrintRequests(){
+  const tbody=document.getElementById('print-req-tbody');
+  if(!tbody) return;
+  const pending=PRINT_REQUESTS_DATA.filter(r=>r.status==='pending').length;
+  const badge=document.getElementById('print-badge');
+  if(badge){ badge.textContent=pending; badge.style.display=pending?'':'none'; }
+  tbody.innerHTML=PRINT_REQUESTS_DATA.map(r=>{
+    const isPending=r.status==='pending';
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap">${r.time}</td>
+      <td style="font-weight:500">${r.student}</td>
+      <td><span class="chip ${HAT_CHIP[r.level]}">${LV_LABEL[r.level]}</span></td>
+      <td>${r.venue}</td>
+      <td>${r.guardian}<br><span style="font-size:11px;color:var(--ink3)">${r.phone}</span></td>
+      <td><span class="chip ${isPending?'chip-amber':'chip-green'}">${isPending?'待處理':'已完成'}</span></td>
+      <td>${isPending?`<button class="btn btn-primary btn-xs" onclick="markPrintComplete('${r.id}')">標記完成</button>`:'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function markPrintComplete(id){
+  const r=PRINT_REQUESTS_DATA.find(x=>x.id===id);
+  if(!r) return;
+  r.status='done';
+  renderPrintRequests();
+  showToast(`已標記完成，LINE 通知已送給 ${r.guardian}`,'success');
 }
 
 // ════ ANNOUNCEMENTS ════
