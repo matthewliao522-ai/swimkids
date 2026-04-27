@@ -3269,7 +3269,7 @@ function renderPrintRequests(){
       <td>${r.venue}</td>
       <td>${r.guardian}<br><span style="font-size:11px;color:var(--ink3)">${r.phone}</span></td>
       <td><span class="chip ${isPending?'chip-amber':'chip-green'}">${isPending?'待處理':'已完成'}</span></td>
-      <td>${isPending?`<button class="btn btn-primary btn-xs" onclick="markPrintComplete('${r.id}')">標記完成</button>`:'—'}</td>
+      <td>${isPending?`<button class="btn btn-primary btn-xs" onclick="markPrintComplete('${r.id}')">通知領取</button>`:'—'}</td>
     </tr>`;
   }).join('');
 }
@@ -3279,7 +3279,7 @@ function markPrintComplete(id){
   if(!r) return;
   r.status='done';
   renderPrintRequests();
-  showToast(`已標記完成，LINE 通知已送給 ${r.guardian}`,'success');
+  showToast(`已通知 ${r.guardian} 前往領取`,'success');
 }
 
 // ════ ANNOUNCEMENTS ════
