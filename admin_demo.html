@@ -518,6 +518,7 @@ tr:hover td{background:#fafaf8}
 
     <!-- ═══ COACHES ═══ -->
     <div class="screen" id="screen-coaches">
+      <div id="coach-venue-notice" style="display:none;font-size:11px;color:var(--ink3);margin-bottom:10px">教練為跨場館資源，不依場館篩選。</div>
       <div class="filter-bar">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -651,9 +652,6 @@ tr:hover td{background:#fafaf8}
           <option value="4">四級</option><option value="5">五級</option><option value="6">六級</option>
           <option value="7">七級</option><option value="8">八級</option><option value="9">九級</option>
           <option value="10">十級</option>
-        </select>
-        <select class="filter-sel" id="exam-venue" onchange="examPage=1;renderExams()">
-          <option value="">全部場館</option>
         </select>
         <input type="date" class="filter-sel" id="exam-date-from" onchange="examPage=1;renderExams()" title="開始日期" style="font-size:12px">
         <span style="font-size:12px;color:var(--ink3);flex-shrink:0">至</span>
@@ -2025,6 +2023,8 @@ function renderStagnant(stagnantIds){
 
 // ════ COACHES ════
 function renderCoaches(){
+  const notice=document.getElementById('coach-venue-notice');
+  if(notice) notice.style.display=currentVenueId!=='all'?'block':'none';
   const q=(document.getElementById('coach-search')?.value||'').toLowerCase();
   const rf=document.getElementById('coach-role-filter')?.value||'';
   const sf=document.getElementById('coach-status-filter')?.value||'';
@@ -2192,7 +2192,8 @@ function renderGuardians(){
   const filteredGuardians=rows.filter(r=>{
     const matchQ=!q||r.name.toLowerCase().includes(q)||r.phone.replace(/-/g,'').includes(q);
     const matchS=!sf||(sf==='active'&&r.activated)||(sf==='pending'&&!r.activated);
-    return matchQ&&matchS;
+    const matchVenue=currentVenueId==='all'||r.children.some(c=>String(c.defaultVenueId)===String(currentVenueId));
+    return matchQ&&matchS&&matchVenue;
   });
   const guardianTotal=filteredGuardians.length;
   filteredGuardians.slice((guardianPage-1)*PAGE_SIZE,guardianPage*PAGE_SIZE).forEach(r=>{
@@ -2487,7 +2488,7 @@ function renderExams(){
   const q=(document.getElementById('exam-search')?.value||'').toLowerCase();
   const vf=document.getElementById('exam-verdict')?.value||'';
   const lf=document.getElementById('exam-level')?.value||'';
-  const evf=document.getElementById('exam-venue')?.value||'';
+  const evf='';
   const dateFrom=document.getElementById('exam-date-from')?.value||'';
   const dateTo=document.getElementById('exam-date-to')?.value||'';
   const stagnantOnly=document.getElementById('exam-stagnant')?.checked||false;
