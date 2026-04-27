@@ -916,7 +916,7 @@ tr:hover td{background:#fafaf8}
       <div class="form-row single">
         <div class="form-field">
           <label class="form-label req" id="cm-pwd-label">初始密碼</label>
-          <input class="form-input" id="cm-pwd" type="password" placeholder="請設定初始密碼（8字元以上）">
+          <input class="form-input" id="cm-pwd" type="password" placeholder="預設 88888888">
           <div class="form-hint" id="cm-pwd-hint">教練首次登入後可自行修改密碼</div>
           <div class="form-err" id="cm-pwd-err">密碼至少 8 字元</div>
         </div>
@@ -2020,7 +2020,7 @@ function openCoachModal(id){
   document.getElementById('cm-phone').value=c?.phone||'';
   document.getElementById('cm-role').value=c?.role||'teach';
   document.getElementById('cm-status').value=c?.status||'active';
-  document.getElementById('cm-pwd').value='';
+  document.getElementById('cm-pwd').value=c?'':'88888888';
   document.getElementById('cm-email').value='';
   // 新增：顯示 email 欄位；編輯：隱藏（email 不可更改），密碼變選填
   if(c){
