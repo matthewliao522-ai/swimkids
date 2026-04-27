@@ -3005,12 +3005,21 @@ function parseImportRows(rows) {
     const ctype = cls.classType||'C';
     const tslot = cls.timeSlot||'A';
     const coachObj = COACHES_DATA.find(c => c.name === cls.teach);
-    const existsBySlot = cls.venueId && CLASSES.find(c =>
+    const existingClass = (cls.venueId && CLASSES.find(c =>
       c.venueId === cls.venueId && c.date === cls.date &&
       c.classType === ctype && c.timeSlot === tslot &&
       (!coachObj || String(c.coachId) === String(coachObj.id))
-    );
-    cls.isDuplicate = !!existsBySlot;
+    )) || null;
+    if (existingClass) {
+      cls.existingClass = existingClass;
+      const enrolledIds = new Set((existingClass.members||[]).map(m => String(m.id)));
+      cls.newStudentsForExisting = cls.students.filter(s => !s.matched || !enrolledIds.has(String(s.matched.id)));
+      cls.isDuplicate = cls.newStudentsForExisting.length === 0;
+    } else {
+      cls.existingClass = null;
+      cls.newStudentsForExisting = null;
+      cls.isDuplicate = false;
+    }
   });
   renderImportPreview(classOrder.map(k => classMap[k]), errors);
 }
@@ -3021,12 +3030,22 @@ function renderImportPreview(classes, errors) {
   if (errors.length) {
     html += `<div class="im-err-box"><strong>⚠ 發現 ${errors.length} 個問題，請修正後重新上傳：</strong><ul style="margin:6px 0 0 14px">${errors.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
   }
-  const newCls = classes.filter(c => !c.isDuplicate);
+  const brandNewCls = classes.filter(c => !c.existingClass);
+  const existAddCls = classes.filter(c => c.existingClass && !c.isDuplicate);
   const dupCls = classes.filter(c => c.isDuplicate);
-  const totalCls = newCls.length;
-  const okStudents = newCls.reduce((n,c) => n + c.students.filter(s=>s.matched).length, 0);
-  const missingStudents = newCls.reduce((n,c) => n + c.students.filter(s=>!s.matched).length, 0);
-  html += `<div class="im-summary">共 <strong>${totalCls}</strong> 個班將匯入、<strong>${okStudents}</strong> 位學員比對成功${missingStudents ? `、<span style="color:var(--brand)">${missingStudents} 位將新建</span>` : ''}${dupCls.length ? `、<span style="color:var(--signal)">${dupCls.length} 個班已存在略過</span>` : ''}</div>`;
+  const totalCls = brandNewCls.length;
+  const okStudents = brandNewCls.reduce((n,c) => n + c.students.filter(s=>s.matched).length, 0);
+  const missingStudents = brandNewCls.reduce((n,c) => n + c.students.filter(s=>!s.matched).length, 0);
+  const totalAddStudents = existAddCls.reduce((n,c) => n + (c.newStudentsForExisting||[]).length, 0);
+  const summaryParts = [];
+  if(totalCls > 0) {
+    let p = `共 <strong>${totalCls}</strong> 個新班將匯入、<strong>${okStudents}</strong> 位學員比對成功`;
+    if(missingStudents) p += `、<span style="color:var(--brand)">${missingStudents} 位將新建</span>`;
+    summaryParts.push(p);
+  }
+  if(existAddCls.length > 0) summaryParts.push(`<span style="color:var(--ocean)"><strong>${existAddCls.length}</strong> 個班已存在，補入 <strong>${totalAddStudents}</strong> 位學員</span>`);
+  if(dupCls.length > 0) summaryParts.push(`<span style="color:var(--signal)">${dupCls.length} 個班已存在略過</span>`);
+  html += `<div class="im-summary">${summaryParts.join('　') || '無可匯入資料'}</div>`;
   classes.forEach(cls => {
     const okCount = cls.students.filter(s=>s.matched).length;
     const warnCount = cls.students.filter(s=>!s.matched).length;
@@ -3041,6 +3060,41 @@ function renderImportPreview(classes, errors) {
           <div style="font-size:11px;color:var(--signal);flex-shrink:0;font-weight:600">已存在，略過</div>
         </div>
       </div>`;
+      return;
+    }
+    if (cls.existingClass && !cls.isDuplicate) {
+      const newStus = cls.newStudentsForExisting || [];
+      html += `<div class="im-cls-card" style="border-color:var(--ocean)">
+        <div class="im-cls-hd">
+          <div>
+            <div class="im-cls-name">${cls.name}</div>
+            <div class="im-cls-meta">${cls.date} · ${venueHtml} · ${cls.teach}</div>
+          </div>
+          <div style="font-size:11px;color:var(--ocean);flex-shrink:0;font-weight:600">班已存在，新增 ${newStus.length} 位學員</div>
+        </div>`;
+      newStus.forEach(s => {
+        if (s.matched) {
+          html += `<div class="im-stu-row im-stu-ok">
+            <div class="s-av ${AV_MAP[s.matched.level]}" style="width:24px;height:24px;font-size:10px">${s.matched.name[0]}</div>
+            <span style="flex:1">${s.matched.name}</span>
+            <span style="font-family:'JetBrains Mono',monospace;color:var(--ink3)">${s.phone}</span>
+            <span class="hat-tag ${HT_MAP[s.matched.level]}">${SKILL_DATA[s.matched.level].label}</span>
+          </div>`;
+        } else {
+          const isSibling = !!s.familyInfo;
+          const newLabel = s.stuName ? `${isSibling ? '手足新建' : '新建學員'}「${s.stuName}」` : '新建學員（無姓名）';
+          html += `<div class="im-stu-row im-stu-warn" style="background:var(--brand-lt);border-color:var(--brand-100)">
+            <span style="width:24px;text-align:center;color:var(--brand)">＋</span>
+            <div style="flex:1;min-width:0">
+              <div style="color:var(--brand)">${newLabel}</div>
+              <div style="font-size:10px;color:var(--ink3);margin-top:1px">家長：${s.guardianName || '—'}</div>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;color:var(--ink3)">${s.phone}</span>
+            <span style="font-size:10px;color:var(--brand)">新建</span>
+          </div>`;
+        }
+      });
+      html += `</div>`;
       return;
     }
     html += `<div class="im-cls-card">
@@ -3079,11 +3133,16 @@ function renderImportPreview(classes, errors) {
   });
   body.innerHTML = html;
   importParsed = classes;
-  const hasOk = classes.some(c => c.students.length > 0) && errors.length === 0;
+  const hasOk = (brandNewCls.some(c => c.students.length > 0) || existAddCls.length > 0) && errors.length === 0;
+  const btnLabel = totalCls > 0 && existAddCls.length > 0
+    ? `確認匯入 ${totalCls} 個班 + 補齊學員`
+    : totalCls > 0
+      ? `確認匯入 ${totalCls} 個班`
+      : `確認補齊學員`;
   document.getElementById('im-footer').innerHTML = `
     <button class="btn btn-ghost btn-sm" onclick="openImportModal()">← 重新上傳</button>
     <button class="btn btn-ghost btn-sm" onclick="closeImportModal()">取消</button>
-    ${hasOk ? `<button class="btn btn-success btn-sm" onclick="confirmImport()">確認匯入 ${totalCls} 個班</button>` : ''}`;
+    ${hasOk ? `<button class="btn btn-success btn-sm" onclick="confirmImport()">${btnLabel}</button>` : ''}`;
 }
 
 function showImportError(msg) {
@@ -3094,6 +3153,7 @@ function showImportError(msg) {
 
 async function confirmImport() {
   let added = 0;
+  let addedEnrollments = 0;
   let newStudents = 0;
   const batchCodes = new Set(CLASSES.map(c => c.code));
   for(const cls of importParsed) {
@@ -3104,6 +3164,41 @@ async function confirmImport() {
     const ctype = cls.classType||'C';
     const tslot = cls.timeSlot||'A';
     if(cls.isDuplicate) continue;
+    if(cls.existingClass) {
+      for(const s of (cls.newStudentsForExisting||[])) {
+        let stuId = s.matched?.id;
+        if(!stuId) {
+          const {data:newStu, error:se} = await SUPA.from('students').insert({
+            name:s.stuName||'未命名',
+            level:1, initial_level:1,
+            default_venue_id:venueId||null,
+            teach_coach_id:coachObj?.id||null,
+          }).select('id').single();
+          if(se){showToast('學員建立失敗：'+se.message,'warn');continue;}
+          stuId = newStu.id;
+          const phone = s.rawPhone.replace(/\D/g,'').replace(/^(\d{4})(\d{3})(\d{3})$/,'$1-$2-$3');
+          const {data:gData} = await SUPA.from('guardians').select('id').eq('phone',phone).maybeSingle();
+          let guardianId = gData?.id;
+          if(!guardianId) {
+            const gInsert = {name:s.guardianName||'家長', phone};
+            if(s.guardianEmail) gInsert.email = s.guardianEmail;
+            const {data:newG,error:ge} = await SUPA.from('guardians').insert(gInsert).select('id').single();
+            if(!ge) guardianId = newG.id;
+          } else if(s.guardianEmail) {
+            await SUPA.from('guardians').update({email:s.guardianEmail}).eq('id',guardianId).is('email',null);
+          }
+          if(guardianId) await SUPA.from('student_guardian').insert({student_id:stuId, guardian_id:guardianId});
+          newStudents++;
+          const newStuObj = {id:stuId,name:s.stuName||'未命名',level:1,teachCoach:coachName,defaultVenueId:venueId,guardianName:s.guardianName||'',guardianPhone:s.rawPhone.replace(/\D/g,'').replace(/^(\d{4})(\d{3})(\d{3})$/,'$1-$2-$3'),guardianActivated:false,examHistory:[]};
+          STUDENTS.push(newStuObj);
+        }
+        if(stuId) {
+          await SUPA.from('prep_enrollments').insert({prep_class_id:cls.existingClass.id, student_id:stuId});
+          addedEnrollments++;
+        }
+      }
+      continue;
+    }
     const baseCode = generateClassCode(venueId, cls.date, ctype, tslot);
     let code;
     if (!baseCode) {
@@ -3161,12 +3256,14 @@ async function confirmImport() {
   }
   closeImportModal();
   await loadClasses();
-  if(added>0) {
-    renderPrepList();
-    const msg = newStudents>0 ? `成功匯入 ${added} 個班級，新建 ${newStudents} 位學員` : `成功匯入 ${added} 個班級`;
-    showToast(msg,'ok');
+  renderPrepList();
+  if(added > 0 || addedEnrollments > 0) {
+    const parts = [];
+    if(added > 0) parts.push(`匯入 ${added} 個新班級`);
+    if(addedEnrollments > 0) parts.push(`補入 ${addedEnrollments} 位學員`);
+    if(newStudents > 0) parts.push(`新建 ${newStudents} 位學員`);
+    showToast('完成：' + parts.join('、'), 'ok');
   } else {
-    renderPrepList();
     showToast('沒有新班級被匯入（可能全部已存在）','warn');
   }
 }
