@@ -91,7 +91,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;background:var(--bg);border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink2);vertical-align:middle}
+td{padding:13px 14px;border-bottom:1px solid var(--line);color:var(--ink2);vertical-align:middle}
+.row-actions{opacity:.15;transition:opacity .15s}
+tr:hover .row-actions{opacity:1}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafaf8}
 .tbl-wrap table th:last-child,.tbl-wrap table td:last-child{position:sticky;right:0;z-index:1}
@@ -2064,7 +2066,7 @@ function renderCoaches(){
       <td class="mono">${c.students>0?c.students+'人':'—'}</td>
       <td class="mono" style="font-size:11px">${c.created}</td>
       <td>
-        <div style="display:flex;gap:4px">
+        <div class="row-actions" style="display:flex;gap:4px">
           <button class="btn btn-ghost btn-xs" onclick="openCoachModal('${c.id}')">編輯</button>
           <button class="btn ${c.status==='active'?'btn-ghost':'btn-success'} btn-xs" onclick="toggleCoachStatus('${c.id}')">${c.status==='active'?'停用':'啟用'}</button>
           <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteCoach('${c.id}')" title="刪除">
@@ -2211,7 +2213,7 @@ function renderGuardians(){
       <td style="font-size:11px;color:var(--ink2)">${names}</td>
       <td class="mono" style="font-size:11px">${r.lastLogin||'—'}</td>
       <td>
-        <div style="display:flex;gap:4px">
+        <div class="row-actions" style="display:flex;gap:4px">
           <button class="btn btn-ghost btn-xs" onclick="openResetPwd('${r.name}','${r.phone}','${r.authId||''}')">重設密碼</button>
           ${r.activated?`<button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deactivateGuardian('${r.phone}')">停用</button>`:''}
         </div>
@@ -2374,10 +2376,10 @@ const noticeEl=document.getElementById('stu-role-notice');
         <td class="mono">${s.guardianPhone}</td>
         <td><span class="chip ${chipCls}">${chipTxt}</span></td>
         <td>${s.teachCoach}</td>
-        <td>${canEdit
+        <td><div class="row-actions">${canEdit
           ?`<button class="btn btn-ghost btn-xs" onclick="openStudentModal('${s.id}')">編輯</button>`
           :`<span style="font-size:10px;color:var(--ink3)">無權限</span>`
-        }</td>
+        }</div></td>
       </tr>`;
     }
   });
@@ -2545,10 +2547,10 @@ function renderExams(){
       <td style="font-size:11px">${e.teachCoach}</td>
       <td style="font-size:11px">${e.examCoach}</td>
       <td class="mono" style="font-size:11px">${e.date}</td>
-      <td>${cfg.canEditExams
+      <td><div class="row-actions">${cfg.canEditExams
         ?`<button class="btn btn-amber btn-xs" onclick="openExamModal('${e.id}')">修改</button>`
         :`<span style="font-size:10px;color:var(--ink3)">無權限</span>`
-      }</td>
+      }</div></td>
     </tr>`;
   });
   renderPager('exam-pager',filtered.length,examPage,'goExamPage');
