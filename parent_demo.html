@@ -1751,6 +1751,18 @@ async function sendCert(btn) {
       return;
     }
     const level = getPassedLevel(child);
+    const { data: existingReq } = await SUPA
+      .from('cert_print_requests')
+      .select('id')
+      .eq('student_id', child.id)
+      .eq('level', level)
+      .eq('status', 'pending')
+      .maybeSingle();
+    if (existingReq) {
+      showToastP('此級別已有待處理的申請，請等候場館安排後以 LINE 通知您');
+      btn.disabled = false; btn.textContent = '送出申請';
+      return;
+    }
     const { data: req, error: insertErr } = await SUPA
       .from('cert_print_requests')
       .insert({ student_id: child.id, guardian_id: guardian.id, venue_id: child.venueId, level })
