@@ -1558,9 +1558,7 @@ async function applyBatchCoach(){
   const coachName=document.getElementById('batch-coach-sel').value;
   const coach=COACHES_DATA.find(c=>c.name===coachName);
   const ids=[...stuSelectedIds];
-  for(const id of ids){
-    await SUPA.from('students').update({teach_coach_id:coach?.id||null}).eq('id',id);
-  }
+  await SUPA.from('students').update({teach_coach_id:coach?.id||null}).in('id',ids);
   closeModal('batch-coach-modal');
   stuSelectedIds.clear();
   await loadStudents();
@@ -1580,9 +1578,7 @@ function openBatchVenue(){
 async function applyBatchVenue(){
   const venueId=document.getElementById('batch-venue-sel').value||null;
   const ids=[...stuSelectedIds];
-  for(const id of ids){
-    await SUPA.from('students').update({default_venue_id:venueId}).eq('id',id);
-  }
+  await SUPA.from('students').update({default_venue_id:venueId}).in('id',ids);
   closeModal('batch-venue-modal');
   stuSelectedIds.clear();
   await loadStudents();
@@ -1704,10 +1700,12 @@ let EXAM_DATA=[];
 async function loadExams(){
   const {data,error}=await SUPA.from('exams').select('*').order('exam_date',{ascending:false});
   if(error){showToast('載入考試失敗：'+error.message,'warn');return;}
+  const stuMap=new Map(STUDENTS_DATA.map(s=>[String(s.id),s]));
+  const coachMap=new Map(COACHES_DATA.map(c=>[String(c.id),c]));
   EXAM_DATA=data.map(e=>{
-    const student=STUDENTS_DATA.find(s=>String(s.id)===String(e.student_id));
-    const teachCoach=COACHES_DATA.find(c=>String(c.id)===String(e.teach_coach_id));
-    const examCoach=COACHES_DATA.find(c=>String(c.id)===String(e.exam_coach_id));
+    const student=stuMap.get(String(e.student_id));
+    const teachCoach=coachMap.get(String(e.teach_coach_id));
+    const examCoach=coachMap.get(String(e.exam_coach_id));
     const d=new Date(e.exam_date);
     const dateStr=d.getFullYear()+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0');
     return {
@@ -2186,15 +2184,15 @@ function renderGuardians(){
   const sf=document.getElementById('guardian-status-filter')?.value||'';
   const tbody=document.getElementById('guardian-table');
   tbody.innerHTML='';
-  const seen=new Set();
-  const rows=[];
+  const guardianMap=new Map();
   STUDENTS_DATA.forEach(s=>{
     const key=s.guardianPhone.replace(/-/g,'');
-    if(seen.has(key))return;
-    seen.add(key);
-    const children=STUDENTS_DATA.filter(x=>x.guardianPhone===s.guardianPhone);
-    rows.push({name:s.guardianName,phone:s.guardianPhone,activated:s.guardianActivated,children,lastLogin:s.lastLogin,authId:s.guardianAuthId});
+    if(!guardianMap.has(key)){
+      guardianMap.set(key,{name:s.guardianName,phone:s.guardianPhone,activated:s.guardianActivated,children:[],lastLogin:s.lastLogin,authId:s.guardianAuthId});
+    }
+    guardianMap.get(key).children.push(s);
   });
+  const rows=[...guardianMap.values()];
   const filteredGuardians=rows.filter(r=>{
     const matchQ=!q||r.name.toLowerCase().includes(q)||r.phone.replace(/-/g,'').includes(q);
     const matchS=!sf||(sf==='active'&&r.activated)||(sf==='pending'&&!r.activated);
@@ -3691,7 +3689,7 @@ async function saveChangePwd() {
   if (pwd.length < 8) { errEl.textContent = '密碼至少 8 字元'; errEl.classList.add('show'); return; }
   if (pwd !== confirm) { errEl.textContent = '兩次密碼不一致'; errEl.classList.add('show'); return; }
   const { error } = await SUPA.auth.updateUser({ password: pwd });
-  if (error) { errEl.textContent = error.message; errEl.classList.add('show'); return; }
+  if (error) { errEl.textContent = error.message.includes('different from the old') ? '新密碼不能與舊密碼相同' : error.message; errEl.classList.add('show'); return; }
   closeModal('change-pwd-modal');
   showToast('密碼已更新', 'ok');
 }
@@ -3759,12 +3757,9 @@ async function doLogout() {
 async function init(roleKey='admin', displayName='系統管理員', roleLabel='管理員', avText='管'){
   const d=new Date();
   document.getElementById('topbar-date').textContent=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+(d.getDate());
-  await loadVenues();
-  await loadCoaches();
+  await Promise.all([loadVenues(), loadCoaches()]);
   await loadStudents();
-  await loadExams();
-  await loadAnnouncements();
-  await loadPrepClassStats();
+  await Promise.all([loadExams(), loadAnnouncements(), loadPrepClassStats()]);
   renderDashExams();
   switchRole(roleKey);
   // 覆寫為真實姓名
