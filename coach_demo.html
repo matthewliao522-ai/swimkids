@@ -67,7 +67,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .sb-wordmark-dot{font-size:15px;font-weight:400;color:rgba(255,255,255,.3);margin:0 5px}
 .sb-wordmark-role{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;color:var(--green);letter-spacing:0.1em;text-transform:uppercase}
 .sb-badge-wrap{margin-top:4px}
-.sb-badge{display:inline-block;background:var(--green);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;padding:2px 7px;border-radius:4px;letter-spacing:.07em}
+.sb-badge{display:inline-block;background:var(--green);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;padding:2px 7px;border-radius:4px;letter-spacing:.07em;vertical-align:-1px}
 .sb-section{padding:16px 20px 5px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;color:rgba(255,255,255,.25);letter-spacing:.12em;text-transform:uppercase}
 .sb-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.5);transition:all .15s;border-left:2px solid transparent}
 .sb-item:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.04)}
@@ -87,7 +87,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .topbar{height:54px;background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;position:sticky;top:0;z-index:40}
 .topbar-title{font-size:14px;font-weight:700;color:var(--ink)}
 .topbar-right{display:flex;align-items:center;gap:10px}
-.topbar-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);background:var(--n100);padding:4px 10px;border-radius:6px;border:1px solid var(--line)}
+.topbar-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);background:var(--n100);padding:4px 10px;border-radius:6px;border:1px solid var(--line);vertical-align:-1px}
 .content{flex:1;overflow-y:auto;padding:20px;display:flex;gap:18px;min-height:0}
 .content.exam-mode{overflow:hidden}
 
@@ -116,7 +116,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 @keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── STATUS CHIPS ── */
-.status-chip{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:500}
+.status-chip{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:500;vertical-align:-1px}
 .chip-draft{background:var(--n100);color:var(--ink3);border:1px solid var(--line2)}
 .chip-ready{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}
 .chip-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
@@ -153,7 +153,7 @@ select.filter-sel:focus{border-color:var(--brand)}
 .class-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:8px}
 .class-card:hover{background:var(--n50);border-color:var(--line2)}
 .class-card.selected{border-color:var(--brand);background:var(--brand-lt)}
-.cc-code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brand);margin-bottom:3px}
+.cc-code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brand);margin-bottom:3px;vertical-align:-1px}
 .cc-meta{font-size:12px;color:var(--ink2);margin-top:3px}
 .cc-members{font-size:11px;color:var(--ink3);margin-top:2px}
 
@@ -207,8 +207,8 @@ select.filter-sel:focus{border-color:var(--brand)}
 
 /* last exam panel */
 .last-exam-panel{background:var(--n50);border:1px solid var(--line2);border-radius:8px;padding:6px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.lep-title{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--purple);flex-shrink:0;font-weight:500}
-.lep-date{font-size:11px;color:var(--ink2);font-family:'JetBrains Mono',monospace;flex-shrink:0;border-left:1px solid var(--line2);padding-left:10px}
+.lep-title{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--purple);flex-shrink:0;font-weight:500;vertical-align:-1px}
+.lep-date{font-size:11px;color:var(--ink2);font-family:'JetBrains Mono',monospace;flex-shrink:0;border-left:1px solid var(--line2);padding-left:10px;vertical-align:-1px}
 .lep-fail-items{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-left:1px solid var(--line2);padding-left:10px}
 .lep-fail-item{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--ink3)}
 .lep-fail-item::before{content:'✗';color:var(--signal);flex-shrink:0}
