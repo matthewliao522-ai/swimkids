@@ -3660,7 +3660,10 @@ async function saveForgotPwd() {
   btn.textContent = '儲存中…'; btn.disabled = true;
   const { error } = await SUPA.auth.updateUser({ password: pwd });
   btn.textContent = '儲存新密碼'; btn.disabled = false;
-  if (error) { errEl.textContent = error.message; return; }
+  if (error) {
+    errEl.textContent = error.message.includes('different from the old') ? '新密碼不能與舊密碼相同' : error.message;
+    return;
+  }
   const { data: { session } } = await SUPA.auth.getSession();
   if (session) {
     document.getElementById('forgot-section').style.display = 'none';
