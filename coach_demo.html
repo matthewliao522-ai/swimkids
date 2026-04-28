@@ -247,7 +247,7 @@ select.filter-sel:focus{border-color:var(--brand)}
 
 .verdict-section{padding:10px 16px;border-top:1px solid var(--line);flex-shrink:0}
 .verdict-row{display:flex;gap:8px;margin-bottom:8px}
-.vbtn{flex:1;padding:14px 9px;border-radius:8px;border:1px solid var(--line2);background:var(--n50);cursor:pointer;font-size:15px;font-weight:700;color:var(--ink3);font-family:'Noto Sans TC',sans-serif;transition:all .15s;text-align:center}
+.vbtn{flex:1;padding:0 9px;min-height:64px;border-radius:8px;border:1px solid var(--line2);background:var(--n50);cursor:pointer;font-size:18px;font-weight:700;color:var(--ink3);font-family:'Noto Sans TC',sans-serif;transition:all .15s;text-align:center;display:flex;align-items:center;justify-content:center}
 .vbtn:hover{background:var(--n100);color:var(--ink)}
 .vbtn.vp{background:var(--green-bg);border-color:var(--green);color:var(--green)}
 .vbtn.vf{background:var(--signal-lt);border-color:var(--signal);color:var(--signal)}
@@ -2191,11 +2191,13 @@ function openExamModal() {
   }
   document.getElementById('exam-modal-backdrop').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  document.querySelector('.sidebar')?.classList.add('collapsed');
 }
 
 function closeExamModal() {
   document.getElementById('exam-modal-backdrop').classList.add('hidden');
   document.body.style.overflow = '';
+  document.querySelector('.sidebar')?.classList.remove('collapsed');
 }
 
 function renderExamScreen() {
