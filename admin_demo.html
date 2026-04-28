@@ -1418,6 +1418,12 @@ tr:hover td{background:#fafaf8}
           </select>
         </div>
       </div>
+      <div class="form-row single">
+        <div class="form-field">
+          <label class="form-label">印製申請通知 Email</label>
+          <input class="form-input" id="vm-notify-email" type="email" placeholder="家長提出印製申請時，通知此信箱">
+        </div>
+      </div>
       <div style="border-top:1px solid var(--line2);margin:12px 0 4px"></div>
       <div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.06em;margin-bottom:10px">LINE OA 設定（選填）</div>
       <div class="form-row single">
@@ -3202,6 +3208,7 @@ function openVenueModal(id){
   document.getElementById('vm-code').value=v?.code||'';
   document.getElementById('vm-location').value=v?.location||'';
   document.getElementById('vm-status').value=v?.status||'active';
+  document.getElementById('vm-notify-email').value=v?.notify_email||'';
   document.getElementById('vm-line-channel-id').value=v?.line_channel_id||'';
   document.getElementById('vm-line-token').value=v?.line_channel_access_token||'';
   document.getElementById('vm-line-secret').value=v?.line_channel_secret||'';
@@ -3217,6 +3224,7 @@ async function saveVenue(){
   const code=document.getElementById('vm-code').value.trim().toUpperCase();
   const location=document.getElementById('vm-location').value.trim();
   const status=document.getElementById('vm-status').value;
+  const notify_email=document.getElementById('vm-notify-email').value.trim()||null;
   const line_channel_id=document.getElementById('vm-line-channel-id').value.trim()||null;
   const line_channel_access_token=document.getElementById('vm-line-token').value.trim()||null;
   const line_channel_secret=document.getElementById('vm-line-secret').value.trim()||null;
@@ -3226,7 +3234,7 @@ async function saveVenue(){
   if(!codeValid){document.getElementById('vm-code-err').classList.add('show');ok=false;}else document.getElementById('vm-code-err').classList.remove('show');
   if(!location){document.getElementById('vm-location-err').classList.add('show');ok=false;}else document.getElementById('vm-location-err').classList.remove('show');
   if(!ok)return;
-  const payload={name,code,location,status,line_channel_id,line_channel_access_token,line_channel_secret};
+  const payload={name,code,location,status,notify_email,line_channel_id,line_channel_access_token,line_channel_secret};
   if(editingVenueId){
     const {error}=await SUPA.from('venues').update(payload).eq('id',editingVenueId);
     if(error){showToast('更新失敗：'+error.message,'warn');return;}
@@ -3365,38 +3373,67 @@ function renderRptClassRatio(){
 }
 
 // ════ PRINT REQUESTS ════
-const PRINT_REQUESTS_DATA = [
-  { id:'pr1', time:'2026-04-28 10:23', student:'林柔安', level:6, venue:'江翠館', guardian:'林媽媽', phone:'0921-111-222', status:'pending' },
-  { id:'pr2', time:'2026-04-27 15:44', student:'陳建豪', level:3, venue:'台北館', guardian:'陳爸爸', phone:'0930-333-444', status:'pending' },
-  { id:'pr3', time:'2026-04-25 09:10', student:'王子涵', level:8, venue:'江翠館', guardian:'王媽媽', phone:'0912-555-666', status:'done' },
-];
-
-function renderPrintRequests(){
+async function renderPrintRequests(){
   const tbody=document.getElementById('print-req-tbody');
   if(!tbody) return;
-  const pending=PRINT_REQUESTS_DATA.filter(r=>r.status==='pending').length;
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:24px">載入中…</td></tr>';
+
+  const {data,error}=await SUPA
+    .from('cert_print_requests')
+    .select('id,level,status,created_at,students(name),guardians(name,phone),venues(name)')
+    .order('created_at',{ascending:false});
+
+  if(error){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--red);padding:24px">載入失敗：${error.message}</td></tr>`;
+    return;
+  }
+  const rows=data||[];
+  const pending=rows.filter(r=>r.status==='pending').length;
   const badge=document.getElementById('print-badge');
   if(badge){ badge.textContent=pending; badge.style.display=pending?'':'none'; }
-  tbody.innerHTML=PRINT_REQUESTS_DATA.map(r=>{
+
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:24px">目前沒有申請記錄</td></tr>';
+    return;
+  }
+  tbody.innerHTML=rows.map(r=>{
     const isPending=r.status==='pending';
+    const dt=r.created_at?r.created_at.replace('T',' ').slice(0,16):'—';
+    const student=r.students?.name||'—';
+    const guardian=r.guardians?.name||'—';
+    const phone=r.guardians?.phone||'—';
+    const venue=r.venues?.name||'—';
     return `<tr>
-      <td style="font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap">${r.time}</td>
-      <td style="font-weight:500">${r.student}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap">${dt}</td>
+      <td style="font-weight:500">${student}</td>
       <td><span class="chip ${HAT_CHIP[r.level]}">${LV_LABEL[r.level]}</span></td>
-      <td>${r.venue}</td>
-      <td>${r.guardian}<br><span style="font-size:11px;color:var(--ink3)">${r.phone}</span></td>
+      <td>${venue}</td>
+      <td>${guardian}<br><span style="font-size:11px;color:var(--ink3)">${phone}</span></td>
       <td><span class="chip ${isPending?'chip-amber':'chip-green'}">${isPending?'待處理':'已完成'}</span></td>
-      <td>${isPending?`<button class="btn btn-primary btn-xs" onclick="markPrintComplete('${r.id}')">通知領取</button>`:'—'}</td>
+      <td>${isPending?`<button class="btn btn-primary btn-xs" onclick="markPrintComplete('${r.id}','${guardian}')">通知領取</button>`:'—'}</td>
     </tr>`;
   }).join('');
 }
 
-function markPrintComplete(id){
-  const r=PRINT_REQUESTS_DATA.find(x=>x.id===id);
-  if(!r) return;
-  r.status='done';
+async function markPrintComplete(id, guardianName){
+  const btn=event.currentTarget;
+  btn.disabled=true;
+  btn.textContent='通知中…';
+  const {data:{session}}=await SUPA.auth.getSession();
+  const res=await fetch(`${SUPA_URL}/functions/v1/notify-guardian-line`,{
+    method:'POST',
+    headers:{'Authorization':`Bearer ${session.access_token}`,'Content-Type':'application/json'},
+    body:JSON.stringify({cert_print_request_id:id})
+  });
+  const json=await res.json();
+  if(!res.ok){
+    showToast('通知失敗：'+(json.error||res.statusText),'warn');
+    btn.disabled=false;
+    btn.textContent='通知領取';
+    return;
+  }
+  showToast(`已通知 ${guardianName} 前往領取`,'ok');
   renderPrintRequests();
-  showToast(`已通知 ${r.guardian} 前往領取`,'success');
 }
 
 // ════ ANNOUNCEMENTS ════

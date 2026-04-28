@@ -42,6 +42,19 @@ serve(async (req) => {
   const token = venue?.line_channel_access_token || Deno.env.get("LINE_CHANNEL_ACCESS_TOKEN")!;
 
   for (const event of body.events || []) {
+    // 家長加好友 → 回覆歡迎語 + 綁定說明
+    if (event.type === "follow") {
+      const lineUserId = event.source?.userId;
+      if (lineUserId) {
+        await pushMessage(
+          token,
+          lineUserId,
+          "您好！歡迎使用小泳士通知服務 🏊\n\n請傳送「小泳士」加上您的手機號碼完成綁定，例如：\n小泳士0930988583\n\n綁定後，孩子的考試結果與泳帽領取通知將即時送達。"
+        );
+      }
+      continue;
+    }
+
     if (event.type !== "message" || event.message?.type !== "text") continue;
 
     const lineUserId = event.source?.userId;
