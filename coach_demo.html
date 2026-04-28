@@ -118,7 +118,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 /* ── STATUS CHIPS ── */
 .status-chip{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:500}
 .chip-draft{background:var(--n100);color:var(--ink3);border:1px solid var(--line2)}
-.chip-ready{background:var(--brand-lt);color:var(--brand-700);border:1px solid var(--brand-100)}
+.chip-ready{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}
 .chip-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .chip-absent{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}
 
@@ -891,9 +891,9 @@ select.filter-sel:focus{border-color:var(--brand)}
                 <div class="verdict-section">
                   <div style="font-size:10px;color:var(--ink3);margin-bottom:6px;font-weight:600">整體考試結果</div>
                   <div class="verdict-row">
-                    <button class="vbtn" id="vbtn-pass" onclick="setVerdict('pass')">通過</button>
-                    <button class="vbtn" id="vbtn-fail" onclick="setVerdict('fail')">未通過</button>
-                    <button class="vbtn" id="vbtn-abs" onclick="setVerdict('absent')">未出席</button>
+                    <button class="vbtn" id="vbtn-pass" onclick="setVerdict('pass')">✓ 通過</button>
+                    <button class="vbtn" id="vbtn-fail" onclick="setVerdict('fail')">✗ 未通過</button>
+                    <button class="vbtn" id="vbtn-abs" onclick="setVerdict('absent')">— 未出席</button>
                   </div>
                 </div>
                 <div class="action-bar">
