@@ -223,7 +223,7 @@ select.filter-sel:focus{border-color:var(--brand)}
 .lv-changer select{background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer}
 .lv-changer select:focus{outline:none;border-color:var(--brand)}
 
-.col-hdrs{display:grid;grid-template-columns:1fr 1fr;margin:10px 16px 6px;border-radius:6px;overflow:hidden}
+.col-hdrs{display:grid;grid-template-columns:1fr 1fr;margin:10px 16px 6px;border-radius:6px;overflow:hidden;flex-shrink:0}
 .col-h{padding:4px 10px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.04em;font-family:'JetBrains Mono',monospace}
 .col-h-p{background:var(--green-bg);color:var(--green)}
 .col-h-f{background:var(--signal-lt);color:var(--signal)}
@@ -872,7 +872,7 @@ select.filter-sel:focus{border-color:var(--brand)}
                 </div>
               </div>
               <!-- Step 1 -->
-              <div id="exam-form-inner" style="flex:1;display:flex;flex-direction:column;min-height:0">
+              <div id="exam-form-inner" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
                 <div class="lv-header">
                   <div>
                     <div class="lv-name" id="ex-lv-name"></div>
