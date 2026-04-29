@@ -1683,12 +1683,17 @@ async function loadStudents(){
   // 載入 student_guardian 及 guardians
   const stuIds=stuData.map(s=>s.id);
   const {data:sgData}=await SUPA.from('student_guardian')
-    .select('student_id, guardians(id,name,phone,status,auth_id)').in('student_id',stuIds);
+    .select('student_id, guardians(id,name,phone,email,status,auth_id)').in('student_id',stuIds);
   const sgMap={};
-  (sgData||[]).forEach(r=>{sgMap[r.student_id]=r.guardians;});
+  (sgData||[]).forEach(r=>{
+    if(!sgMap[r.student_id]) sgMap[r.student_id]=[];
+    if(r.guardians) sgMap[r.student_id].push(r.guardians);
+  });
 
   STUDENTS_DATA=stuData.map(s=>{
-    const g=sgMap[s.id]||null;
+    const gs=sgMap[s.id]||[];
+    // 主要家長 = email 非 @swimkids.app 的那位，找不到則取第一位
+    const g=gs.find(x=>x.email&&!x.email.endsWith('@swimkids.app'))||gs[0]||null;
     const coach=COACHES_DATA.find(c=>String(c.id)===String(s.teach_coach_id));
     return {
       id:s.id,
@@ -1699,6 +1704,7 @@ async function loadStudents(){
       guardianId:g?.id||null,
       guardianAuthId:g?.auth_id||null,
       guardianActivated:g?.status==='active',
+      allGuardians:gs,
       teachCoach:coach?.name||'',
       teachCoachId:s.teach_coach_id,
       defaultVenueId:s.default_venue_id,
@@ -2237,14 +2243,23 @@ function renderGuardians(){
   const sf=document.getElementById('guardian-status-filter')?.value||'';
   const tbody=document.getElementById('guardian-table');
   tbody.innerHTML='';
+
+  // 以 guardian ID 為 key，涵蓋主要家長與副家長
   const guardianMap=new Map();
   STUDENTS_DATA.forEach(s=>{
-    const key=s.guardianPhone.replace(/-/g,'');
-    if(!guardianMap.has(key)){
-      guardianMap.set(key,{name:s.guardianName,phone:s.guardianPhone,activated:s.guardianActivated,children:[],lastLogin:s.lastLogin,authId:s.guardianAuthId});
-    }
-    guardianMap.get(key).children.push(s);
+    (s.allGuardians||[]).forEach(g=>{
+      if(!guardianMap.has(g.id)){
+        guardianMap.set(g.id,{
+          id:g.id, name:g.name, phone:g.phone, email:g.email||'',
+          activated:g.status==='active', authId:g.auth_id,
+          isSecondary:!!(g.email?.endsWith('@swimkids.app')),
+          children:[]
+        });
+      }
+      guardianMap.get(g.id).children.push(s);
+    });
   });
+
   const rows=[...guardianMap.values()];
   const filteredGuardians=rows.filter(r=>{
     const matchQ=!q||r.name.toLowerCase().includes(q)||r.phone.replace(/-/g,'').includes(q);
@@ -2256,22 +2271,34 @@ function renderGuardians(){
   filteredGuardians.slice((guardianPage-1)*PAGE_SIZE,guardianPage*PAGE_SIZE).forEach(r=>{
     const chipCls=r.activated?'chip-green':'chip-amber';
     const chipTxt=r.activated?'已啟用':'待啟用';
-    const names=r.children.map(c=>c.name).join('、');
+    const names=r.children.map(c=>esc(c.name)).join('、');
+    const secBadge=r.isSecondary?`<span class="chip" style="background:var(--brand-lt);color:var(--brand);font-size:9px;padding:1px 5px;margin-left:4px">副</span>`:'';
     tbody.innerHTML+=`<tr>
-      <td style="font-weight:500">${r.name}</td>
-      <td class="mono">${r.phone}</td>
+      <td style="font-weight:500">${esc(r.name)}${secBadge}</td>
+      <td class="mono">${esc(r.phone)}</td>
       <td><span class="chip ${chipCls}">${chipTxt}</span></td>
       <td style="font-size:11px;color:var(--ink2)">${names}</td>
-      <td class="mono" style="font-size:11px">${r.lastLogin||'—'}</td>
+      <td class="mono" style="font-size:11px">—</td>
       <td>
         <div class="row-actions" style="display:flex;gap:4px">
-          <button class="btn btn-ghost btn-xs" onclick="openResetPwd('${r.name}','${r.phone}','${r.authId||''}')">重設密碼</button>
-          ${r.activated?`<button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deactivateGuardian('${r.phone}')">停用</button>`:''}
+          ${!r.isSecondary?`<button class="btn btn-ghost btn-xs" onclick="openResetPwd('${esc(r.name)}','${esc(r.phone)}','${r.authId||''}')">重設密碼</button>`:''}
+          ${r.isSecondary
+            ?`<button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="removeSecondaryGuardian('${r.id}','${esc(r.name)}')">解除關聯</button>`
+            :(r.activated?`<button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deactivateGuardian('${esc(r.phone)}')">停用</button>`:'')}
         </div>
       </td>
     </tr>`;
   });
   renderPager('guardian-pager',guardianTotal,guardianPage,'goGuardianPage');
+}
+
+async function removeSecondaryGuardian(guardianId, guardianName){
+  if(!confirm(`確定解除「${guardianName}」的第二家長關聯？\n關聯記錄與帳號將一併刪除，此操作無法復原。`)) return;
+  const {error}=await SUPA.functions.invoke('admin-remove-guardian',{body:{guardian_id:guardianId}});
+  if(error){showToast('解除失敗：'+error.message,'warn');return;}
+  showToast('✓ 第二家長關聯已解除','success');
+  await loadStudents();
+  renderGuardians();
 }
 function openResetPwd(name,phone,authId){
   resetTargetAuthId=authId||null;
