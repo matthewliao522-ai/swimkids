@@ -85,7 +85,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 
 /* ── MAIN ── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.topbar{height:54px;background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;position:sticky;top:0;z-index:40}
+.topbar{height:54px;background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;position:sticky;top:0;z-index:40;position:relative}
 .topbar-title{font-size:14px;font-weight:700;color:var(--ink)}
 .topbar-right{display:flex;align-items:center;gap:10px}
 .topbar-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);background:var(--n100);padding:4px 10px;border-radius:6px;border:1px solid var(--line);vertical-align:-1px}
@@ -205,6 +205,18 @@ select.filter-sel:focus{border-color:var(--brand)}
 .stud-tab{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all .12s;margin-bottom:5px}
 .stud-tab:hover{background:var(--n50)}
 .stud-tab.act{border-color:var(--brand);background:var(--brand-lt)}
+
+/* ── FLOW STEPPER ── */
+.fstep-wrap{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:flex-start;pointer-events:none}
+.fstep{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:32px}
+.fstep-num{width:20px;height:20px;border-radius:50%;background:var(--n200);color:var(--ink4);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;transition:all .2s;flex-shrink:0}
+.fstep-lbl{font-size:9px;color:var(--ink4);white-space:nowrap;transition:color .2s;line-height:1}
+.fstep-conn{width:24px;height:1px;background:var(--line2);margin-top:10px;transition:background .2s;flex-shrink:0}
+.fstep.active .fstep-num{background:var(--brand);color:#fff}
+.fstep.active .fstep-lbl{color:var(--brand);font-weight:700}
+.fstep.done .fstep-num{background:var(--green);color:#fff}
+.fstep.done .fstep-lbl{color:var(--green)}
+.fstep-conn.done{background:var(--green);opacity:.5}
 
 /* last exam panel */
 .last-exam-panel{background:var(--n50);border:1px solid var(--line2);border-radius:8px;padding:6px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -358,6 +370,7 @@ select.filter-sel:focus{border-color:var(--brand)}
   .ex-left{width:220px}
 }
 @media(max-width:768px){
+  .fstep-wrap{display:none!important}
   body{overflow:auto}
   .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
@@ -687,6 +700,17 @@ select.filter-sel:focus{border-color:var(--brand)}
       </button>
       <div style="width:28px" class="d-mobile"></div>
       <div class="topbar-title" id="topbar-title">預建班管理</div>
+    </div>
+    <div class="fstep-wrap" id="flow-stepper" style="display:none">
+      <div class="fstep" id="fstep-prep"><div class="fstep-num">1</div><div class="fstep-lbl">預建班</div></div>
+      <div class="fstep-conn" id="fconn-1"></div>
+      <div class="fstep" id="fstep-day"><div class="fstep-num">2</div><div class="fstep-lbl">考試日</div></div>
+      <div class="fstep-conn" id="fconn-2"></div>
+      <div class="fstep" id="fstep-exam"><div class="fstep-num">3</div><div class="fstep-lbl">評量</div></div>
+      <div class="fstep-conn" id="fconn-3"></div>
+      <div class="fstep" id="fstep-preview"><div class="fstep-num">4</div><div class="fstep-lbl">確認</div></div>
+      <div class="fstep-conn" id="fconn-4"></div>
+      <div class="fstep" id="fstep-done"><div class="fstep-num">5</div><div class="fstep-lbl">完成</div></div>
     </div>
     <div class="topbar-right">
       <div class="topbar-date" id="date-badge"></div>
@@ -1456,6 +1480,25 @@ function showScreen(name) {
   if (navEl) navEl.classList.add('active');
   const titles = {prep:'預建班管理', day:'考試日主畫面', exam:'填寫評量表', preview:'送出確認', done:'送出完成', students:'學員資料管理'};
   document.getElementById('topbar-title').textContent = titles[name]||'';
+  // flow stepper
+  const flowScreens = ['prep','day','exam','preview','done'];
+  const stepperEl = document.getElementById('flow-stepper');
+  if (stepperEl) {
+    if (flowScreens.includes(name)) {
+      stepperEl.style.display = 'flex';
+      const idx = flowScreens.indexOf(name);
+      flowScreens.forEach((s, i) => {
+        const el = document.getElementById('fstep-'+s);
+        if (el) el.className = 'fstep' + (i===idx?' active':i<idx?' done':'');
+      });
+      for (let i=1;i<=4;i++) {
+        const conn = document.getElementById('fconn-'+i);
+        if (conn) conn.className = 'fstep-conn' + (i<=idx?' done':'');
+      }
+    } else {
+      stepperEl.style.display = 'none';
+    }
+  }
   const content = document.getElementById('content-area');
   if (content) content.classList.toggle('exam-mode', name==='exam');
   if (name==='day') renderDayScreen();
