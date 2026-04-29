@@ -798,10 +798,10 @@ select.filter-sel:focus{border-color:var(--brand)}
           <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
             <div class="card-hd">
               <div class="card-title" id="day-selected-title">選擇班級開始考試</div>
-              <div style="display:flex;gap:6px;align-items:center">
-                <button class="btn btn-ghost btn-sm" id="day-edit-btn" onclick="openEditClassFromDay()" style="display:none">編輯</button>
-                <button class="btn btn-ghost btn-sm" id="day-delete-btn" onclick="deleteDayClass()" style="display:none;color:var(--signal)">刪除</button>
-                <button class="btn btn-success btn-sm" id="day-start-btn" onclick="startExamFromDay()" style="display:none">開始考試 →</button>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button class="btn btn-ghost" id="day-edit-btn" onclick="openEditClassFromDay()" style="display:none;padding:8px 16px;font-size:13px">編輯</button>
+                <button class="btn btn-ghost" id="day-delete-btn" onclick="deleteDayClass()" style="display:none;padding:8px 16px;font-size:13px;color:var(--signal)">刪除</button>
+                <button class="btn btn-success" id="day-start-btn" onclick="startExamFromDay()" style="display:none;padding:8px 20px;font-size:13px">開始考試 →</button>
               </div>
             </div>
             <div class="card-bd" id="day-class-detail" style="overflow-y:auto;flex:1;min-height:0">
@@ -1622,22 +1622,22 @@ function showPrepDetail(id) {
   acts.innerHTML = '';
   if (cls.status !== 'done') {
     const b1 = document.createElement('button');
-    b1.className = 'btn btn-ghost btn-sm'; b1.textContent = '編輯';
+    b1.className = 'btn btn-ghost'; b1.style.cssText = 'padding:8px 16px;font-size:13px'; b1.textContent = '編輯';
     b1.onclick = () => openEditClass(id);
     acts.appendChild(b1);
 
     const bDel = document.createElement('button');
-    bDel.className = 'btn btn-ghost btn-sm';
-    bDel.style.color = 'var(--signal)';
+    bDel.className = 'btn btn-ghost';
+    bDel.style.cssText = 'padding:8px 16px;font-size:13px;color:var(--signal)';
     bDel.textContent = '刪除';
     bDel.onclick = () => deletePrepClass(id);
     acts.appendChild(bDel);
   }
   const b2 = document.createElement('button');
   if (cls.status === 'done') {
-    b2.className = 'btn btn-ghost btn-sm'; b2.textContent = '重新開考';
+    b2.className = 'btn btn-ghost'; b2.style.cssText = 'padding:8px 16px;font-size:13px'; b2.textContent = '重新開考';
   } else {
-    b2.className = 'btn btn-success btn-sm'; b2.textContent = '開始考試 →';
+    b2.className = 'btn btn-success'; b2.style.cssText = 'padding:8px 20px;font-size:13px'; b2.textContent = '開始考試 →';
   }
   b2.onclick = () => { startExam(id); };
   acts.appendChild(b2);
@@ -1771,9 +1771,10 @@ function renderDetailAddPicker(id) {
         <div style="font-size:10px;color:var(--ink3)">${esc(s.guardianPhone||'—')}</div>
       </div>
       <div class="hat-tag ${HT_MAP[s.level]}" style="font-size:9px">${sd.label}</div>
-      <button style="padding:3px 9px;border-radius:5px;border:1px solid var(--brand-100);background:var(--brand-lt);color:var(--brand-700);font-size:11px;font-family:'Noto Sans TC',sans-serif;cursor:pointer">加入</button>`;
-    row.querySelector('button').onclick = async (e) => {
-      e.stopPropagation();
+      <div style="padding:3px 9px;border-radius:5px;border:1px solid var(--brand-100);background:var(--brand-lt);color:var(--brand-700);font-size:11px;pointer-events:none">加入</div>`;
+    row.onmouseenter = () => row.style.background = 'var(--brand-lt)';
+    row.onmouseleave = () => row.style.background = '';
+    row.onclick = async () => {
       const {error} = await SUPA.from('prep_enrollments').insert({prep_class_id:id, student_id:s.id});
       if(error){showToast('加入失敗：'+error.message,'warn');return;}
       cls.members.push({...s, examLevel: s.level});
@@ -2214,9 +2215,10 @@ function renderDayAddPicker(id) {
         <div style="font-size:10px;color:var(--ink3)">${esc(s.guardianPhone||'—')}</div>
       </div>
       <div class="hat-tag ${HT_MAP[s.level]}" style="font-size:9px">${sd.label}</div>
-      <button style="padding:3px 9px;border-radius:5px;border:1px solid var(--brand-100);background:var(--brand-lt);color:var(--brand-700);font-size:11px;font-family:'Noto Sans TC',sans-serif;cursor:pointer">加入</button>`;
-    row.querySelector('button').onclick = async (e) => {
-      e.stopPropagation();
+      <div style="padding:3px 9px;border-radius:5px;border:1px solid var(--brand-100);background:var(--brand-lt);color:var(--brand-700);font-size:11px;pointer-events:none">加入</div>`;
+    row.onmouseenter = () => row.style.background = 'var(--brand-lt)';
+    row.onmouseleave = () => row.style.background = '';
+    row.onclick = async () => {
       const {error} = await SUPA.from('prep_enrollments').insert({prep_class_id:id, student_id:s.id});
       if(error){showToast('加入失敗：'+error.message,'warn');return;}
       cls.members.push({...s, examLevel: s.level});
