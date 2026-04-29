@@ -2768,8 +2768,7 @@ function nextStudent() {
 // ════════════════════════════════
 function downloadSampleExcel() {
   const today = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  const d1 = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  const d1 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const v1 = VENUES[0]?.code || 'N';
   const v2 = VENUES[1]?.code || v1;
   const tc1 = COACHES[0] || '教學教練A';
@@ -2786,7 +2785,12 @@ function downloadSampleExcel() {
     { '場館':v2, '客戶姓名':'吳小雨媽媽', '學員姓名':'吳小雨', '客戶電話':'0912345007', '客戶Email':'', '班級名稱':'初階A組', '考試日期':d1, '班別':'C', '時段':'B', '教學教練':tc1, '考試教練':ec1 },
   ];
 
-  const ws = XLSX.utils.json_to_sheet(sample);
+  const ws = XLSX.utils.json_to_sheet(sample, {cellDates: true});
+  // 設定考試日期欄（G）顯示格式為 YYYY-MM-DD
+  for (let r = 2; r <= sample.length + 1; r++) {
+    const cell = ws['G' + r];
+    if (cell) cell.z = 'yyyy-mm-dd';
+  }
   ws['!cols'] = [
     {wch:6},{wch:12},{wch:10},{wch:14},{wch:22},{wch:12},{wch:12},{wch:6},{wch:6},{wch:10},{wch:10}
   ];
