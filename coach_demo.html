@@ -798,7 +798,11 @@ select.filter-sel:focus{border-color:var(--brand)}
           <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
             <div class="card-hd">
               <div class="card-title" id="day-selected-title">選擇班級開始考試</div>
-              <button class="btn btn-success btn-sm" id="day-start-btn" onclick="startExamFromDay()" style="display:none">開始考試 →</button>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button class="btn btn-ghost btn-sm" id="day-edit-btn" onclick="openEditClassFromDay()" style="display:none">編輯</button>
+                <button class="btn btn-ghost btn-sm" id="day-delete-btn" onclick="deleteDayClass()" style="display:none;color:var(--signal)">刪除</button>
+                <button class="btn btn-success btn-sm" id="day-start-btn" onclick="startExamFromDay()" style="display:none">開始考試 →</button>
+              </div>
             </div>
             <div class="card-bd" id="day-class-detail" style="overflow-y:auto;flex:1;min-height:0">
               <div class="empty-state">← 從左側選擇要開考的班級</div>
@@ -1714,6 +1718,7 @@ async function removeMemberFromClass(classId, studentId) {
   cls.members = cls.members.filter(m=>String(m.id)!==String(studentId));
   renderDetailMembers(classId);
   renderDetailAddPicker(classId);
+  if (daySelectedClassId === classId) { renderDayMembers(classId); renderDayAddPicker(classId); }
 }
 
 async function deletePrepClass(id) {
@@ -2035,6 +2040,7 @@ async function saveEditClass(id) {
   await loadClasses();
   renderPrepList();
   showPrepDetail(id);
+  if (daySelectedClassId === id) renderDayDetail(id);
   showToast('班級已更新','ok');
 }
 
@@ -2117,8 +2123,10 @@ function renderDayDetail(id) {
   const dtTypeMap={U:'幼兒',C:'初階',J:'進階'};
   const dtTimeMap={A:'A',B:'B',C:'C',D:'D',Z:'Z',E:'E',F:'F',G:'G',H:'H',I:'I'};
   document.getElementById('day-selected-title').textContent = cls.code + ' · ' + (cls.note || (dtTypeMap[cls.classType]||cls.classType) + '班 · ' + (dtTimeMap[cls.timeSlot]||cls.timeSlot));
-  const btn = document.getElementById('day-start-btn');
-  btn.style.display = 'inline-flex';
+  const canEdit = cls.status !== 'done';
+  document.getElementById('day-start-btn').style.display = 'inline-flex';
+  document.getElementById('day-edit-btn').style.display = canEdit ? 'inline-flex' : 'none';
+  document.getElementById('day-delete-btn').style.display = canEdit ? 'inline-flex' : 'none';
   const body = document.getElementById('day-class-detail');
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px">
@@ -2139,20 +2147,115 @@ function renderDayDetail(id) {
         <div style="font-size:13px;font-weight:500;color:var(--ink);margin-top:3px">${cls.examCoach}</div>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--ink3);margin-bottom:8px">學員（${cls.members.length} 位）</div>
-    <div>${cls.members.map(m=>{
-      const sd = SKILL_DATA[m.examLevel];
-      const lf = getLastFailExam(m.examHistory);
-      const lastFailHtml = lf ? `<div style="font-size:10px;color:var(--ink3)">上次未過：${lf.date}</div>` : '';
-      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px">
-        <div class="s-av ${AV_MAP[m.examLevel]}">${m.name[0]}</div>
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:500;color:var(--ink)">${m.name}</div>
-          <div style="font-size:11px;color:var(--ink3)">${sd.label} · ${HAT_MAP[m.examLevel]}</div>
-        </div>
-        ${lastFailHtml}
-      </div>`;
-    }).join('')}</div>`;
+    <div style="font-size:11px;color:var(--ink3);margin-bottom:8px">學員（<span id="day-dm-cnt">${cls.members.length}</span> 位）</div>
+    <div id="day-dm"></div>
+    ${canEdit ? `
+    <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span style="font-size:11px;font-weight:700;color:var(--brand)">快速加入學員</span>
+      </div>
+      <input id="day-da-q" placeholder="搜尋姓名或手機..."
+        style="width:100%;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'Noto Sans TC',sans-serif;outline:none;margin-bottom:6px"
+        oninput="renderDayAddPicker('${id}')">
+      <div id="day-da-list" style="max-height:180px;overflow-y:auto"></div>
+    </div>` : ''}`;
+  renderDayMembers(id);
+  if (canEdit) renderDayAddPicker(id);
+}
+
+function renderDayMembers(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  if (!cls) return;
+  const canEdit = cls.status !== 'done';
+  const ml = document.getElementById('day-dm');
+  if (!ml) return;
+  ml.innerHTML = '';
+  const cntEl = document.getElementById('day-dm-cnt');
+  if (cntEl) cntEl.textContent = cls.members.length;
+  cls.members.forEach(m => {
+    const sd = SKILL_DATA[m.examLevel];
+    const lf = getLastFailExam(m.examHistory);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;margin-bottom:5px';
+    row.innerHTML = `<div class="s-av ${AV_MAP[m.examLevel]}">${esc(m.name[0])}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--ink)">${esc(m.name)}</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:1px">${esc(sd.label)} · ${esc(HAT_MAP[m.examLevel])}${lf?` · <span style="color:var(--signal)">上次未過 ${lf.date}</span>`:''}</div>
+      </div>
+      ${canEdit ? `<button onclick="removeMemberFromClass('${id}','${m.id}')" title="移除"
+        style="width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);background:var(--n50);color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;line-height:1">×</button>` : ''}`;
+    ml.appendChild(row);
+  });
+}
+
+function renderDayAddPicker(id) {
+  const cls = CLASSES.find(c=>c.id===id);
+  if (!cls) return;
+  const list = document.getElementById('day-da-list');
+  if (!list) return;
+  const q = (document.getElementById('day-da-q')?.value||'').toLowerCase().trim();
+  const existingIds = new Set(cls.members.map(m=>m.id));
+  let candidates = STUDENTS.filter(s => !existingIds.has(s.id));
+  if (q) candidates = candidates.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    (s.guardianPhone||'').replace(/-/g,'').includes(q.replace(/-/g,''))
+  );
+  list.innerHTML = '';
+  if (!q) { list.innerHTML = '<div style="font-size:11px;color:var(--ink3);padding:4px 0">輸入姓名或手機搜尋</div>'; return; }
+  if (!candidates.length) { list.innerHTML = '<div style="font-size:11px;color:var(--ink3);padding:4px 0">找不到學員</div>'; return; }
+  candidates.slice(0, 20).forEach(s => {
+    const sd = SKILL_DATA[s.level];
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;margin-bottom:4px;cursor:pointer;transition:background .12s';
+    row.innerHTML = `<div class="s-av ${AV_MAP[s.level]}" style="width:28px;height:28px;font-size:11px">${esc(s.name[0])}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;color:var(--ink)">${esc(s.name)}</div>
+        <div style="font-size:10px;color:var(--ink3)">${esc(s.guardianPhone||'—')}</div>
+      </div>
+      <div class="hat-tag ${HT_MAP[s.level]}" style="font-size:9px">${sd.label}</div>
+      <button style="padding:3px 9px;border-radius:5px;border:1px solid var(--brand-100);background:var(--brand-lt);color:var(--brand-700);font-size:11px;font-family:'Noto Sans TC',sans-serif;cursor:pointer">加入</button>`;
+    row.querySelector('button').onclick = async (e) => {
+      e.stopPropagation();
+      const {error} = await SUPA.from('prep_enrollments').insert({prep_class_id:id, student_id:s.id});
+      if(error){showToast('加入失敗：'+error.message,'warn');return;}
+      cls.members.push({...s, examLevel: s.level});
+      document.getElementById('day-da-q').value = '';
+      renderDayMembers(id);
+      renderDayAddPicker(id);
+    };
+    list.appendChild(row);
+  });
+}
+
+function openEditClassFromDay() {
+  if (!daySelectedClassId) return;
+  showScreen('prep');
+  prepSelectedId = daySelectedClassId;
+  renderPrepList();
+  showPrepDetail(daySelectedClassId);
+  openEditClass(daySelectedClassId);
+}
+
+async function deleteDayClass() {
+  if (!daySelectedClassId) return;
+  const cls = CLASSES.find(c=>c.id===daySelectedClassId);
+  if (!cls) return;
+  if (!confirm(`確定刪除「${cls.code}」？\n學員名單將一併清除，此動作無法復原。`)) return;
+  const {data:exams} = await SUPA.from('exams').select('id').eq('prep_class_id', daySelectedClassId).limit(1);
+  if (exams && exams.length > 0) { showToast('此班已有考試紀錄，無法刪除','warn'); return; }
+  await SUPA.from('prep_enrollments').delete().eq('prep_class_id', daySelectedClassId);
+  const {error} = await SUPA.from('prep_classes').delete().eq('id', daySelectedClassId);
+  if (error) { showToast('刪除失敗：'+error.message,'warn'); return; }
+  CLASSES = CLASSES.filter(c=>c.id!==daySelectedClassId);
+  showToast('已刪除 '+cls.code,'ok');
+  daySelectedClassId = null;
+  document.getElementById('day-selected-title').textContent = '選擇班級開始考試';
+  document.getElementById('day-start-btn').style.display = 'none';
+  document.getElementById('day-edit-btn').style.display = 'none';
+  document.getElementById('day-delete-btn').style.display = 'none';
+  document.getElementById('day-class-detail').innerHTML = '<div class="empty-state">← 從左側選擇要開考的班級</div>';
+  renderDayScreen();
 }
 
 function startExamFromDay() {
