@@ -1226,7 +1226,11 @@ async function loadStudents() {
   if(stuIds.length) {
     const {data:sg} = await SUPA.from('student_guardian')
       .select('student_id, guardians(id,name,phone,auth_id)').in('student_id',stuIds);
-    (sg||[]).forEach(r=>{if(r.guardians) guardianMap[r.student_id]=r.guardians;});
+    (sg||[]).forEach(r=>{
+      if(!r.guardians) return;
+      if(!guardianMap[r.student_id]) guardianMap[r.student_id]=[];
+      guardianMap[r.student_id].push(r.guardians);
+    });
   }
   const examMap = {};
   (exams||[]).forEach(e=>{
@@ -1235,15 +1239,17 @@ async function loadStudents() {
   });
   STUDENTS = (students||[]).map(s=>{
     const coach = COACHES_DATA.find(c=>String(c.id)===String(s.teach_coach_id));
-    const guardian = guardianMap[s.id];
+    const guardians = guardianMap[s.id] || [];
+    const primary = guardians[0] || null;
     return {
       id:s.id, name:s.name, level:s.level,
       teachCoachId:s.teach_coach_id, teachCoach:coach?.name||'',
       defaultVenueId:s.default_venue_id,
       specialNote:s.special_note||'',
-      guardianId:guardian?.id||null,
-      guardianName:guardian?.name||'', guardianPhone:guardian?.phone||'',
-      guardianActivated:!!(guardian?.auth_id),
+      guardians,
+      guardianId:primary?.id||null,
+      guardianName:primary?.name||'', guardianPhone:primary?.phone||'',
+      guardianActivated:guardians.some(g=>g.auth_id),
       examHistory:examMap[s.id]||[],
     };
   });
@@ -2719,14 +2725,13 @@ async function doSubmit() {
   r.failItems = failItems;
   const stu = STUDENTS.find(x=>String(x.id)===String(m.id));
   let lineStatus = '';
-  if(stu?.guardianId) {
+  if(stu?.guardians?.length) {
     const msg = `${stu.name} 的游泳測驗結果已出爐，請登入 Handle Power 小泳士系統查看。`;
     const sendAt = new Date(Date.now() + 60*60*1000).toISOString();
-    const {data:notifData, error:notifErr} = await SUPA.from('pending_notifications')
-      .insert({guardian_id:stu.guardianId, student_name:stu.name, message:msg, send_at:sendAt, venue_id:cls.venueId||null})
-      .select('id').single();
+    const notifRows = stu.guardians.map(g => ({guardian_id:g.id, student_name:stu.name, message:msg, send_at:sendAt, venue_id:cls.venueId||null}));
+    const {data:notifData, error:notifErr} = await SUPA.from('pending_notifications').insert(notifRows).select('id');
     if(notifErr) lineStatus = '｜LINE 通知失敗';
-    else if(notifData?.id) { examState[m.id].pendingNotifyId = notifData.id; lineStatus = '｜LINE 已排程'; }
+    else if(notifData?.length) { examState[m.id].pendingNotifyId = notifData[0].id; lineStatus = '｜LINE 已排程'; }
   }
   if(verdict==='pass') {
     const stu = STUDENTS.find(x=>String(x.id)===String(m.id));

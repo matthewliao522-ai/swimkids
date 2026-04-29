@@ -387,6 +387,39 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
       </div>
     </div>
 
+    <!-- ── SCREEN B1b：第二位監護人 ── -->
+    <div class="auth-screen" id="sc-secondary">
+      <div class="info-banner">請輸入孩子的登記手機（主要家長的手機號碼），系統將確認您與該學員的關係。</div>
+      <div class="form-group">
+        <label class="form-label">孩子的登記手機</label>
+        <input class="form-input" type="tel" id="sec-primary-phone" placeholder="09XX-XXX-XXX" oninput="formatPhone(this,event)">
+        <div class="form-error" id="sec-primary-err"></div>
+      </div>
+      <div id="sec-students-found" style="display:none;margin-bottom:14px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px">找到以下學員：</div>
+        <div id="sec-student-list" style="font-size:14px;font-weight:600;color:var(--text1)"></div>
+      </div>
+      <div id="sec-self-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">您的姓名</label>
+          <input class="form-input" type="text" id="sec-name" placeholder="請輸入您的姓名">
+          <div class="form-error" id="sec-name-err">請輸入姓名</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">您的手機號碼</label>
+          <input class="form-input" type="tel" id="sec-phone" placeholder="09XX-XXX-XXX" oninput="formatPhone(this,event)">
+          <div class="form-error" id="sec-phone-err"></div>
+        </div>
+        <button class="auth-btn" onclick="doSecondaryCreate()">建立帳號並繼續</button>
+      </div>
+      <div id="sec-lookup-btn-wrap">
+        <button class="auth-btn" onclick="doSecondaryLookup()">查詢學員</button>
+      </div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="auth-link" onclick="goBack('sc-activate')">← 返回</button>
+      </div>
+    </div>
+
     <!-- ── SCREEN B2：填 Email ── -->
     <div class="auth-screen" id="sc-email">
       <div class="steps-row" id="steps-email"></div>
@@ -623,10 +656,8 @@ const SKILL_DATA={
 
 function venueName(id){ if(!id) return '—'; const e=Object.entries(VENUES_UUID_MAP).find(([,v])=>v===id); return e?e[0]:'—'; }
 
-const SUPA = supabase.createClient(
-  'https://mqkasrtaxkcchrqyornh.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xa2FzcnRheGtjY2hycXlvcm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA5MTksImV4cCI6MjA5MjYwNjkxOX0.TanYWbC8sQD99H_ylOaCO-WVCdbibB8OIo7xMaWFy-M'
-);
+const SUPA_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xa2FzcnRheGtjY2hycXlvcm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA5MTksImV4cCI6MjA5MjYwNjkxOX0.TanYWbC8sQD99H_ylOaCO-WVCdbibB8OIo7xMaWFy-M';
+const SUPA = supabase.createClient('https://mqkasrtaxkcchrqyornh.supabase.co', SUPA_ANON_KEY);
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 let ANNS_DATA = [];
 let VENUES_UUID_MAP = {};
@@ -855,7 +886,7 @@ async function doActivatePhone() {
   const {data: rows} = await SUPA.rpc('get_guardian_by_phone', { p_phone: dbPhone(phone) });
   const g = rows?.[0] || null;
   if (!g) {
-    err.textContent = '此號碼尚未在系統中，請確認或聯繫教練';
+    err.innerHTML = '此號碼尚未在系統中，請確認或聯繫教練。<br><a href="#" style="color:var(--brand);text-decoration:underline;font-size:12px" onclick="event.preventDefault();goSecondary(\''+rawPhone(document.getElementById('act-phone').value)+'\')">我是孩子的其他監護人 →</a>';
     err.classList.add('show'); return;
   }
   const hasRealEmail = g.email && !g.email.endsWith('@swimkids.app');
@@ -871,6 +902,82 @@ async function doActivatePhone() {
   renderSteps('steps-email', 2);
   document.getElementById('auth-sub').textContent = '首次啟用帳號';
   document.getElementById('email-back-btn').onclick = () => goBack('sc-activate');
+  showScreen('sc-email');
+  setTimeout(() => emailInput.focus(), 100);
+}
+
+function goSecondary(prefillPhone) {
+  document.getElementById('sec-primary-phone').value = '';
+  document.getElementById('sec-primary-err').classList.remove('show');
+  document.getElementById('sec-students-found').style.display = 'none';
+  document.getElementById('sec-self-form').style.display = 'none';
+  document.getElementById('sec-lookup-btn-wrap').style.display = 'block';
+  if (prefillPhone) {
+    document.getElementById('sec-phone').value = prefillPhone.length===10 ? dbPhone(prefillPhone) : prefillPhone;
+  }
+  showScreen('sc-secondary');
+}
+
+async function doSecondaryLookup() {
+  const phone = rawPhone(document.getElementById('sec-primary-phone').value);
+  const err = document.getElementById('sec-primary-err');
+  if (phone.length !== 10 || !phone.startsWith('09')) {
+    err.textContent = '請輸入正確的手機號碼格式';
+    err.classList.add('show'); return;
+  }
+  err.classList.remove('show');
+  const btn = document.querySelector('#sec-lookup-btn-wrap .auth-btn');
+  btn.disabled = true; btn.textContent = '查詢中…';
+  const {data: rows} = await SUPA.rpc('get_guardian_by_phone', { p_phone: dbPhone(phone) });
+  btn.disabled = false; btn.textContent = '查詢學員';
+  const g = rows?.[0] || null;
+  if (!g) {
+    err.textContent = '找不到此登記手機的家長資料，請確認號碼是否正確';
+    err.classList.add('show'); return;
+  }
+  document.getElementById('sec-self-form').style.display = 'block';
+  document.getElementById('sec-lookup-btn-wrap').style.display = 'none';
+}
+
+async function doSecondaryCreate() {
+  const primaryPhone = rawPhone(document.getElementById('sec-primary-phone').value);
+  const name = document.getElementById('sec-name').value.trim();
+  const myPhone = rawPhone(document.getElementById('sec-phone').value);
+  const nameErr = document.getElementById('sec-name-err');
+  const phoneErr = document.getElementById('sec-phone-err');
+  nameErr.classList.remove('show');
+  phoneErr.classList.remove('show');
+  let valid = true;
+  if (!name) { nameErr.classList.add('show'); valid = false; }
+  if (myPhone.length !== 10 || !myPhone.startsWith('09')) {
+    phoneErr.textContent = '請輸入正確的手機號碼格式';
+    phoneErr.classList.add('show'); valid = false;
+  }
+  if (!valid) return;
+  const btn = document.querySelector('#sec-self-form .auth-btn');
+  btn.disabled = true; btn.textContent = '建立中…';
+  const res = await fetch('https://mqkasrtaxkcchrqyornh.supabase.co/functions/v1/create-secondary-guardian', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON_KEY },
+    body: JSON.stringify({ primary_phone: primaryPhone, secondary_phone: myPhone, secondary_name: name }),
+  });
+  const data = await res.json();
+  btn.disabled = false; btn.textContent = '建立帳號並繼續';
+  if (!res.ok || data.error) {
+    phoneErr.textContent = data.error || '建立失敗，請稍後再試';
+    phoneErr.classList.add('show'); return;
+  }
+  if (data.students?.length) {
+    document.getElementById('sec-student-list').textContent = data.students.map((s: any) => s.name).join('、');
+    document.getElementById('sec-students-found').style.display = 'block';
+  }
+  pendingPhone = myPhone;
+  pendingMode = 'activate';
+  const emailInput = document.getElementById('act-email');
+  emailInput.value = '';
+  renderSteps('steps-email', 2);
+  document.getElementById('auth-sub').textContent = '首次啟用帳號';
+  document.getElementById('email-back-btn').onclick = () => goBack('sc-secondary');
   showScreen('sc-email');
   setTimeout(() => emailInput.focus(), 100);
 }
