@@ -233,7 +233,7 @@ select.filter-sel:focus{border-color:var(--brand)}
 
 /* exam form */
 .form-card{background:var(--white);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0}
-.lv-header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-shrink:0}
+.lv-header{padding:8px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-shrink:0}
 .lv-name{font-size:15px;font-weight:700;color:var(--ink)}
 .lv-desc{font-size:11px;color:var(--ink2);margin-top:3px;line-height:1.5}
 .lv-changer{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -241,7 +241,7 @@ select.filter-sel:focus{border-color:var(--brand)}
 .lv-changer select{background:var(--n50);border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:4px 8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer}
 .lv-changer select:focus{outline:none;border-color:var(--brand)}
 
-.col-hdrs{display:grid;grid-template-columns:1fr 1fr;margin:10px 16px 6px;border-radius:6px;overflow:hidden;flex-shrink:0}
+.col-hdrs{display:grid;grid-template-columns:1fr 1fr;margin:6px 16px 4px;border-radius:6px;overflow:hidden;flex-shrink:0}
 .col-h{padding:4px 10px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.04em;font-family:'JetBrains Mono',monospace}
 .col-h-p{background:var(--green-bg);color:var(--green)}
 .col-h-f{background:var(--signal-lt);color:var(--signal)}
@@ -263,7 +263,7 @@ select.filter-sel:focus{border-color:var(--brand)}
 .crit.chk-f .crit-txt{color:var(--signal)}
 .was-fail-badge{font-size:9px;color:var(--gold-dk);background:var(--gold-100);border-radius:3px;padding:0 4px;margin-top:2px;display:inline-block;white-space:nowrap;font-weight:600}
 
-.verdict-section{padding:10px 16px;border-top:1px solid var(--line);flex-shrink:0}
+.verdict-section{padding:7px 16px;border-top:1px solid var(--line);flex-shrink:0}
 .verdict-row{display:flex;gap:8px;margin-bottom:8px}
 .vbtn{flex:1;padding:0 9px;min-height:64px;border-radius:8px;border:1px solid var(--line2);background:var(--n50);cursor:pointer;font-size:18px;font-weight:700;color:var(--ink3);font-family:'Noto Sans TC',sans-serif;transition:all .15s;text-align:center;display:flex;align-items:center;justify-content:center}
 .vbtn:hover{background:var(--n100);color:var(--ink)}
@@ -955,7 +955,7 @@ select.filter-sel:focus{border-color:var(--brand)}
               </div>
               <!-- Step 2 -->
               <div id="exam-note-step" style="display:none;flex-direction:column;flex:1;min-height:0">
-                <div id="note-step-preview" style="border-bottom:1px solid var(--line);padding:16px 16px 14px;max-height:45%;overflow-y:auto;flex-shrink:0"></div>
+                <div id="note-step-preview" style="border-bottom:1px solid var(--line);padding:12px 16px 10px;max-height:25%;overflow-y:auto;flex-shrink:0"></div>
                 <div class="note-step-wrap">
                   <textarea class="note-ta" id="ex-note" placeholder="考試評語（選填）&#10;可記錄今天的表現、需要加強的地方，或給家長的建議。&#10;例：換氣動作進步很多，繼續加油！" oninput="saveNote();saveDraft()" style="height:72px;min-height:60px"></textarea>
                 </div>
