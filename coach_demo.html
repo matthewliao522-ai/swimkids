@@ -3469,6 +3469,9 @@ function parseImportRows(rows) {
     if (!phone)        { errors.push(`第 ${rowNum} 行（${name}）：缺少學員手機`); return; }
     if (!guardianName) { errors.push(`第 ${rowNum} 行（${stuName||name}）：缺少家長姓名`); return; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { errors.push(`第 ${rowNum} 行：日期格式錯誤，請用 YYYY-MM-DD`); return; }
+    const [_y,_m,_d] = date.split('-').map(Number);
+    const _dt = new Date(_y, _m-1, _d);
+    if (_dt.getFullYear()!==_y || _dt.getMonth()!==_m-1 || _dt.getDate()!==_d) { errors.push(`第 ${rowNum} 行：日期 ${date} 不存在`); return; }
     if (date < today) { errors.push(`第 ${rowNum} 行（${name}）：考試日期 ${date} 為過去日期，無法匯入`); return; }
     if (phone.length !== 10 || !phone.startsWith('09')) { errors.push(`第 ${rowNum} 行（${name}）：手機格式錯誤（${phone}）`); return; }
     const key = venue + '|' + date + '|' + classType + '|' + timeSlot + '|' + teach;
