@@ -1,10 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
+
+async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
+  if (!secret) return true; // 尚未設定 secret 時跳過驗證（開發階段）
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+  const expected = base64Encode(new Uint8Array(sig));
+  return signature === expected;
+}
 
 async function pushMessage(token: string, userId: string, text: string) {
   await fetch("https://api.line.me/v2/bot/message/push", {
@@ -34,24 +50,23 @@ serve(async (req) => {
   const { data: venue } = destination
     ? await supabase
         .from("venues")
-        .select("id, line_channel_access_token")
+        .select("id, line_channel_access_token, line_channel_secret")
         .eq("line_channel_id", destination)
         .maybeSingle()
     : { data: null };
+
+  // 驗證 LINE Signature（使用該場館的 secret）
+  const signature = req.headers.get("x-line-signature") || "";
+  const secret = venue?.line_channel_secret || "";
+  if (!(await verifySignature(bodyText, signature, secret))) {
+    return new Response("Invalid signature", { status: 403 });
+  }
 
   const token = venue?.line_channel_access_token || Deno.env.get("LINE_CHANNEL_ACCESS_TOKEN")!;
 
   for (const event of body.events || []) {
     // 家長加好友 → 回覆歡迎語 + 綁定說明
     if (event.type === "follow") {
-      const lineUserId = event.source?.userId;
-      if (lineUserId) {
-        await pushMessage(
-          token,
-          lineUserId,
-          "您好！歡迎使用小泳士通知服務 🏊\n\n請傳送「小泳士」加上您的手機號碼完成綁定，例如：\n小泳士0930988583\n\n綁定後，孩子的考試結果與泳帽領取通知將即時送達。"
-        );
-      }
       continue;
     }
 

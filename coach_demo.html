@@ -2451,7 +2451,7 @@ function renderExamForm() {
     verdictEl.textContent = vtxt;
     verdictEl.style.color = vColor;
     document.getElementById('locked-fails').innerHTML = (r.failItems||[]).length
-      ? `<div style="margin-top:14px;text-align:left"><div style="font-size:10px;font-weight:700;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">未達標項目</div>${(r.failItems).map(f=>`<div style="font-size:12px;color:var(--signal);padding:5px 0;border-bottom:1px solid var(--line)">${f}</div>`).join('')}</div>` : '';
+      ? `<div style="margin-top:14px;text-align:left"><div style="font-size:10px;font-weight:700;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">未達標項目</div>${(r.failItems).map(f=>`<div style="font-size:12px;color:var(--signal);padding:5px 0;border-bottom:1px solid var(--line)">${esc(f)}</div>`).join('')}</div>` : '';
     document.getElementById('locked-note').innerHTML = r.note
       ? `<div style="margin-top:12px;padding:10px 12px;background:var(--n50);border-radius:8px;font-size:12px;color:var(--ink2);text-align:left"><span style="font-weight:600">評語：</span>${esc(r.note)}</div>` : '';
     return;
@@ -2634,9 +2634,9 @@ function buildPreviewHtml(cls, m, r, backFn) {
   }).filter(Boolean).join('');
   return `
     <div class="ph-hero">
-      <div class="ph-av ${AV_MAP[examLv]}">${m.name[0]}</div>
+      <div class="ph-av ${AV_MAP[examLv]}">${esc(m.name[0])}</div>
       <div>
-        <div class="ph-name">${m.name}</div>
+        <div class="ph-name">${esc(m.name)}</div>
         <div class="ph-sub">${sd.label}・${HAT_MAP[examLv]}${pCount||fCount?' · 達標 '+pCount+' / 未達標 '+fCount+' 項':''}</div>
         <div class="ph-sub" style="color:var(--brand);margin-top:2px">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -3126,13 +3126,13 @@ function renderStudentList() {
     row.className = 'student-check-row' + (isSelected ? ' sel' : '');
     row.style.cssText = 'cursor:pointer;margin-bottom:4px';
     row.innerHTML = `
-      <div class="s-av ${AV_MAP[s.level]}">${s.name[0]}</div>
+      <div class="s-av ${AV_MAP[s.level]}">${esc(s.name[0])}</div>
       <div class="s-info" style="flex:1;min-width:0">
-        <div class="s-name">${s.name}</div>
+        <div class="s-name">${esc(s.name)}</div>
         <div class="s-sub" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span>${s.guardianName || '—'}</span>
+          <span>${esc(s.guardianName || '—')}</span>
           <span>·</span>
-          <span style="font-family:'JetBrains Mono',monospace">${s.guardianPhone || '—'}</span>
+          <span style="font-family:'JetBrains Mono',monospace">${esc(s.guardianPhone || '—')}</span>
         </div>
         <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <span class="hat-tag ${HT_MAP[s.level]}">${sd.label}</span>

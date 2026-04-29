@@ -3129,12 +3129,12 @@ function renderRptParent(){
     const loginTxt=r.lastLogin?r.lastLogin+'（'+daysSince(r.lastLogin)+'天前）':'從未登入';
     const loginColor=!r.lastLogin||daysSince(r.lastLogin)>30?'var(--red)':'var(--ink3)';
     tbody.innerHTML+=`<tr>
-      <td style="font-weight:500">${r.name}</td>
-      <td class="mono">${r.phone}</td>
-      <td style="font-size:11px;color:var(--ink2)">${r.children}</td>
+      <td style="font-weight:500">${esc(r.name)}</td>
+      <td class="mono">${esc(r.phone)}</td>
+      <td style="font-size:11px;color:var(--ink2)">${esc(r.children)}</td>
       <td><span class="chip ${chipCls}">${chipTxt}</span></td>
       <td class="mono" style="font-size:11px;color:${loginColor}">${loginTxt}</td>
-      <td><button class="btn btn-ghost btn-xs" onclick="openResetPwd('${r.name}','${r.phone}','${r.authId||''}')">重設密碼</button></td>
+      <td><button class="btn btn-ghost btn-xs" data-name="${esc(r.name)}" data-phone="${esc(r.phone)}" data-auth="${esc(r.authId||'')}" onclick="openResetPwd(this.dataset.name,this.dataset.phone,this.dataset.auth)">重設密碼</button></td>
     </tr>`;
   });
   renderPager('rpt-parent-pager',filtered.length,parentPage,'goParentPage');
