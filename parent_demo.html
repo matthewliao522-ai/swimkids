@@ -974,7 +974,7 @@ async function doSecondaryCreate() {
     phoneErr.classList.add('show'); return;
   }
   if (data.students?.length) {
-    document.getElementById('sec-student-list').textContent = data.students.map((s: any) => s.name).join('、');
+    document.getElementById('sec-student-list').textContent = data.students.map(s => s.name).join('、');
     document.getElementById('sec-students-found').style.display = 'block';
   }
   pendingPhone = myPhone;
