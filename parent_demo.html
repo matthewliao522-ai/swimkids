@@ -544,7 +544,13 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
         <div class="header-logo-icon" style="background:none;width:30px;height:30px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="30" height="30"><polygon points="60,4 116,34 116,86 60,116 4,86 4,34" fill="#2680FF"/><polygon points="60,4 116,34 88,49 60,19" fill="#FFA626"/><polygon points="60,116 4,86 32,71 60,101" fill="#C30017"/><polygon points="18,42 34,34 34,78 18,70" fill="white" opacity="0.95"/><polygon points="86,34 102,42 102,70 86,78" fill="white" opacity="0.95"/><polygon points="34,53 86,53 86,61 34,61" fill="white" opacity="0.95"/></svg></div>
         <div><div style="display:flex;flex-direction:column"><div class="header-title" style="font-size:14px;font-weight:900">Handle Power</div><div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:-1px">小泳士學習護照</div></div></div>
       </div>
-      <button class="logout-btn" onclick="doLogout()">登出</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div id="prev-login-txt" style="font-size:10px;color:rgba(255,255,255,.5);display:none;text-align:right"></div>
+        <div style="display:flex;gap:6px">
+          <button class="logout-btn" onclick="doLogoutAll()" style="background:rgba(220,60,60,.25);border-color:rgba(220,60,60,.5)">登出所有裝置</button>
+          <button class="logout-btn" onclick="doLogout()">登出</button>
+        </div>
+      </div>
     </div>
     <div class="child-switcher" id="child-switcher"></div>
     <div class="hero-band">
@@ -1148,6 +1154,16 @@ async function doLogin() {
   }
   err.classList.remove('show');
   document.getElementById('login-pwd').classList.remove('input-err');
+
+  // 記錄上次登入時間
+  const prevAt = data.user.user_metadata?.prev_login_at || null;
+  SUPA.auth.updateUser({ data: { prev_login_at: data.user.last_sign_in_at } });
+  const prevEl = document.getElementById('prev-login-txt');
+  if (prevEl && prevAt) {
+    prevEl.textContent = '上次登入 ' + fmtLoginTime(prevAt);
+    prevEl.style.display = 'block';
+  }
+
   await loadParentData(data.user.id);
   currentChildIdx = 0;
   document.getElementById('auth-shell').style.display = 'none';
@@ -1166,6 +1182,28 @@ async function doLogout() {
   showScreen('sc-choice');
   document.getElementById('login-pwd').value = '';
   document.getElementById('login-err').classList.remove('show');
+  document.getElementById('prev-login-txt').style.display = 'none';
+}
+
+async function doLogoutAll() {
+  if (!confirm('確定要登出所有已登入的裝置？')) return;
+  stopIdleTimer();
+  await SUPA.auth.signOut({ scope: 'global' });
+  currentAccount = null;
+  document.getElementById('app-page').style.display = 'none';
+  document.getElementById('auth-shell').style.display = 'flex';
+  document.getElementById('auth-sub').textContent = '家長登入';
+  showScreen('sc-choice');
+  document.getElementById('login-pwd').value = '';
+  document.getElementById('login-err').classList.remove('show');
+  document.getElementById('prev-login-txt').style.display = 'none';
+}
+
+function fmtLoginTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 // ════════════════════

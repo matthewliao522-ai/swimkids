@@ -1127,6 +1127,7 @@ select.filter-sel:focus{border-color:var(--brand)}
         <div>
           <div class="cp-coach-name" id="cp-name">—</div>
           <div class="cp-coach-meta" id="cp-meta">—</div>
+          <div id="cp-prev-login" style="font-size:11px;color:var(--ink3);margin-top:3px"></div>
         </div>
       </div>
       <button class="cp-close" onclick="closeCoachProfile()">✕</button>
@@ -1144,12 +1145,15 @@ select.filter-sel:focus{border-color:var(--brand)}
         <button class="cp-show-more" id="cp-show-more" onclick="toggleCpOlderClasses()" style="display:none"></button>
       </div>
     </div>
-    <div class="cp-footer">
-      <button class="cp-btn cp-btn-ghost" onclick="closeCoachProfile();openChangePwdModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        修改密碼
-      </button>
-      <button class="cp-btn cp-btn-danger" onclick="closeCoachProfile();doLogout()">登出</button>
+    <div class="cp-footer" style="flex-direction:column;gap:8px">
+      <button class="cp-btn cp-btn-danger" style="width:100%;background:rgba(220,50,50,.08);font-size:13px" onclick="closeCoachProfile();doLogoutAll()">登出所有裝置</button>
+      <div style="display:flex;gap:8px;width:100%">
+        <button class="cp-btn cp-btn-ghost" style="flex:1" onclick="closeCoachProfile();openChangePwdModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          修改密碼
+        </button>
+        <button class="cp-btn cp-btn-danger" style="flex:1" onclick="closeCoachProfile();doLogout()">登出</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2835,10 +2839,13 @@ async function doLogin() {
   btn.disabled = false;
   if (error) { errEl.textContent = '帳號或密碼錯誤，請再確認'; return; }
 
-  await initAfterAuth(data.user.id);
+  const prevLoginAt = data.user.user_metadata?.prev_login_at || null;
+  SUPA.auth.updateUser({ data: { prev_login_at: data.user.last_sign_in_at } });
+
+  await initAfterAuth(data.user.id, prevLoginAt);
 }
 
-async function initAfterAuth(userId) {
+async function initAfterAuth(userId, prevLoginAt = null) {
   const { data: staffRole } = await SUPA.from('staff_roles')
     .select('role, coach_id').eq('auth_id', userId).maybeSingle();
   if (!staffRole) {
@@ -2846,7 +2853,7 @@ async function initAfterAuth(userId) {
     document.getElementById('login-err').textContent = '此帳號沒有存取權限';
     return;
   }
-  currentStaff = { auth_id: userId, ...staffRole };
+  currentStaff = { auth_id: userId, ...staffRole, prevLoginAt };
 
   if (staffRole.coach_id) {
     const { data: coach } = await SUPA.from('coaches').select('name, role, phone').eq('id', staffRole.coach_id).maybeSingle();
@@ -2884,6 +2891,20 @@ async function doLogout() {
   await SUPA.auth.signOut();
   currentStaff = null;
   document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function doLogoutAll() {
+  if (!confirm('確定要登出所有已登入的裝置？')) return;
+  await SUPA.auth.signOut({ scope: 'global' });
+  currentStaff = null;
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function fmtLoginTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 // ── 忘記密碼 ──
@@ -3882,7 +3903,11 @@ function setupTeachCoachMode() {
   content.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0;gap:0';
   content.innerHTML = `
     <div style="flex:1;overflow-y:auto" id="tc-body"></div>
-    <div style="flex-shrink:0;border-top:1px solid var(--line);padding:12px 16px 28px;background:var(--white)">
+    <div style="flex-shrink:0;border-top:1px solid var(--line);padding:12px 16px 28px;background:var(--white);display:flex;flex-direction:column;gap:8px">
+      <button class="tc-logout-btn" style="background:var(--red-bg);opacity:.7;font-size:14px" onclick="doLogoutAll()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        登出所有裝置
+      </button>
       <button class="tc-logout-btn" onclick="doLogout()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         登出
@@ -3992,7 +4017,7 @@ function renderTeachCoachPage() {
   document.getElementById('tc-body').innerHTML = `
     <div class="tc-header">
       <div class="tc-coach-av">${name.charAt(0)}</div>
-      <div><div class="tc-coach-name">${name}</div><div class="tc-coach-meta">教學教練${phone?' · '+phone:''}</div></div>
+      <div><div class="tc-coach-name">${name}</div><div class="tc-coach-meta">教學教練${phone?' · '+phone:''}</div>${currentStaff?.prevLoginAt ? `<div style="font-size:11px;color:var(--ink3);margin-top:3px">上次登入：${fmtLoginTime(currentStaff.prevLoginAt)}</div>` : ''}</div>
     </div>
     <div class="tc-section">
       <div class="tc-sec-title">學員狀況</div>
@@ -4051,9 +4076,11 @@ function renderCoachProfile() {
   const role  = currentStaff?.coachRoleLabel || '—';
   const phone = currentStaff?.coachPhone || '';
 
+  const prevAt = currentStaff?.prevLoginAt;
   document.getElementById('cp-av').textContent   = name.charAt(0);
   document.getElementById('cp-name').textContent  = name;
   document.getElementById('cp-meta').textContent  = role + (phone ? ' · ' + phone : '');
+  document.getElementById('cp-prev-login').textContent = prevAt ? '上次登入：' + fmtLoginTime(prevAt) : '';
 
   // ── Stat Cards ──
   const myStudents = STUDENTS.filter(s => String(s.teachCoachId) === String(currentStaff?.coach_id));

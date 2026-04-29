@@ -68,6 +68,20 @@ serve(async (req) => {
       });
     }
 
+    // 檢查此家庭已連結的其他帳號數量（防止濫用）
+    const studentIds = sgLinks.map(l => l.student_id);
+    const { count: secondaryCount } = await supabase
+      .from("student_guardian")
+      .select("guardian_id", { count: "exact", head: true })
+      .in("student_id", studentIds)
+      .neq("guardian_id", primaryGuardian.id);
+
+    if ((secondaryCount ?? 0) >= 5) {
+      return new Response(JSON.stringify({ error: "此家庭已達帳號連結上限（5 個），請聯繫教練處理" }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // 建立新的 guardian 記錄
     const fakeEmail = `${secondary_phone.replace(/\D/g,"")}@swimkids.app`;
     const { data: newGuardian, error: insertErr } = await supabase
