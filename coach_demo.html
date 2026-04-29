@@ -671,13 +671,13 @@ select.filter-sel:focus{border-color:var(--brand)}
   </div>
   <nav>
     <div class="sb-section">考試管理</div>
-    <div class="sb-item active" id="nav-prep" onclick="showScreen('prep')" title="預建班管理">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      <span class="sb-label">預建班管理</span>
-    </div>
-    <div class="sb-item" id="nav-day" onclick="showScreen('day')" title="考試日主畫面">
+    <div class="sb-item active" id="nav-day" onclick="showScreen('day')" title="考試日主畫面">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span class="sb-label">考試日主畫面</span>
+    </div>
+    <div class="sb-item" id="nav-prep" onclick="showScreen('prep')" title="預建班管理">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="sb-label">預建班管理</span>
     </div>
     <div class="sb-section">學員管理</div>
     <div class="sb-item" id="nav-students" onclick="showScreen('students')" title="學員資料管理">
@@ -711,7 +711,7 @@ select.filter-sel:focus{border-color:var(--brand)}
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <div style="width:28px" class="d-mobile"></div>
-      <div class="topbar-title" id="topbar-title">預建班管理</div>
+      <div class="topbar-title" id="topbar-title">考試日主畫面</div>
     </div>
     <div class="fstep-wrap" id="flow-stepper" style="display:none">
       <div class="fstep" id="fstep-prep"><div class="fstep-num">1</div><div class="fstep-lbl">預建班</div></div>
@@ -732,7 +732,7 @@ select.filter-sel:focus{border-color:var(--brand)}
   <div class="content" id="content-area">
 
     <!-- ══ SCREEN: 預建班管理 ══ -->
-    <div class="screen active" id="screen-prep">
+    <div class="screen" id="screen-prep">
       <div class="prep-layout">
         <div class="prep-left">
           <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
@@ -775,7 +775,7 @@ select.filter-sel:focus{border-color:var(--brand)}
     </div>
 
     <!-- ══ SCREEN: 考試日主畫面 ══ -->
-    <div class="screen" id="screen-day">
+    <div class="screen active" id="screen-day">
       <div class="exam-day-layout">
         <div class="ed-left">
           <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
