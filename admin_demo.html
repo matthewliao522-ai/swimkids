@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'">
 <title>小泳士 · 後台管理系統</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -80,7 +81,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .stat-card:hover{box-shadow:var(--shadow-md)}
 .stat-num{font-size:28px;font-weight:900;color:var(--ink);font-family:'DM Mono',monospace;line-height:1}
 .stat-lbl{font-size:11px;color:var(--ink3);margin-top:5px}
-.stat-sub{font-size:11px;margin-top:4px}
+.stat-sub{font-size:11px;margin-top:4px;color:var(--ink4)}
 .stat-up{color:var(--green)}.stat-down{color:var(--red)}
 
 /* ── SCREENS ── */
@@ -459,23 +460,23 @@ tr:hover td{background:#fafaf8}
     <div class="screen active" id="screen-dashboard">
       <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
         <div class="stat-card" style="cursor:pointer" onclick="goToStagnant()">
-          <div class="stat-num" style="color:var(--red)" id="dash-stagnant-count">—</div>
-          <div class="stat-lbl">半年內停留同一級</div>
-          <div class="stat-sub" style="color:var(--ink3)">有考試但未升級</div>
+          <div class="stat-num" style="color:var(--amber)" id="dash-stagnant-count">—</div>
+          <div class="stat-lbl">停留同一級</div>
+          <div class="stat-sub">半年內有考試但未升級</div>
         </div>
         <div class="stat-card" style="cursor:pointer" onclick="goToRisk('stuck')">
           <div class="stat-num" style="color:var(--red)" id="dash-stuck-count">—</div>
           <div class="stat-lbl">卡關學員</div>
-          <div class="stat-sub" style="color:var(--ink3)">🔴 同級失敗 3 次以上</div>
+          <div class="stat-sub">同級連續失敗 3 次以上</div>
         </div>
         <div class="stat-card" style="cursor:pointer" onclick="goToRisk('warn')">
           <div class="stat-num" style="color:var(--amber)" id="dash-warn-count">—</div>
           <div class="stat-lbl">警示學員</div>
-          <div class="stat-sub" style="color:var(--ink3)">⚠ 同級失敗 2 次</div>
+          <div class="stat-sub">同級連續失敗 2 次</div>
         </div>
       </div>
 
-      <div class="dash-cards" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <div class="dash-cards" style="display:grid;grid-template-columns:1fr 1.3fr;gap:14px">
         <!-- 最近考試 / 近期預建班學員 -->
         <div class="card">
           <div class="card-hd">
@@ -489,29 +490,33 @@ tr:hover td{background:#fafaf8}
             </table>
           </div>
         </div>
-        <!-- 停留同一級學員 / 預建班停留同一級 -->
+        <!-- 需關注學員（停留 / 警示 / 卡關 tab） -->
         <div class="card">
-          <div class="card-hd">
-            <div class="card-title" id="dash-title2">半年內停留同一級</div>
-            <button class="btn btn-ghost btn-sm" id="dash-btn2" onclick="goToStagnant()">查看全部</button>
+          <div class="card-hd" style="padding-bottom:0;border-bottom:none">
+            <div class="card-title" id="dash-title2">需關注學員</div>
+            <button class="btn btn-ghost btn-sm" id="dash-attn-more-btn" onclick="goToStagnant()">查看全部</button>
           </div>
-          <div class="card-bd-flush tbl-wrap">
+          <div class="tabs" style="padding:0 16px;margin-bottom:0">
+            <div class="tab active" id="dash-attn-tab-stagnant" onclick="switchDashTab('stagnant')">停留 <span id="dash-stagnant-tab-count" style="font-size:10px;font-weight:700;color:var(--amber)">0</span></div>
+            <div class="tab" id="dash-attn-tab-warn" onclick="switchDashTab('warn')">警示 <span id="dash-warn-tab-count" style="font-size:10px;font-weight:700;color:var(--amber)">0</span></div>
+            <div class="tab" id="dash-attn-tab-stuck" onclick="switchDashTab('stuck')">卡關 <span id="dash-stuck-tab-count" style="font-size:10px;font-weight:700;color:var(--red)">0</span></div>
+          </div>
+          <div class="card-bd-flush tbl-wrap" id="dash-attn-panel-stagnant">
             <table>
               <thead><tr><th>學員</th><th>停留級別</th><th>最近考試</th><th>次數</th></tr></thead>
               <tbody id="dash-stagnant-table"></tbody>
             </table>
           </div>
-        </div>
-        <!-- 需關注學員 / 預建班須關注學員 -->
-        <div class="card">
-          <div class="card-hd">
-            <div class="card-title" id="dash-title3">需關注學員</div>
-            <button class="btn btn-ghost btn-sm" id="dash-btn3" onclick="goToRisk()">查看全部</button>
+          <div class="card-bd-flush tbl-wrap" id="dash-attn-panel-warn" style="display:none">
+            <table>
+              <thead><tr><th>學員</th><th>級別</th><th>失敗次數</th><th>教練</th></tr></thead>
+              <tbody id="dash-warn-table"></tbody>
+            </table>
           </div>
-          <div class="card-bd-flush tbl-wrap">
+          <div class="card-bd-flush tbl-wrap" id="dash-attn-panel-stuck" style="display:none">
             <table>
               <thead><tr><th>學員</th><th>卡關級別</th><th>失敗次數</th><th>教練</th></tr></thead>
-              <tbody id="dash-warn-stuck-table"></tbody>
+              <tbody id="dash-stuck-table"></tbody>
             </table>
           </div>
         </div>
@@ -1103,6 +1108,14 @@ tr:hover td{background:#fafaf8}
             <div class="form-hint">學員可跨館上課考試，此為主要上課場館</div>
           </div>
         </div>
+        <div class="form-section">特殊需求</div>
+        <div class="form-row single">
+          <div class="form-field">
+            <label class="form-label">特殊說明</label>
+            <textarea class="form-input" id="sm-special-note" rows="2" placeholder="例：右腳行動不便，蛙腳動作請放寬" style="resize:vertical;min-height:58px"></textarea>
+            <div class="form-hint">此備註考官考試時可見，不顯示給家長</div>
+          </div>
+        </div>
         <div class="form-section">家長資料</div>
         <div class="form-row">
           <div class="form-field">
@@ -1470,6 +1483,7 @@ const SUPA = supabase.createClient(
   SUPA_URL,
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xa2FzcnRheGtjY2hycXlvcm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA5MTksImV4cCI6MjA5MjYwNjkxOX0.TanYWbC8sQD99H_ylOaCO-WVCdbibB8OIo7xMaWFy-M'
 );
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 // ════ DATA ════
 const HAT_MAP={1:'黃色布帽',2:'黃色布帽',3:'黃色布帽',4:'藍色布帽',5:'藍色布帽',6:'紅色布帽',7:'黑色膠帽',8:'黑色膠帽',9:'銀色膠帽',10:'銀色膠帽'};
@@ -1688,6 +1702,7 @@ async function loadStudents(){
       teachCoach:coach?.name||'',
       teachCoachId:s.teach_coach_id,
       defaultVenueId:s.default_venue_id,
+      specialNote:s.special_note||'',
       status:s.status,
       lastLogin:null,
       created:s.created_at?new Date(s.created_at).toLocaleDateString('zh-TW'):'—',
@@ -1974,31 +1989,67 @@ function renderDashExams(){
   }
 }
 
-function renderWarnStuckTable(stuck, warn) {
-  const tbody = document.getElementById('dash-warn-stuck-table');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  const all = [...stuck.map(r=>({...r,status:'stuck'})), ...warn.map(r=>({...r,status:'warn'}))];
-  if (!all.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;font-size:12px;color:var(--ink3)">目前無需關注學員</td></tr>';
-    return;
-  }
-  all.slice(0,8).forEach(r => {
-    const isStuck = r.status === 'stuck';
-    tbody.innerHTML += `<tr style="background:${isStuck?'#fff5f5':'#fffdf0'}">
-      <td style="font-weight:500">
-        ${r.name}
-        <span class="chip ${isStuck?'chip-red':'chip-amber'}" style="margin-left:5px;font-size:9px">${isStuck?'🔴 卡關':'⚠ 警示'}</span>
-      </td>
-      <td><span class="chip ${HAT_CHIP[r.level]}">${LV_LABEL[r.level]}</span></td>
-      <td class="mono" style="color:${isStuck?'var(--red)':'var(--amber)'};font-weight:700">${r.failCount} 次</td>
-      <td style="font-size:11px">${r.teachCoach}</td>
-    </tr>`;
+function switchDashTab(tab) {
+  ['stagnant','warn','stuck'].forEach(t => {
+    document.getElementById('dash-attn-tab-'+t)?.classList.toggle('active', t===tab);
+    const panel = document.getElementById('dash-attn-panel-'+t);
+    if (panel) panel.style.display = t===tab ? '' : 'none';
   });
+  const moreBtn = document.getElementById('dash-attn-more-btn');
+  if (moreBtn) {
+    if (tab==='stagnant') moreBtn.setAttribute('onclick','goToStagnant()');
+    else moreBtn.setAttribute('onclick',`goToRisk('${tab}')`);
+  }
+}
+
+function renderWarnStuckTable(stuck, warn) {
+  // 更新 tab 計數
+  const warnTabEl = document.getElementById('dash-warn-tab-count');
+  const stuckTabEl = document.getElementById('dash-stuck-tab-count');
+  if (warnTabEl) warnTabEl.textContent = warn.length;
+  if (stuckTabEl) stuckTabEl.textContent = stuck.length;
+
+  // 警示 tab
+  const warnTbody = document.getElementById('dash-warn-table');
+  if (warnTbody) {
+    warnTbody.innerHTML = '';
+    if (!warn.length) {
+      warnTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:16px;font-size:12px;color:var(--ink3)">目前無警示學員</td></tr>';
+    } else {
+      warn.slice(0,8).forEach(r => {
+        warnTbody.innerHTML += `<tr>
+          <td style="font-weight:500">${r.name}</td>
+          <td><span class="chip ${HAT_CHIP[r.level]}">${LV_LABEL[r.level]}</span></td>
+          <td class="mono" style="color:var(--amber);font-weight:700">${r.failCount} 次</td>
+          <td style="font-size:11px">${r.teachCoach}</td>
+        </tr>`;
+      });
+    }
+  }
+
+  // 卡關 tab
+  const stuckTbody = document.getElementById('dash-stuck-table');
+  if (stuckTbody) {
+    stuckTbody.innerHTML = '';
+    if (!stuck.length) {
+      stuckTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:16px;font-size:12px;color:var(--ink3)">目前無卡關學員</td></tr>';
+    } else {
+      stuck.slice(0,8).forEach(r => {
+        stuckTbody.innerHTML += `<tr>
+          <td style="font-weight:500">${r.name}</td>
+          <td><span class="chip ${HAT_CHIP[r.level]}">${LV_LABEL[r.level]}</span></td>
+          <td class="mono" style="color:var(--red);font-weight:700">${r.failCount} 次</td>
+          <td style="font-size:11px">${r.teachCoach}</td>
+        </tr>`;
+      });
+    }
+  }
 }
 
 
 function renderStagnant(stagnantIds){
+  const tabCount=document.getElementById('dash-stagnant-tab-count');
+  if(tabCount) tabCount.textContent=stagnantIds.size;
   const tbody=document.getElementById('dash-stagnant-table');
   if(!tbody) return;
   tbody.innerHTML='';
@@ -2059,7 +2110,7 @@ function renderCoaches(){
     const statusChip=c.status==='active'?'chip-green':'chip-red';
     const statusTxt=c.status==='active'?'啟用中':'已停用';
     tbody.innerHTML+=`<tr>
-      <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${c.name[0]}</div><span style="font-weight:500">${c.name}</span></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${esc(c.name[0])}</div><span style="font-weight:500">${esc(c.name)}</span></div></td>
       <td><span class="chip ${roleChip}">${roleTxt}</span></td>
       <td class="mono">${c.phone}</td>
       <td><span class="chip ${statusChip}">${statusTxt}</span></td>
@@ -2360,20 +2411,20 @@ const noticeEl=document.getElementById('stu-role-notice');
     const vName=venueLabel(s.defaultVenueId)||'—';
     if(isCoach){
       tbody.innerHTML+=`<tr>
-        <td style="font-weight:500">${s.name}</td>
+        <td style="font-weight:500">${esc(s.name)}</td>
         <td><span class="chip ${HAT_CHIP[s.level]}">${LV_LABEL[s.level]}・${HAT_MAP[s.level]}</span></td>
-        <td><span class="chip chip-gray">${vName}</span></td>
-        <td>${s.guardianName}</td>
+        <td><span class="chip chip-gray">${esc(vName)}</span></td>
+        <td>${esc(s.guardianName)}</td>
         <td><button class="btn btn-ghost btn-xs" onclick="openStudentModal('${s.id}')">編輯</button></td>
       </tr>`;
     } else {
       tbody.innerHTML+=`<tr>
         <td style="text-align:center"><input type="checkbox" class="stu-row-cb" data-id="${s.id}" ${stuSelectedIds.has(s.id)?'checked':''} onchange="toggleStuSelect('${s.id}',this.checked)" style="accent-color:var(--ocean);cursor:pointer"></td>
-        <td style="font-weight:500">${s.name}</td>
+        <td style="font-weight:500">${esc(s.name)}</td>
         <td><span class="chip ${HAT_CHIP[s.level]}">${LV_LABEL[s.level]}・${HAT_MAP[s.level]}</span></td>
-        <td><span class="chip chip-gray">${vName}</span></td>
-        <td>${s.guardianName}</td>
-        <td class="mono">${s.guardianPhone}</td>
+        <td><span class="chip chip-gray">${esc(vName)}</span></td>
+        <td>${esc(s.guardianName)}</td>
+        <td class="mono">${esc(s.guardianPhone)}</td>
         <td><span class="chip ${chipCls}">${chipTxt}</span></td>
         <td>${s.teachCoach}</td>
         <td><div class="row-actions">${canEdit
@@ -2394,6 +2445,7 @@ function openStudentModal(id){
   document.getElementById('sm-level').value=s?.level||1;
   document.getElementById('sm-gname').value=s?.guardianName||'';
   document.getElementById('sm-gphone').value=s?.guardianPhone||'';
+  document.getElementById('sm-special-note').value=s?.specialNote||'';
   // 教練角色：隱藏家長電話欄（隱私保護）
   const phoneField=document.getElementById('sm-gphone-field');
   const phoneInfobox=document.getElementById('sm-phone-infobox');
@@ -2454,8 +2506,9 @@ async function saveStudent(){
   }
   if(!ok)return;
 
+  const specialNote=document.getElementById('sm-special-note').value.trim()||null;
   if(editingStuId){
-    const stuUpdate={name,level,default_venue_id:venueId,teach_coach_id:coachId};
+    const stuUpdate={name,level,default_venue_id:venueId,teach_coach_id:coachId,special_note:specialNote};
     const {error}=await SUPA.from('students').update(stuUpdate).eq('id',editingStuId);
     if(error){showToast('更新失敗：'+error.message,'warn');return;}
     if(!isCoachRole){
@@ -2478,7 +2531,7 @@ async function saveStudent(){
       guardianId=newG.id;
     }
     // 建立學員
-    const {data:newS,error:se}=await SUPA.from('students').insert({name,level,initial_level:level,default_venue_id:venueId,teach_coach_id:coachId}).select('id').single();
+    const {data:newS,error:se}=await SUPA.from('students').insert({name,level,initial_level:level,default_venue_id:venueId,teach_coach_id:coachId,special_note:specialNote}).select('id').single();
     if(se){showToast('學員建立失敗：'+se.message,'warn');return;}
     // 建立關聯
     await SUPA.from('student_guardian').insert({student_id:newS.id,guardian_id:guardianId});
@@ -2721,9 +2774,9 @@ function openRiskStuModal(studentId){
     </div>`;
   document.getElementById('risk-stu-modal-body').innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:4px">
-      <div class="av" style="width:40px;height:40px;border-radius:8px;background:#fff0f0;color:var(--red);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.name[0]}</div>
+      <div class="av" style="width:40px;height:40px;border-radius:8px;background:#fff0f0;color:var(--red);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${esc(s.name[0])}</div>
       <div>
-        <div style="font-size:16px;font-weight:700;color:var(--ink)">${s.name}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--ink)">${esc(s.name)}</div>
         <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
           <span class="chip ${HAT_CHIP[s.level]}">${LV_LABEL[s.level]}</span>
           <span class="chip chip-gray">${HAT_MAP[s.level]}</span>
@@ -2863,11 +2916,11 @@ function renderRptRisk(){
     if(s.risks.includes('noexam')) descs.push(s.lastExamDate?`最後考試 ${s.lastExamDate}（${daysSince(s.lastExamDate)} 天前）`:'無考試紀錄');
     tbody.innerHTML+=`<tr>
       <td><div style="display:flex;align-items:center;gap:8px">
-        <div class="av" style="background:#fff0f0;color:var(--red)">${s.name[0]}</div>
-        <div><div style="font-weight:500">${s.name}</div><div style="font-size:10px;color:var(--ink3)">${LV_LABEL[s.level]}・${HAT_MAP[s.level]}</div></div>
+        <div class="av" style="background:#fff0f0;color:var(--red)">${esc(s.name[0])}</div>
+        <div><div style="font-weight:500">${esc(s.name)}</div><div style="font-size:10px;color:var(--ink3)">${LV_LABEL[s.level]}・${HAT_MAP[s.level]}</div></div>
       </div></td>
       <td>${chips}</td>
-      <td style="font-size:11px">${s.teachCoach}</td>
+      <td style="font-size:11px">${esc(s.teachCoach)}</td>
       <td style="font-size:11px;color:var(--ink2)">${descs.join('；')}</td>
       <td><div style="display:flex;gap:4px">
         <button class="btn btn-ghost btn-xs" onclick="openRiskStuModal(${s.id})">學員</button>
@@ -2914,7 +2967,7 @@ function renderRptCoach(){
     const cPr=cEx.length?Math.round(cPass/cEx.length*100):null;
     const cRisk=riskStudents.filter(s=>s.teachCoach===c.name).length;
     tbody.innerHTML+=`<tr>
-      <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${c.name[0]}</div><span style="font-weight:500">${c.name}</span></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${esc(c.name[0])}</div><span style="font-weight:500">${esc(c.name)}</span></div></td>
       <td class="mono">${cStu}</td>
       <td class="mono">${cEx.length}</td>
       <td class="mono">${cEx.length?cPass:'—'}</td>
@@ -2996,7 +3049,7 @@ function renderRptSpeed(){
       const stuPool=venueStudentIds?STUDENTS_DATA.filter(s=>venueStudentIds.has(s.id)):STUDENTS_DATA;
       const cStu=stuPool.filter(s=>s.teachCoach===c.name).length;
       coachTbody.innerHTML+=`<tr>
-        <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${c.name[0]}</div><span style="font-weight:500">${c.name}</span></div></td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-coach">${esc(c.name[0])}</div><span style="font-weight:500">${esc(c.name)}</span></div></td>
         <td class="mono">${cStu}</td>
         <td class="mono">${avg!==null?avg+'天':'<span style="color:var(--ink4)">資料不足</span>'}</td>
         <td class="mono" style="color:var(--ink3)">${cDays.length}</td>
@@ -3572,8 +3625,8 @@ function renderAnnouncements(){
             ${isExpired?'<span class="chip chip-gray">已下線</span>':''}
             ${a.pinned&&!isExpired?'<span class="chip chip-amber">置頂</span>':''}
           </div>
-          <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:${a.content?'6px':'0'}">${a.title}</div>
-          ${a.content?`<div style="font-size:13px;color:var(--ink2);line-height:1.7;white-space:pre-wrap">${a.content}</div>`:''}
+          <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:${a.content?'6px':'0'}">${esc(a.title)}</div>
+          ${a.content?`<div style="font-size:13px;color:var(--ink2);line-height:1.7;white-space:pre-wrap">${esc(a.content)}</div>`:''}
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px">
           ${!isExpired?`<button class="btn btn-ghost btn-xs" onclick="toggleAnnPin('${a.id}')">${a.pinned?'取消置頂':'置頂'}</button>`:''}

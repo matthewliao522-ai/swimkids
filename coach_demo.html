@@ -206,6 +206,11 @@ select.filter-sel:focus{border-color:var(--brand)}
 .stud-tab:hover{background:var(--n50)}
 .stud-tab.act{border-color:var(--brand);background:var(--brand-lt)}
 
+/* ── SPECIAL NOTE BANNER ── */
+.special-note-banner{background:#fffbeb;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;flex-shrink:0;margin-bottom:6px}
+.special-note-banner-title{font-size:10px;font-weight:700;color:#b45309;margin-bottom:3px;letter-spacing:.04em}
+.special-note-banner-body{font-size:12px;color:#92400e;line-height:1.5}
+
 /* ── FLOW STEPPER ── */
 .fstep-wrap{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:flex-start;pointer-events:none}
 .fstep{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:32px}
@@ -513,6 +518,13 @@ select.filter-sel:focus{border-color:var(--brand)}
 .eh-summary-card{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 8px;text-align:center}
 .eh-summary-num{font-size:24px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
 .eh-summary-lbl{font-size:13px;color:var(--ink3);margin-top:6px;font-weight:500}
+.eh-note-box{background:#fffbeb;border:1px solid #f59e0b;border-radius:10px;padding:10px 14px;margin-bottom:14px}
+.eh-note-box-title{font-size:10px;font-weight:700;color:#b45309;margin-bottom:4px;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between}
+.eh-note-box-body{font-size:13px;color:#92400e;line-height:1.6}
+.eh-note-add{border:1.5px dashed var(--line2);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--ink4);cursor:pointer;text-align:center;transition:border-color .15s}
+.eh-note-add:hover{border-color:var(--brand);color:var(--brand)}
+.eh-note-edit-wrap{margin-bottom:14px}
+.eh-note-edit-wrap textarea{width:100%;background:var(--n100);border:1px solid var(--brand);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;resize:vertical;min-height:70px;outline:none;box-sizing:border-box}
 .eh-list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .eh-row{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
 .eh-row:last-child{border-bottom:none}
@@ -872,6 +884,10 @@ select.filter-sel:focus{border-color:var(--brand)}
           </div>
           <!-- 右側：步驟 + 表單 -->
           <div class="ex-right" style="display:flex;flex-direction:column;overflow:hidden">
+            <div class="special-note-banner" id="special-note-banner" style="display:none">
+              <div class="special-note-banner-title">⚠ 特殊需求備註</div>
+              <div class="special-note-banner-body" id="special-note-text"></div>
+            </div>
             <div id="last-exam-ref" style="display:none;max-height:150px;overflow-y:auto"></div>
             <div class="exam-stepper" id="exam-stepper">
               <div class="estep-item active" id="estep-1">
@@ -1150,6 +1166,7 @@ select.filter-sel:focus{border-color:var(--brand)}
     </div>
     <div class="eh-body">
       <div class="eh-summary" id="eh-summary"></div>
+      <div id="eh-note-section"></div>
       <div class="eh-list" id="eh-list"></div>
     </div>
   </div>
@@ -1219,6 +1236,7 @@ async function loadStudents() {
       id:s.id, name:s.name, level:s.level,
       teachCoachId:s.teach_coach_id, teachCoach:coach?.name||'',
       defaultVenueId:s.default_venue_id,
+      specialNote:s.special_note||'',
       guardianId:guardian?.id||null,
       guardianName:guardian?.name||'', guardianPhone:guardian?.phone||'',
       guardianActivated:!!(guardian?.auth_id),
@@ -2303,6 +2321,8 @@ function renderExamForm() {
   const stepper = document.getElementById('exam-stepper');
   if (r.submitted && !r.editing) {
     document.getElementById('last-exam-ref').style.display = 'none';
+    const _snb = document.getElementById('special-note-banner');
+    if (_snb) _snb.style.display = 'none';
     lockedView.style.display = 'block';
     formInner.style.display = 'none';
     document.getElementById('exam-note-step').style.display = 'none';
@@ -2325,6 +2345,17 @@ function renderExamForm() {
   }
   lockedView.style.display = 'none';
   if (stepper) stepper.style.display = 'flex';
+  // 特殊需求備註
+  const snBanner = document.getElementById('special-note-banner');
+  const snText = document.getElementById('special-note-text');
+  if (snBanner && snText) {
+    if (m.specialNote) {
+      snText.textContent = m.specialNote;
+      snBanner.style.display = '';
+    } else {
+      snBanner.style.display = 'none';
+    }
+  }
   setExamStep(1);
   document.getElementById('ex-lv-name').textContent = sd.label + '・' + HAT_MAP[examLv];
   document.getElementById('ex-lv-desc').textContent = sd.desc;
@@ -3003,6 +3034,10 @@ function showStudentDetail(id) {
         </div>
       </div>
     </div>
+    ${s.specialNote ? `<div style="background:#fffbeb;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:#b45309;margin-bottom:3px;letter-spacing:.04em">⚠ 特殊需求備註</div>
+      <div style="font-size:12px;color:#92400e;line-height:1.5">${esc(s.specialNote)}</div>
+    </div>` : ''}
     <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:10px;font-weight:500">家長資訊</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div style="background:var(--n50);border-radius:8px;padding:10px 12px;border:1px solid var(--line)">
@@ -3114,6 +3149,12 @@ function renderStudentForm(id) {
       </select>
       <div style="font-size:10px;color:var(--ink3);margin-top:3px">學員可跨館上課考試，此為主要上課場館</div>
     </div>
+    <div class="section-divider">特殊需求</div>
+    <div class="form-field">
+      <label>特殊說明</label>
+      <textarea id="sf-special-note" rows="2" placeholder="例：右腳行動不便，蛙腳動作請放寬" style="resize:vertical;min-height:58px;width:100%;background:var(--n100);border:1px solid var(--line2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink);font-family:'Noto Sans TC',sans-serif;outline:none">${esc(s?.specialNote||'')}</textarea>
+      <div style="font-size:10px;color:var(--ink3);margin-top:3px">考官考試時可見，不顯示給家長</div>
+    </div>
     <div class="section-divider">家長資料</div>
     <div class="form-field required">
       <label>家長姓名</label>
@@ -3176,16 +3217,18 @@ async function saveStudent(id) {
     document.getElementById('sf-phone-err').classList.add('show'); valid = false;
   } else document.getElementById('sf-phone-err').classList.remove('show');
   if (!valid) return;
+  const specialNote = document.getElementById('sf-special-note')?.value.trim()||null;
   const coachObj = COACHES_DATA.find(c=>c.name===teachCoachName);
   if (id && id !== 'null') {
     const {error} = await SUPA.from('students').update({
       name, level,
       default_venue_id: venueVal||null,
       teach_coach_id: coachObj?.id||null,
+      special_note: specialNote,
     }).eq('id',id);
     if(error){showToast('更新失敗：'+error.message,'warn');return;}
     const stu = STUDENTS.find(x=>String(x.id)===String(id));
-    if(stu){ stu.name=name; stu.level=level; stu.teachCoach=teachCoachName; stu.defaultVenueId=venueVal||null; }
+    if(stu){ stu.name=name; stu.level=level; stu.teachCoach=teachCoachName; stu.defaultVenueId=venueVal||null; stu.specialNote=specialNote||''; }
     selectedStudentId = id;
     renderStudentList();
     showStudentDetail(id);
@@ -4098,7 +4141,47 @@ function openExamHistorySheet(studentId) {
     }).join('');
   }
 
+  renderEhNoteSection(s);
   document.getElementById('eh-overlay').classList.remove('hidden');
+}
+
+function renderEhNoteSection(s) {
+  const sec = document.getElementById('eh-note-section');
+  if (!sec) return;
+  if (s.specialNote) {
+    sec.innerHTML = `<div class="eh-note-box">
+      <div class="eh-note-box-title">⚠ 特殊需求備註
+        <span style="font-size:11px;font-weight:400;color:#b45309;cursor:pointer;text-decoration:underline" onclick="startEhNoteEdit('${s.id}')">編輯</span>
+      </div>
+      <div class="eh-note-box-body">${esc(s.specialNote)}</div>
+    </div>`;
+  } else {
+    sec.innerHTML = `<div class="eh-note-add" onclick="startEhNoteEdit('${s.id}')">＋ 加特殊備註</div>`;
+  }
+}
+
+function startEhNoteEdit(studentId) {
+  const s = STUDENTS.find(x => String(x.id) === String(studentId));
+  if (!s) return;
+  const sec = document.getElementById('eh-note-section');
+  sec.innerHTML = `<div class="eh-note-edit-wrap">
+    <textarea id="eh-note-input" placeholder="例：右腳行動不便，蛙腳動作請放寬">${esc(s.specialNote||'')}</textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="renderEhNoteSection(STUDENTS.find(x=>String(x.id)==='${studentId}'))">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEhNote('${studentId}')">儲存</button>
+    </div>
+  </div>`;
+  document.getElementById('eh-note-input')?.focus();
+}
+
+async function saveEhNote(studentId) {
+  const note = document.getElementById('eh-note-input')?.value.trim() || null;
+  const {error} = await SUPA.from('students').update({special_note: note}).eq('id', studentId);
+  if (error) { showToast('儲存失敗：' + error.message, 'warn'); return; }
+  const s = STUDENTS.find(x => String(x.id) === String(studentId));
+  if (s) s.specialNote = note || '';
+  renderEhNoteSection(s);
+  showToast('備註已儲存', 'ok');
 }
 
 function closeExamHistorySheet() {
