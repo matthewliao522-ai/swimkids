@@ -498,7 +498,7 @@ select.filter-sel:focus{border-color:var(--brand)}
 .estep-item.done .estep-lbl{color:var(--green)}
 .estep-item.done + .estep-connector{background:var(--green);opacity:.4}
 /* ── Note Step ── */
-.note-step-wrap{padding:12px 16px;flex:0 0 auto;display:flex;flex-direction:column}
+.note-step-wrap{padding:12px 16px;flex:0 0 auto;display:flex;flex-direction:column;margin-top:auto}
 .note-step-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px}
 .note-step-sub{font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:16px}
 
@@ -959,7 +959,7 @@ select.filter-sel:focus{border-color:var(--brand)}
                 <div class="note-step-wrap">
                   <textarea class="note-ta" id="ex-note" placeholder="考試評語（選填）&#10;可記錄今天的表現、需要加強的地方，或給家長的建議。&#10;例：換氣動作進步很多，繼續加油！" oninput="saveNote();saveDraft()" style="height:72px;min-height:60px"></textarea>
                 </div>
-                <div class="action-bar" style="margin-top:auto">
+                <div class="action-bar">
                   <div></div>
                   <div style="display:flex;gap:8px">
                     <button class="btn btn-ghost btn-sm" onclick="setExamStep(1)">← 返回</button>
