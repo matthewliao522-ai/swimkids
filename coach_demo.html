@@ -3345,6 +3345,7 @@ function parseImportRows(rows) {
   const errors = [];
   const classMap = {};
   const classOrder = [];
+  const today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10);
   rows.forEach((row, i) => {
     const rowNum = i + 2;
     const name   = String(row[COL.name]  || '').trim();
@@ -3364,6 +3365,7 @@ function parseImportRows(rows) {
     if (!phone)        { errors.push(`第 ${rowNum} 行（${name}）：缺少學員手機`); return; }
     if (!guardianName) { errors.push(`第 ${rowNum} 行（${stuName||name}）：缺少家長姓名`); return; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { errors.push(`第 ${rowNum} 行：日期格式錯誤，請用 YYYY-MM-DD`); return; }
+    if (date < today) { errors.push(`第 ${rowNum} 行（${name}）：考試日期 ${date} 為過去日期，無法匯入`); return; }
     if (phone.length !== 10 || !phone.startsWith('09')) { errors.push(`第 ${rowNum} 行（${name}）：手機格式錯誤（${phone}）`); return; }
     const key = venue + '|' + date + '|' + classType + '|' + timeSlot + '|' + teach;
     if (!classMap[key]) {
