@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'">
 <title>小泳士學習護照</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -626,6 +627,7 @@ const SUPA = supabase.createClient(
   'https://mqkasrtaxkcchrqyornh.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xa2FzcnRheGtjY2hycXlvcm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMzA5MTksImV4cCI6MjA5MjYwNjkxOX0.TanYWbC8sQD99H_ylOaCO-WVCdbibB8OIo7xMaWFy-M'
 );
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 let ANNS_DATA = [];
 let VENUES_UUID_MAP = {};
 let annsLoaded = false;
@@ -1435,7 +1437,7 @@ function renderExamList(child) {
       </div>`;
     }
     if (!exam.synthetic) {
-      if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${exam.note}</div></div>`;
+      if (exam.note) bodyHtml += `<div class="exam-note-block"><div class="note-lbl">教練評語</div><div class="note-txt">${esc(exam.note)}</div></div>`;
       bodyHtml += `<div class="coach-row" style="grid-template-columns:1fr 1fr 1fr">
         <div><div class="coach-lbl">教學教練</div><div class="coach-name">${exam.teachCoach}</div></div>
         <div><div class="coach-lbl">考試教練</div><div class="coach-name">${exam.examCoach}</div></div>
@@ -1666,8 +1668,8 @@ function renderAnnouncements(){
         <span class="ann-badge type-${type}">${label}</span>
         <span class="ann-date">${dateStr}</span>
       </div>
-      <div class="ann-title">${a.title}</div>
-      ${a.content?`<div class="ann-body">${a.content}</div>`:''}
+      <div class="ann-title">${esc(a.title)}</div>
+      ${a.content?`<div class="ann-body">${esc(a.content)}</div>`:''}
     </div>`;
   }).join('');
 }

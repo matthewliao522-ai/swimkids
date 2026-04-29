@@ -29,7 +29,7 @@ serve(async (req) => {
         id, level, status,
         students ( name ),
         guardians ( id, name, line_user_id ),
-        venues ( name )
+        venues ( name, line_channel_access_token )
       `)
       .eq("id", cert_print_request_id)
       .single();
@@ -43,7 +43,7 @@ serve(async (req) => {
 
     const guardian = data.guardians as { id: string; name: string; line_user_id: string | null };
     const student  = data.students  as { name: string };
-    const venue    = data.venues    as { name: string };
+    const venue    = data.venues    as { name: string; line_channel_access_token: string | null };
     const level    = data.level;
 
     if (!guardian.line_user_id) {
@@ -53,12 +53,18 @@ serve(async (req) => {
       });
     }
 
+    const token = venue.line_channel_access_token;
+    if (!token) {
+      return new Response(JSON.stringify({ error: "此場館未設定 LINE Channel Token" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const message =
 `【小泳士】${guardian.name} 您好！
 孩子 ${student.name} 的第 ${level} 級認證泳帽已完成印製，請至 ${venue.name} 領取。
 請攜帶此通知至服務台，完成領取手續。`;
-
-    const token = Deno.env.get("LINE_CHANNEL_ACCESS_TOKEN")!;
     const lineRes = await fetch("https://api.line.me/v2/bot/message/push", {
       method: "POST",
       headers: {
