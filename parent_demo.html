@@ -194,6 +194,41 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
 .hat-y{background:#f59e0b}.hat-b{background:#3b82f6}.hat-r{background:#ef4444}.hat-k{background:#374151}.hat-s{background:#9ca3af}
 .badge-lv{font-size:10px;color:rgba(255,255,255,.65);margin-top:4px;text-align:center}
 
+/* ── RPG HERO CARD ── */
+.rpg-section{padding:0 20px 18px;background:linear-gradient(135deg,#1257C0 0%,#2680FF 100%)}
+.rpg-card{background:linear-gradient(135deg,#0f0c29,#1a1040,#24243e);border-radius:18px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);overflow:hidden;position:relative}
+.rpg-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(139,92,246,.15),transparent 60%);pointer-events:none}
+.rpg-inner{display:flex;gap:14px;align-items:flex-start;position:relative}
+.rpg-left{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0}
+.rpg-figure{width:64px;height:88px;position:relative}
+.rpg-head{width:26px;height:26px;border-radius:50%;background:#ffd699;position:absolute;top:0;left:19px;border:2px solid rgba(255,255,255,.3)}
+.rpg-eye-l,.rpg-eye-r{width:4px;height:4px;border-radius:50%;background:#5c3d1e;position:absolute;top:9px}
+.rpg-eye-l{left:7px}.rpg-eye-r{right:7px}
+.rpg-mouth{width:8px;height:3px;border-radius:0 0 6px 6px;background:#c27a3a;position:absolute;bottom:5px;left:9px}
+.rpg-body{width:22px;height:26px;border-radius:5px 5px 3px 3px;position:absolute;top:26px;left:21px}
+.rpg-arm-l,.rpg-arm-r{width:8px;height:22px;border-radius:4px;position:absolute;top:28px}
+.rpg-arm-l{left:13px;transform:rotate(-8deg)}.rpg-arm-r{right:13px;transform:rotate(8deg)}
+.rpg-leg-l,.rpg-leg-r{width:9px;height:24px;border-radius:4px;position:absolute;top:50px}
+.rpg-leg-l{left:18px;transform:rotate(4deg)}.rpg-leg-r{right:17px;transform:rotate(-4deg)}
+.rpg-class-badge{font-size:10px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:.05em;text-align:center;background:rgba(255,255,255,.1);border-radius:6px;padding:2px 6px;white-space:nowrap}
+.rpg-right{flex:1;min-width:0}
+.rpg-lv-row{display:flex;align-items:baseline;gap:4px;margin-bottom:8px}
+.rpg-lv-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.45);font-family:'JetBrains Mono',monospace}
+.rpg-lv-num{font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+.rpg-items{display:flex;flex-direction:column;gap:4px}
+.rpg-item{display:flex;align-items:center;gap:7px;opacity:0;animation:rpgEquip .4s cubic-bezier(.34,1.56,.64,1) forwards}
+.rpg-item.rpg-new{animation:rpgEquipNew .6s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes rpgEquip{from{opacity:0;transform:translateX(-12px) scale(.85)}to{opacity:1;transform:none}}
+@keyframes rpgEquipNew{0%{opacity:0;transform:scale(.6)}60%{transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+@keyframes rpgSparkle{0%,100%{filter:drop-shadow(0 0 3px currentColor)}50%{filter:drop-shadow(0 0 10px currentColor)}}
+.rpg-item-icon{font-size:16px;line-height:1;flex-shrink:0}
+.rpg-item-name{font-size:11px;color:rgba(255,255,255,.75);font-weight:500}
+.rpg-item-new-tag{font-size:9px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:1px 5px;margin-left:2px;flex-shrink:0}
+.rpg-prog-wrap{margin-top:8px;height:4px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
+.rpg-prog-fill{height:100%;border-radius:4px;transition:width .8s ease;animation:rpgProgGlow 2s ease-in-out infinite}
+@keyframes rpgProgGlow{0%,100%{opacity:.8}50%{opacity:1}}
+.rpg-prog-txt{font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;font-family:'JetBrains Mono',monospace}
+@keyframes rpgGlow{0%,100%{box-shadow:0 0 6px currentColor,inset 0 0 4px rgba(255,255,255,.1)}50%{box-shadow:0 0 16px currentColor,inset 0 0 8px rgba(255,255,255,.2)}}
 .app-content{padding:18px 20px;max-width:600px;margin:0 auto}
 .section-title{font-size:11px;font-weight:700;color:var(--slate3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .section-title::after{content:'';flex:1;height:1px;background:var(--slate6)}
@@ -563,6 +598,26 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--sky);color:var(--sla
         <div style="text-align:center;flex-shrink:0">
           <div class="hat-dot" id="hero-hat-dot"></div>
           <div class="badge-lv" id="hero-badge-lv"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rpg-section" id="rpg-section">
+    <div class="rpg-card">
+      <div class="rpg-inner">
+        <div class="rpg-left">
+          <div class="rpg-figure" id="rpg-figure"></div>
+          <div class="rpg-class-badge" id="rpg-class-badge"></div>
+        </div>
+        <div class="rpg-right">
+          <div class="rpg-lv-row">
+            <span class="rpg-lv-label">Lv.</span>
+            <span class="rpg-lv-num" id="rpg-lv-num" style="color:#fff"></span>
+          </div>
+          <div class="rpg-items" id="rpg-items"></div>
+          <div class="rpg-prog-wrap"><div class="rpg-prog-fill" id="rpg-prog-fill"></div></div>
+          <div class="rpg-prog-txt" id="rpg-prog-txt"></div>
         </div>
       </div>
     </div>
@@ -1271,10 +1326,134 @@ function getPassedLevel(child) {
 }
 
 
+// ════════════════════
+// RPG HERO CARD
+// ════════════════════
+const RPG_CLASSES = {
+  warrior: {
+    name:'勇者', color:'#f87171', bodyColor:'#7f1d1d', armColor:'#991b1b', legColor:'#450a0a',
+    items:[
+      {icon:'👟',name:'布製長靴'},
+      {icon:'🥼',name:'棉布甲'},
+      {icon:'🛡️',name:'木製圓盾'},
+      {icon:'🗡️',name:'鐵製短劍'},
+      {icon:'⚔️',name:'長劍'},
+      {icon:'🪖',name:'鐵製頭盔'},
+      {icon:'🦺',name:'鎖子甲'},
+      {icon:'🛡️',name:'精鋼騎士盾'},
+      {icon:'👑',name:'勇者金冠'},
+      {icon:'⚡',name:'傳說・雷霆之劍'},
+    ]
+  },
+  mage: {
+    name:'魔法師', color:'#c084fc', bodyColor:'#3b0764', armColor:'#4c1d95', legColor:'#2e1065',
+    items:[
+      {icon:'👘',name:'法師長袍'},
+      {icon:'🎩',name:'星月魔法帽'},
+      {icon:'🪄',name:'新手法杖'},
+      {icon:'📖',name:'魔法古書'},
+      {icon:'🔮',name:'水晶法球'},
+      {icon:'💍',name:'魔力指環'},
+      {icon:'🌟',name:'星紋法衣'},
+      {icon:'✨',name:'附魔法杖'},
+      {icon:'☄️',name:'彗星胸章'},
+      {icon:'🌌',name:'傳說・時空之書'},
+    ]
+  },
+  priest: {
+    name:'牧師', color:'#fde68a', bodyColor:'#78350f', armColor:'#92400e', legColor:'#451a03',
+    items:[
+      {icon:'🩱',name:'白色聖袍'},
+      {icon:'📿',name:'祈禱念珠'},
+      {icon:'✝️',name:'聖徽章'},
+      {icon:'🌿',name:'治癒藥草'},
+      {icon:'🪄',name:'治癒聖杖'},
+      {icon:'😇',name:'天使羽冠'},
+      {icon:'🛡️',name:'聖潔護盾'},
+      {icon:'🪶',name:'鳳凰羽毛'},
+      {icon:'🌈',name:'彩虹聖甲'},
+      {icon:'💫',name:'傳說・神之祝福'},
+    ]
+  },
+  swordsman: {
+    name:'劍客', color:'#4ade80', bodyColor:'#052e16', armColor:'#14532d', legColor:'#064e3b',
+    items:[
+      {icon:'👢',name:'皮革輕靴'},
+      {icon:'🥷',name:'黑色道服'},
+      {icon:'🗡️',name:'武士刀'},
+      {icon:'🎋',name:'精製刀鞘'},
+      {icon:'🎌',name:'武士頭巾'},
+      {icon:'💨',name:'疾風腕甲'},
+      {icon:'🗡️',name:'影之短刀'},
+      {icon:'🌀',name:'旋風護甲'},
+      {icon:'🦅',name:'飛鷹披風'},
+      {icon:'⚡',name:'傳說・萬刃斬'},
+    ]
+  }
+};
+const RPG_CLASS_KEYS = Object.keys(RPG_CLASSES);
+
+function getRpgClass(studentId) {
+  const key = 'rpg_cls_' + studentId;
+  if (!localStorage.getItem(key)) {
+    localStorage.setItem(key, RPG_CLASS_KEYS[Math.floor(Math.random() * RPG_CLASS_KEYS.length)]);
+  }
+  return localStorage.getItem(key);
+}
+
+function renderRpgHero(child) {
+  const lv = child.currentLevel || 1;
+  const clsKey = getRpgClass(child.id);
+  const cls = RPG_CLASSES[clsKey];
+
+  // 角色外型
+  const fig = document.getElementById('rpg-figure');
+  fig.innerHTML = `
+    <div class="rpg-head" style="box-shadow:0 0 12px ${cls.color}44">
+      <div class="rpg-eye-l"></div><div class="rpg-eye-r"></div>
+      <div class="rpg-mouth"></div>
+    </div>
+    <div class="rpg-body" style="background:${cls.bodyColor};box-shadow:0 0 8px ${cls.color}33"></div>
+    <div class="rpg-arm-l" style="background:${cls.armColor}"></div>
+    <div class="rpg-arm-r" style="background:${cls.armColor}"></div>
+    <div class="rpg-leg-l" style="background:${cls.legColor}"></div>
+    <div class="rpg-leg-r" style="background:${cls.legColor}"></div>`;
+
+  document.getElementById('rpg-class-badge').textContent = cls.name;
+  document.getElementById('rpg-class-badge').style.color = cls.color;
+  document.getElementById('rpg-lv-num').textContent = lv;
+  document.getElementById('rpg-lv-num').style.color = cls.color;
+
+  // 裝備列表（逐件動畫出現）
+  const itemsEl = document.getElementById('rpg-items');
+  itemsEl.innerHTML = '';
+  const count = Math.min(lv, 10);
+  cls.items.slice(0, count).forEach((item, i) => {
+    const isNew = (i === count - 1);
+    const div = document.createElement('div');
+    div.className = 'rpg-item' + (isNew ? ' rpg-new' : '');
+    // 延遲：每件 0.35s，最新一件加長
+    const delay = isNew ? (i * 0.35 + 0.2) : (i * 0.35);
+    div.style.animationDelay = delay + 's';
+    div.innerHTML = `
+      <span class="rpg-item-icon">${item.icon}</span>
+      <span class="rpg-item-name" style="${isNew?'color:#fde68a;font-weight:700':''}">${esc(item.name)}</span>
+      ${isNew ? '<span class="rpg-item-new-tag">NEW</span>' : ''}`;
+    itemsEl.appendChild(div);
+  });
+
+  // 進度條
+  const pct = (lv / 10) * 100;
+  document.getElementById('rpg-prog-fill').style.cssText =
+    `width:${pct}%;background:linear-gradient(90deg,${cls.color}88,${cls.color})`;
+  document.getElementById('rpg-prog-txt').textContent = `${lv} / 10 級`;
+}
+
 async function renderApp(showCelebration) {
   renderChildSwitcher();
   const child = currentAccount.children[currentChildIdx];
   renderHero(child);
+  renderRpgHero(child);
   if (!annsLoaded) await loadAnnsFromSupa();
   renderAnnouncements();
   renderProgress(child);
