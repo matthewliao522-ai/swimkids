@@ -970,6 +970,13 @@ tr:hover td{background:#fafaf8}
           </select>
         </div>
       </div>
+      <div class="form-section">負責場館</div>
+      <div class="form-row single">
+        <div class="form-field">
+          <div id="cm-venues-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          <div class="form-hint">勾選教練可操作的場館（考官跨館協助時需加入該場館）</div>
+        </div>
+      </div>
       <div class="form-section">帳號設定</div>
       <div class="form-row single" id="cm-email-row">
         <div class="form-field">
@@ -2136,7 +2143,7 @@ function renderCoaches(){
   renderPager('coach-pager',coachTotal,coachPage,'goCoachPage');
 }
 
-function openCoachModal(id){
+async function openCoachModal(id){
   editingCoachId=id;
   const c=id?COACHES_DATA.find(x=>String(x.id)===String(id)):null;
   document.getElementById('coach-modal-title').textContent=c?'編輯教練 · '+c.name:'新增教練';
@@ -2146,6 +2153,19 @@ function openCoachModal(id){
   document.getElementById('cm-status').value=c?.status||'active';
   document.getElementById('cm-pwd').value=c?'':'88888888';
   document.getElementById('cm-email').value='';
+  // 載入場館選項
+  let assignedVenues=[];
+  if(c){
+    const {data}=await SUPA.from('coach_venues').select('venue_id').eq('coach_id',c.id);
+    assignedVenues=(data||[]).map(x=>x.venue_id);
+  }
+  const vList=document.getElementById('cm-venues-list');
+  vList.innerHTML=VENUES_DATA.filter(v=>v.status==='active').map(v=>`
+    <label style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg);border:1px solid var(--line2);border-radius:8px;cursor:pointer;font-size:12px">
+      <input type="checkbox" value="${v.id}" ${assignedVenues.includes(v.id)?'checked':''} style="accent-color:var(--ocean)">
+      ${esc(v.name)}
+    </label>
+  `).join('');
   // 新增：顯示 email 欄位；編輯：隱藏（email 不可更改），密碼變選填
   if(c){
     document.getElementById('cm-email-row').style.display='none';
@@ -2183,9 +2203,17 @@ async function saveCoach(){
   const btn=document.querySelector('#coach-modal .btn-primary');
   btn.textContent='處理中…';btn.disabled=true;
 
+  // 取得勾選的場館
+  const selectedVenues=[...document.querySelectorAll('#cm-venues-list input:checked')].map(x=>x.value);
+
   if(editingCoachId){
     const {error}=await SUPA.from('coaches').update({name,phone,role,status}).eq('id',editingCoachId);
     if(error){showToast('更新失敗：'+error.message,'warn');btn.textContent='儲存';btn.disabled=false;return;}
+    // 更新場館指派
+    await SUPA.from('coach_venues').delete().eq('coach_id',editingCoachId);
+    if(selectedVenues.length){
+      await SUPA.from('coach_venues').insert(selectedVenues.map(v=>({coach_id:editingCoachId,venue_id:v})));
+    }
     // 若有填密碼就重設
     if(pwd.length>=8){
       const {data:sr}=await SUPA.from('staff_roles').select('auth_id').eq('coach_id',editingCoachId).maybeSingle();
@@ -2209,6 +2237,13 @@ async function saveCoach(){
     });
     const result=await res.json();
     if(!res.ok||result.error){showToast('新增失敗：'+(result.error||'請稍後再試'),'warn');btn.textContent='儲存';btn.disabled=false;return;}
+    // 新增場館指派
+    if(selectedVenues.length){
+      const {data:newCoach}=await SUPA.from('coaches').select('id').eq('phone',phone).maybeSingle();
+      if(newCoach){
+        await SUPA.from('coach_venues').insert(selectedVenues.map(v=>({coach_id:newCoach.id,venue_id:v})));
+      }
+    }
     showToast(name+' 已新增','ok');
   }
   btn.textContent='儲存';btn.disabled=false;
