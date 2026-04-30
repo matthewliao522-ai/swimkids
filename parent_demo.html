@@ -1773,6 +1773,12 @@ async function loadParentData(authId) {
   currentAccount = { guardian, children };
 }
 
+// localhost 自動填入測試帳密
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  document.getElementById('login-phone').value = '0912-345-678';
+  document.getElementById('login-pwd').value = 'Swim@2025!';
+}
+
 // 頁面載入時自動還原已登入 session
 (async () => {
   const {data: {session}} = await SUPA.auth.getSession();

@@ -3894,6 +3894,12 @@ function showToast(msg, type=''){
   t._timer=setTimeout(()=>t.classList.remove('show'),2500);
 }
 
+// localhost 自動填入測試帳密
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  document.getElementById('login-email').value = 'matthew.liao522+admin@gmail.com';
+  document.getElementById('login-pwd').value = 'Handle@Power2026';
+}
+
 (async () => {
   const { data: { session } } = await SUPA.auth.getSession();
   if (session) await initAfterAuth(session.user.id);
