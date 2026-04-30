@@ -485,6 +485,8 @@ select.filter-sel:focus{border-color:var(--brand)}
 .exam-modal-body{flex:1;overflow:hidden;display:flex;min-height:0}
 @media(max-width:768px){
   .exam-modal{width:100vw;height:100dvh;height:100vh;border-radius:0;max-width:none}
+  .exam-modal-body{flex-direction:column;overflow:auto}
+  .ex-left,.ex-right{flex:none;min-height:auto}
 }
 /* ── EXAM STEP INDICATOR ── */
 .exam-stepper{display:flex;align-items:center;padding:14px 20px 12px;background:var(--white);border-bottom:1px solid var(--line);flex-shrink:0}
