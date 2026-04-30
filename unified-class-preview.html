@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>班級管理 UI 預覽</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#2680FF;--brand-dk:#1A6CE8;--brand-lt:#EBF4FF;--brand-100:#C8E2FF;
+  --n50:#F8F9FA;--n100:#F1F3F5;--n200:#E9ECEF;--n300:#DEE2E6;--n400:#ADB5BD;
+  --n500:#6C757D;--n600:#495057;--n700:#343A40;--n800:#212529;--n900:#16191C;
+  --bg:var(--n50);--white:#fff;
+  --ink:var(--n900);--ink2:var(--n600);--ink3:var(--n500);--ink4:var(--n400);
+  --line:var(--n200);--line2:var(--n300);
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
+  --red:#C30017;--red-bg:#FFF0F0;--red-border:#fecaca;
+  --gold-dk:#E8900F;--gold-lt:#FFF8EC;--gold-100:#FFECC8;
+  --sidebar-w:220px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+body{display:flex;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--n900);display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-wordmark{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:.08em}
+.sb-badge{display:inline-block;background:var(--green);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.07em;margin-top:4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 14px;color:rgba(255,255,255,.55);cursor:pointer;font-size:13px;font-weight:500;border-radius:6px;margin:2px 8px;transition:all .15s}
+.sb-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.sb-item.active{background:rgba(255,255,255,.1);color:#fff}
+.sb-item.active svg{opacity:1}
+.sb-sec{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;padding:10px 22px 4px;margin-top:4px}
+.sb-foot{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.sb-av{width:30px;height:30px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-name{font-size:12px;font-weight:600;color:#fff}
+.sb-role{font-size:10px;color:rgba(255,255,255,.4);font-family:'JetBrains Mono',monospace}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:52px;background:var(--white);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:700;color:var(--ink)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.content{flex:1;overflow:hidden;display:flex;gap:0}
+
+/* LAYOUT */
+.cl-layout{display:flex;flex:1;overflow:hidden;gap:0}
+.cl-left{width:300px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--line);background:var(--white)}
+.cl-right{flex:1;overflow-y:auto;background:var(--bg)}
+
+/* LEFT PANEL */
+.cl-filter{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.cl-date-input{flex:1;background:var(--n50);border:1px solid var(--line2);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--ink);font-family:'JetBrains Mono',monospace;outline:none}
+.cl-all-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;border:1px solid var(--line2);background:var(--n50);color:var(--ink3);white-space:nowrap}
+.cl-progress{padding:6px 12px 8px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.cl-prog-bar{flex:1;height:4px;background:var(--n200);border-radius:2px;overflow:hidden}
+.cl-prog-fill{height:100%;background:var(--green);border-radius:2px;width:33%}
+.cl-prog-txt{font-size:11px;color:var(--ink3);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.cl-list{flex:1;overflow-y:auto;padding:8px}
+
+/* CLASS CARD */
+.cls-card{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:6px;cursor:pointer;transition:all .15s;background:var(--white)}
+.cls-card:hover{border-color:var(--brand-100);background:var(--brand-lt)}
+.cls-card.selected{border-color:var(--brand);background:var(--brand-lt)}
+.cls-card.done-card{opacity:.6}
+.cls-card-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.cls-code{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--brand);font-weight:600}
+.cls-status{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:600;margin-left:auto;flex-shrink:0}
+.st-pending{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}
+.st-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.st-draft{background:var(--n100);color:var(--ink3);border:1px solid var(--line2)}
+.cls-name{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.cls-meta{font-size:11px;color:var(--ink3);line-height:1.5}
+.cls-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.cls-stu-cnt{font-size:11px;color:var(--ink3);font-family:'JetBrains Mono',monospace}
+
+/* RIGHT PANEL */
+.cl-detail{padding:20px;max-width:700px}
+.cd-header{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+.cd-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.cd-code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brand);margin-bottom:4px}
+.cd-name{font-size:19px;font-weight:700;color:var(--ink)}
+.cd-date{font-size:13px;color:var(--ink3);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.cd-actions{display:flex;gap:8px;flex-shrink:0}
+.cd-meta-row{display:flex;gap:20px;flex-wrap:wrap}
+.cd-meta-item{display:flex;flex-direction:column;gap:3px}
+.cd-meta-lbl{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;font-family:'JetBrains Mono',monospace}
+.cd-meta-val{font-size:14px;font-weight:600;color:var(--ink)}
+.cd-divider{height:1px;background:var(--line);margin:14px 0}
+
+/* START EXAM BANNER */
+.cd-exam-banner{background:linear-gradient(135deg,var(--brand-lt),#dbeeff);border:1px solid var(--brand-100);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.cd-exam-icon{width:40px;height:40px;background:var(--brand);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cd-exam-info{flex:1}
+.cd-exam-title{font-size:14px;font-weight:700;color:var(--brand-dk)}
+.cd-exam-sub{font-size:12px;color:var(--ink3);margin-top:2px}
+.btn-start{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0}
+
+/* DONE BANNER */
+.cd-done-banner{background:var(--green-bg);border:1px solid var(--green-border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.cd-done-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cd-done-txt{font-size:13px;font-weight:700;color:var(--green)}
+.cd-done-sub{font-size:12px;color:var(--ink3);margin-top:1px}
+
+/* STUDENT LIST */
+.cd-stu-section{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.cd-stu-hd{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.cd-stu-title{font-size:13px;font-weight:700;color:var(--ink)}
+.cd-add-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;border:1px solid var(--line2);background:var(--n50);font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:'Noto Sans TC',sans-serif}
+.cd-stu-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line)}
+.cd-stu-row:last-child{border-bottom:none}
+.cd-stu-av{width:34px;height:34px;border-radius:50%;background:var(--brand-lt);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.cd-stu-av.av-g{background:var(--green-bg);color:var(--green)}
+.cd-stu-av.av-r{background:var(--red-bg);color:var(--red)}
+.cd-stu-name{font-size:14px;font-weight:600;color:var(--ink);flex:1}
+.cd-stu-lv{font-size:11px;color:var(--ink3);font-family:'JetBrains Mono',monospace}
+.cd-stu-badge{font-size:11px;padding:2px 9px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:600}
+.bd-pass{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.bd-fail{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.bd-pend{background:var(--n100);color:var(--ink3);border:1px solid var(--line2)}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:7px;border:none;font-size:12px;font-family:'Noto Sans TC',sans-serif;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.btn-ghost{background:var(--n100);color:var(--ink2);border:1px solid var(--line2)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.btn-primary{background:var(--brand);color:#fff}
+
+/* TOPBAR ACTION AREA */
+.tb-acts{display:flex;gap:8px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-wordmark">SWIMKIDS · COACH</div>
+    <div><span class="sb-badge">COACH PORTAL</span></div>
+  </div>
+  <nav style="padding:8px 0;flex:1">
+    <div class="sb-sec">考試管理</div>
+    <div class="sb-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      班級管理
+    </div>
+    <div class="sb-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      填寫評量表
+    </div>
+    <div class="sb-sec">學員管理</div>
+    <div class="sb-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      學員資料管理
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <div class="sb-av">張</div>
+    <div>
+      <div class="sb-name">張國豪</div>
+      <div class="sb-role">考試教練</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">班級管理</div>
+    <div class="topbar-right">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);background:var(--n100);padding:4px 10px;border-radius:6px;border:1px solid var(--line)">2026/4/28</div>
+      <div class="tb-acts">
+        <button class="btn btn-ghost">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          匯入 Excel
+        </button>
+        <button class="btn btn-primary">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          新增班級
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="cl-layout">
+
+      <!-- LEFT: 班級清單 -->
+      <div class="cl-left">
+        <div class="cl-filter">
+          <input class="cl-date-input" type="date" value="2026-04-28">
+          <button class="cl-all-btn">顯示全部</button>
+        </div>
+        <div class="cl-progress">
+          <div class="cl-prog-bar"><div class="cl-prog-fill"></div></div>
+          <div class="cl-prog-txt">1 / 3 完成</div>
+        </div>
+        <div class="cl-list">
+
+          <!-- 已完成 -->
+          <div class="cls-card done-card">
+            <div class="cls-card-top">
+              <div class="cls-code">Z20260428CB1</div>
+              <span class="cls-status st-done">已完成</span>
+            </div>
+            <div class="cls-name">幼兒 A 組</div>
+            <div class="cls-meta">南湖國小 · 教學：林美玲</div>
+            <div class="cls-footer">
+              <div class="cls-stu-cnt">5 位學員</div>
+            </div>
+          </div>
+
+          <!-- 待考（選中） -->
+          <div class="cls-card selected">
+            <div class="cls-card-top">
+              <div class="cls-code">Z20260428CB2</div>
+              <span class="cls-status st-pending">待考</span>
+            </div>
+            <div class="cls-name">初階 A 組</div>
+            <div class="cls-meta">江翠 · 教學：廖亮亮</div>
+            <div class="cls-footer">
+              <div class="cls-stu-cnt">3 位學員</div>
+            </div>
+          </div>
+
+          <!-- 待考 -->
+          <div class="cls-card">
+            <div class="cls-card-top">
+              <div class="cls-code">N20260428UA</div>
+              <span class="cls-status st-pending">待考</span>
+            </div>
+            <div class="cls-name">（未命名）</div>
+            <div class="cls-meta">南湖國小 · 教學：林美玲</div>
+            <div class="cls-footer">
+              <div class="cls-stu-cnt">0 位學員</div>
+            </div>
+          </div>
+
+          <!-- 分隔：其他日期班（顯示全部模式下才有） -->
+          <div style="font-size:10px;font-weight:700;color:var(--ink4);letter-spacing:.08em;text-transform:uppercase;padding:10px 4px 4px;font-family:'JetBrains Mono',monospace">其他日期</div>
+
+          <div class="cls-card done-card" style="opacity:.45">
+            <div class="cls-card-top">
+              <div class="cls-code">Z20260421CB3</div>
+              <span class="cls-status st-done">已完成</span>
+            </div>
+            <div class="cls-name">進階 B 組</div>
+            <div class="cls-meta">2026-04-21 · 江翠</div>
+            <div class="cls-footer">
+              <div class="cls-stu-cnt">4 位學員</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT: 班級詳情 -->
+      <div class="cl-right">
+        <div class="cl-detail">
+
+          <!-- 班級 Header -->
+          <div class="cd-header">
+            <div class="cd-top">
+              <div>
+                <div class="cd-code">Z20260428CB2</div>
+                <div class="cd-name">初階 A 組</div>
+                <div class="cd-date">2026-04-28 (四)</div>
+              </div>
+              <div class="cd-actions">
+                <button class="btn btn-ghost">編輯</button>
+                <button class="btn btn-danger">刪除</button>
+              </div>
+            </div>
+            <div class="cd-divider"></div>
+            <div class="cd-meta-row">
+              <div class="cd-meta-item">
+                <div class="cd-meta-lbl">考試場館</div>
+                <div class="cd-meta-val">江翠</div>
+              </div>
+              <div class="cd-meta-item">
+                <div class="cd-meta-lbl">教學教練</div>
+                <div class="cd-meta-val">廖亮亮</div>
+              </div>
+              <div class="cd-meta-item">
+                <div class="cd-meta-lbl">考試教練</div>
+                <div class="cd-meta-val">張國豪</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 開始考試 Banner（待考狀態） -->
+          <div class="cd-exam-banner">
+            <div class="cd-exam-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <div class="cd-exam-info">
+              <div class="cd-exam-title">今日考試 · 3 位學員待評</div>
+              <div class="cd-exam-sub">進入填寫評量表，依序完成每位學員的考試評量</div>
+            </div>
+            <button class="btn-start">開始考試 →</button>
+          </div>
+
+          <!-- 學員名單 -->
+          <div class="cd-stu-section">
+            <div class="cd-stu-hd">
+              <div class="cd-stu-title">學員名單（3 位）</div>
+              <button class="cd-add-btn">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                快速加入學員
+              </button>
+            </div>
+            <div class="cd-stu-row">
+              <div class="cd-stu-av">黃</div>
+              <div>
+                <div class="cd-stu-name">黃小龍</div>
+                <div class="cd-stu-lv">目前 4 級</div>
+              </div>
+              <span class="cd-stu-badge bd-pend">待考</span>
+            </div>
+            <div class="cd-stu-row">
+              <div class="cd-stu-av">吳</div>
+              <div>
+                <div class="cd-stu-name">吳小雨</div>
+                <div class="cd-stu-lv">目前 3 級</div>
+              </div>
+              <span class="cd-stu-badge bd-pend">待考</span>
+            </div>
+            <div class="cd-stu-row">
+              <div class="cd-stu-av">Melody</div>
+              <div>
+                <div class="cd-stu-name">Melody</div>
+                <div class="cd-stu-lv">目前 5 級</div>
+              </div>
+              <span class="cd-stu-badge bd-pend">待考</span>
+            </div>
+          </div>
+
+          <!-- 完成後狀態示意（另一個班） -->
+          <div style="margin-top:24px;padding-top:20px;border-top:2px dashed var(--line2)">
+            <div style="font-size:11px;color:var(--ink4);margin-bottom:12px;font-family:'JetBrains Mono',monospace;letter-spacing:.05em">▼ 已完成班級的樣子</div>
+
+            <div class="cd-done-banner">
+              <div class="cd-done-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <div class="cd-done-txt">考試已完成</div>
+                <div class="cd-done-sub">2026-04-28 · 5 位學員已評量</div>
+              </div>
+            </div>
+
+            <div class="cd-stu-section">
+              <div class="cd-stu-hd">
+                <div class="cd-stu-title">學員名單（5 位）</div>
+              </div>
+              <div class="cd-stu-row">
+                <div class="cd-stu-av av-g">陳</div>
+                <div><div class="cd-stu-name">陳小明</div><div class="cd-stu-lv">4 → 5 級</div></div>
+                <span class="cd-stu-badge bd-pass">通過</span>
+              </div>
+              <div class="cd-stu-row">
+                <div class="cd-stu-av av-r">李</div>
+                <div><div class="cd-stu-name">李小花</div><div class="cd-stu-lv">3 級</div></div>
+                <span class="cd-stu-badge bd-fail">未通過</span>
+              </div>
+              <div class="cd-stu-row">
+                <div class="cd-stu-av av-g">王</div>
+                <div><div class="cd-stu-name">王小美</div><div class="cd-stu-lv">2 → 3 級</div></div>
+                <span class="cd-stu-badge bd-pass">通過</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

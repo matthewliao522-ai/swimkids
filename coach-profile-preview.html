@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach Profile Drawer — UI Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#2680FF;--brand-dk:#1A6CE8;--brand-lt:#EBF4FF;
+  --gold-dk:#E8900F;--gold-lt:#FFF8EC;--gold-100:#FFECC8;
+  --signal:#C30017;--signal-lt:#FFF0F0;
+  --n50:#F8F9FA;--n100:#F1F3F5;--n200:#E9ECEF;--n300:#DEE2E6;--n400:#ADB5BD;
+  --n500:#6C757D;--n600:#495057;--n700:#343A40;--n900:#16191C;
+  --bg:var(--n50);--white:#fff;
+  --ink:var(--n900);--ink2:var(--n600);--ink3:var(--n500);--ink4:var(--n400);
+  --line:var(--n200);--line2:var(--n300);
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
+  --red:var(--signal);--red-bg:var(--signal-lt);--red-border:#fecaca;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;
+  --shadow-lg:0 10px 40px rgba(0,0,0,.18);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{
+  font-family:'Noto Sans TC',sans-serif;
+  background:#9ca3af;color:var(--ink);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── DEMO TOPBAR ── */
+.demo-topbar{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;height:54px;
+  background:var(--white);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 12px;z-index:10;
+}
+.demo-topbar-left{display:flex;align-items:center;gap:10px}
+.demo-menu-icon{width:36px;height:36px;background:var(--n900);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.demo-menu-icon svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round}
+.demo-title{font-size:14px;font-weight:700;color:var(--ink)}
+.demo-topbar-right{display:flex;align-items:center;gap:8px}
+.demo-date-badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);background:var(--n100);padding:4px 10px;border-radius:6px;border:1px solid var(--line)}
+/* ★ 新增：教練頭像按鈕 */
+.coach-av-btn{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--green);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;
+  font-family:'Noto Sans TC',sans-serif;
+  transition:opacity .15s;flex-shrink:0;
+}
+.coach-av-btn:hover{opacity:.85}
+
+/* ── CHIPS ── */
+.chip{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;line-height:1.5}
+.chip-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.chip-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.chip-amber{background:var(--gold-lt);color:var(--gold-dk);border:1px solid var(--gold-100)}
+.chip-brand{background:var(--brand-lt);color:var(--brand-dk);border:1px solid #bae6fd}
+.chip-gray{background:var(--bg);color:var(--ink3);border:1px solid var(--line2)}
+
+/* ── AVATAR ── */
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;font-family:'Noto Sans TC',sans-serif}
+.av-coach{background:var(--green-bg);color:var(--green)}
+.av-stu{background:var(--brand-lt);color:var(--brand-dk)}
+
+/* ══════════════════════════════════
+   COACH PROFILE DRAWER
+══════════════════════════════════ */
+.cp-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  z-index:200;display:flex;align-items:flex-end;justify-content:center;
+  animation:cpFadeIn .2s;
+}
+.cp-overlay.hidden{display:none}
+@keyframes cpFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes cpSlideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.cp-panel{
+  background:var(--white);border-radius:20px 20px 0 0;
+  width:100%;max-width:480px;max-height:92vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 -4px 40px rgba(0,0,0,.2);
+  animation:cpSlideUp .22s cubic-bezier(.22,1,.36,1);
+}
+.cp-handle{width:40px;height:5px;background:var(--line2);border-radius:3px;margin:12px auto 0;flex-shrink:0}
+
+/* Header */
+.cp-hd{padding:16px 18px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.cp-hd-left{display:flex;align-items:center;gap:14px}
+.cp-name{font-size:19px;font-weight:700;color:var(--ink)}
+.cp-meta{font-size:13px;color:var(--ink3);margin-top:3px}
+.cp-close{background:none;border:none;cursor:pointer;color:var(--ink3);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:background .15s}
+.cp-close:hover{background:var(--n100)}
+
+/* Body */
+.cp-body{flex:1;overflow-y:auto;padding:18px 16px 8px}
+
+/* Stat Cards */
+.cp-stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:22px}
+.cp-stat-card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 10px 12px;text-align:center}
+.cp-stat-num{font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+.cp-stat-lbl{font-size:12px;font-weight:600;color:var(--ink2);margin-top:8px;line-height:1.4}
+.cp-stat-sub{font-size:10px;color:var(--ink3);margin-top:3px;line-height:1.3}
+
+/* Section Title */
+.cp-sec{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin:0 0 10px;display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace}
+.cp-sec-count{background:var(--line);color:var(--ink3);font-size:10px;font-family:'JetBrains Mono',monospace;padding:1px 7px;border-radius:10px}
+
+/* Risk student list */
+.cp-risk-list{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:24px}
+.cp-risk-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.cp-risk-row:last-child{border-bottom:none}
+.cp-risk-name{font-size:14px;font-weight:600;color:var(--brand);flex:1;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.cp-risk-detail{font-size:11px;color:var(--ink3);margin-top:2px}
+
+/* Prep class list */
+.cp-class-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.cp-class-row{border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden}
+.cp-class-row.upcoming{background:var(--brand-lt);border-color:#bae6fd}
+.cp-class-row.past{opacity:.7}
+
+.cp-class-main{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;user-select:none}
+.cp-class-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);flex-shrink:0;width:46px;text-align:center;line-height:1.4}
+.cp-class-date strong{display:block;font-size:17px;color:var(--ink2);font-weight:700}
+.cp-class-row.upcoming .cp-class-date,
+.cp-class-row.upcoming .cp-class-date strong{color:var(--brand-dk)}
+.cp-class-info{flex:1;min-width:0}
+.cp-class-code{font-size:14px;font-weight:600;color:var(--ink)}
+.cp-class-venue{font-size:12px;color:var(--ink3);margin-top:2px}
+.cp-class-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.cp-class-cnt{font-size:12px;color:var(--ink3);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:4px}
+.cp-expand-icon{transition:transform .2s;display:inline-block;font-size:11px;color:var(--ink4)}
+.cp-class-row.open .cp-expand-icon{transform:rotate(180deg)}
+
+/* Student list inside class */
+.cp-stu-list{display:none;border-top:1px solid rgba(0,0,0,.07);padding:10px 14px 12px;background:rgba(255,255,255,.7)}
+.cp-class-row.open .cp-stu-list{display:block}
+.cp-stu-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.cp-stu-row:last-child{border-bottom:none}
+.cp-stu-name{font-size:13px;font-weight:600;color:var(--brand);flex:1;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.cp-stu-lv{font-size:12px;color:var(--ink3);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+
+/* Today divider */
+.cp-today-divider{display:flex;align-items:center;gap:8px;margin:6px 0}
+.cp-today-divider::before,.cp-today-divider::after{content:'';flex:1;height:1px;background:var(--brand);opacity:.25}
+.cp-today-label{font-size:10px;font-weight:700;color:var(--brand);letter-spacing:.05em;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+
+/* Show-more button */
+.cp-show-more{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px;border-radius:12px;border:1px dashed var(--line2);
+  background:none;width:100%;cursor:pointer;
+  font-size:12px;font-weight:600;color:var(--ink3);
+  font-family:'Noto Sans TC',sans-serif;transition:all .15s;
+}
+.cp-show-more:hover{background:var(--bg);color:var(--ink2)}
+
+/* Footer */
+.cp-footer{flex-shrink:0;border-top:1px solid var(--line);padding:14px 16px 28px;display:flex;gap:8px}
+.cp-btn{flex:1;padding:13px 10px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:'Noto Sans TC',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}
+.cp-btn:hover{opacity:.82}
+.cp-btn-ghost{background:var(--n100);color:var(--ink2);border:1px solid var(--line2)}
+.cp-btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+/* ══════════════════════════════════
+   EXAM HISTORY SHEET
+══════════════════════════════════ */
+.eh-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:300;display:flex;align-items:flex-end;justify-content:center;
+  animation:cpFadeIn .18s;
+}
+.eh-overlay.hidden{display:none}
+
+.eh-panel{
+  background:var(--white);border-radius:20px 20px 0 0;
+  width:100%;max-width:480px;max-height:82vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 -4px 40px rgba(0,0,0,.2);
+  animation:cpSlideUp .22s cubic-bezier(.22,1,.36,1);
+}
+.eh-handle{width:40px;height:5px;background:var(--line2);border-radius:3px;margin:12px auto 0;flex-shrink:0}
+.eh-hd{padding:14px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.eh-hd-left{display:flex;align-items:center;gap:12px}
+.eh-stu-name{font-size:17px;font-weight:700;color:var(--ink)}
+.eh-stu-meta{font-size:12px;color:var(--ink3);margin-top:2px}
+.eh-close{background:none;border:none;cursor:pointer;color:var(--ink3);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s}
+.eh-close:hover{background:var(--n100)}
+.eh-body{flex:1;overflow-y:auto;padding:16px 16px 24px}
+
+/* Summary row */
+.eh-summary{display:flex;gap:6px;margin-bottom:16px}
+.eh-summary-card{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 8px;text-align:center}
+.eh-summary-num{font-size:22px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+.eh-summary-lbl{font-size:11px;color:var(--ink3);margin-top:5px;font-weight:500}
+
+/* Exam history rows */
+.eh-list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.eh-row{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.eh-row:last-child{border-bottom:none}
+.eh-date{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--ink3);flex-shrink:0;width:68px;padding-top:2px}
+.eh-lv{font-size:14px;font-weight:700;color:var(--ink);flex-shrink:0;width:36px;padding-top:2px}
+.eh-venue{font-size:12px;color:var(--ink3)}
+.eh-note{font-size:11px;color:var(--ink3);margin-top:3px;line-height:1.5;font-style:italic}
+</style>
+</head>
+<body>
+
+<!-- ── DEMO TOPBAR ── -->
+<div class="demo-topbar">
+  <div class="demo-topbar-left">
+    <div class="demo-menu-icon">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    <div class="demo-title">預建班管理</div>
+  </div>
+  <div class="demo-topbar-right">
+    <div class="demo-date-badge">2026/04/27</div>
+    <!-- ★ 新增：教練頭像按鈕（取代原本的鎖頭） -->
+    <button class="coach-av-btn" onclick="openCoachProfile()" title="我的資料">陳</button>
+  </div>
+</div>
+
+<!-- ── COACH PROFILE DRAWER ── -->
+<div class="cp-overlay" id="cp-overlay" onclick="if(event.target===this)closeCoachProfile()">
+  <div class="cp-panel">
+    <div class="cp-handle"></div>
+
+    <!-- Header -->
+    <div class="cp-hd">
+      <div class="cp-hd-left">
+        <div class="av av-coach" style="width:46px;height:46px;font-size:18px">陳</div>
+        <div>
+          <div class="cp-name">陳志明</div>
+          <div class="cp-meta">教學教練 · 0912-345-678</div>
+        </div>
+      </div>
+      <button class="cp-close" onclick="closeCoachProfile()">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="cp-body">
+
+      <!-- Stat Cards -->
+      <div class="cp-stat-grid">
+        <div class="cp-stat-card">
+          <div class="cp-stat-num" style="color:var(--gold-dk)">3</div>
+          <div class="cp-stat-lbl">半年<br>停留同級</div>
+          <div class="cp-stat-sub">有考試未升級</div>
+        </div>
+        <div class="cp-stat-card">
+          <div class="cp-stat-num" style="color:var(--gold-dk)">2</div>
+          <div class="cp-stat-lbl">連續 2 次<br>未通過</div>
+        </div>
+        <div class="cp-stat-card">
+          <div class="cp-stat-num" style="color:var(--red)">1</div>
+          <div class="cp-stat-lbl">連續 3 次<br>未通過</div>
+        </div>
+      </div>
+
+      <!-- Risk Students -->
+      <div class="cp-sec">需關注學員 <span class="cp-sec-count">6</span></div>
+      <div class="cp-risk-list">
+        <div class="cp-risk-row">
+          <div class="av av-stu" style="width:32px;height:32px;font-size:12px">林</div>
+          <div style="flex:1">
+            <div class="cp-risk-name" onclick="openExamHistory('林小美','3 級')">林小美</div>
+            <div class="cp-risk-detail">3 級 · 最近考試 2026/04/10</div>
+          </div>
+          <span class="chip chip-red">卡關 3 次</span>
+        </div>
+        <div class="cp-risk-row">
+          <div class="av av-stu" style="width:32px;height:32px;font-size:12px">王</div>
+          <div style="flex:1">
+            <div class="cp-risk-name" onclick="openExamHistory('王大志','5 級')">王大志</div>
+            <div class="cp-risk-detail">5 級 · 最近考試 2026/03/28</div>
+          </div>
+          <span class="chip chip-amber">警示 2 次</span>
+        </div>
+        <div class="cp-risk-row">
+          <div class="av av-stu" style="width:32px;height:32px;font-size:12px">陳</div>
+          <div style="flex:1">
+            <div class="cp-risk-name" onclick="openExamHistory('陳小玲','4 級')">陳小玲</div>
+            <div class="cp-risk-detail">4 級 · 半年考 3 次未升級</div>
+          </div>
+          <span class="chip chip-amber">停留過久</span>
+        </div>
+        <div class="cp-risk-row">
+          <div class="av av-stu" style="width:32px;height:32px;font-size:12px">黃</div>
+          <div style="flex:1">
+            <div class="cp-risk-name" onclick="openExamHistory('黃俊豪','2 級')">黃俊豪</div>
+            <div class="cp-risk-detail">2 級 · 半年考 2 次未升級</div>
+          </div>
+          <span class="chip chip-amber">停留過久</span>
+        </div>
+        <div class="cp-risk-row">
+          <div class="av av-stu" style="width:32px;height:32px;font-size:12px">張</div>
+          <div style="flex:1">
+            <div class="cp-risk-name" onclick="openExamHistory('張雅文','6 級')">張雅文</div>
+            <div class="cp-risk-detail">6 級 · 最近考試 2026/04/05</div>
+          </div>
+          <span class="chip chip-amber">警示 2 次</span>
+        </div>
+        <div class="cp-risk-row">
+          <div class="av av-stu" style="width:32px;height:32px;font-size:12px">吳</div>
+          <div style="flex:1">
+            <div class="cp-risk-name" onclick="openExamHistory('吳明哲','3 級')">吳明哲</div>
+            <div class="cp-risk-detail">3 級 · 半年考 2 次未升級</div>
+          </div>
+          <span class="chip chip-amber">停留過久</span>
+        </div>
+      </div>
+
+      <!-- Prep Classes 過去 130 天 ~ 未來 70 天 -->
+      <div class="cp-sec">我的授課班 <span class="cp-sec-count">7</span></div>
+      <div class="cp-class-list" id="class-list">
+
+        <!-- 未來 -->
+        <div class="cp-class-row upcoming" onclick="toggleClass(this)">
+          <div class="cp-class-main">
+            <div class="cp-class-date">06/22<strong>一</strong></div>
+            <div class="cp-class-info">
+              <div class="cp-class-code">J 班 · B 時段</div>
+              <div class="cp-class-venue">信義游泳館</div>
+            </div>
+            <div class="cp-class-right">
+              <span class="chip chip-brand">即將到來</span>
+              <div class="cp-class-cnt">6 人 <span class="cp-expand-icon">▾</span></div>
+            </div>
+          </div>
+          <div class="cp-stu-list">
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">林</div><div class="cp-stu-name" onclick="openExamHistory('林小美','3 級');event.stopPropagation()">林小美</div><div class="cp-stu-lv">3 級</div><span class="chip chip-red" style="font-size:10px;padding:2px 7px">卡關</span></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">王</div><div class="cp-stu-name" onclick="openExamHistory('王大志','5 級');event.stopPropagation()">王大志</div><div class="cp-stu-lv">5 級</div><span class="chip chip-amber" style="font-size:10px;padding:2px 7px">警示</span></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">陳</div><div class="cp-stu-name" onclick="openExamHistory('陳小玲','4 級');event.stopPropagation()">陳小玲</div><div class="cp-stu-lv">4 級</div></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">黃</div><div class="cp-stu-name" onclick="openExamHistory('黃俊豪','4 級');event.stopPropagation()">黃俊豪</div><div class="cp-stu-lv">4 級</div></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">張</div><div class="cp-stu-name" onclick="openExamHistory('張雅文','6 級');event.stopPropagation()">張雅文</div><div class="cp-stu-lv">6 級</div></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">吳</div><div class="cp-stu-name" onclick="openExamHistory('吳明哲','3 級');event.stopPropagation()">吳明哲</div><div class="cp-stu-lv">3 級</div></div>
+          </div>
+        </div>
+
+        <div class="cp-class-row upcoming" onclick="toggleClass(this)">
+          <div class="cp-class-main">
+            <div class="cp-class-date">05/18<strong>一</strong></div>
+            <div class="cp-class-info">
+              <div class="cp-class-code">C 班 · A 時段</div>
+              <div class="cp-class-venue">大安游泳館</div>
+            </div>
+            <div class="cp-class-right">
+              <span class="chip chip-brand">即將到來</span>
+              <div class="cp-class-cnt">4 人 <span class="cp-expand-icon">▾</span></div>
+            </div>
+          </div>
+          <div class="cp-stu-list">
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">李</div><div class="cp-stu-name" onclick="openExamHistory('李建宏','1 級');event.stopPropagation()">李建宏</div><div class="cp-stu-lv">1 級</div></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">劉</div><div class="cp-stu-name" onclick="openExamHistory('劉雨晴','2 級');event.stopPropagation()">劉雨晴</div><div class="cp-stu-lv">2 級</div></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">謝</div><div class="cp-stu-name" onclick="openExamHistory('謝品均','2 級');event.stopPropagation()">謝品均</div><div class="cp-stu-lv">2 級</div></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">蔡</div><div class="cp-stu-name" onclick="openExamHistory('蔡宜蓁','1 級');event.stopPropagation()">蔡宜蓁</div><div class="cp-stu-lv">1 級</div></div>
+          </div>
+        </div>
+
+        <!-- 今天分隔線 -->
+        <div class="cp-today-divider"><span class="cp-today-label">今天 04/27</span></div>
+
+        <!-- 過去（前 2 筆預設顯示） -->
+        <div class="cp-class-row past" onclick="toggleClass(this)">
+          <div class="cp-class-main">
+            <div class="cp-class-date">04/20<strong>日</strong></div>
+            <div class="cp-class-info">
+              <div class="cp-class-code">J 班 · B 時段</div>
+              <div class="cp-class-venue">信義游泳館</div>
+            </div>
+            <div class="cp-class-right">
+              <span class="chip chip-green">已完成</span>
+              <div class="cp-class-cnt">6 人 <span class="cp-expand-icon">▾</span></div>
+            </div>
+          </div>
+          <div class="cp-stu-list">
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">林</div><div class="cp-stu-name" onclick="openExamHistory('林小美','3 級');event.stopPropagation()">林小美</div><div class="cp-stu-lv">3 級</div></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">王</div><div class="cp-stu-name" onclick="openExamHistory('王大志','5 級');event.stopPropagation()">王大志</div><div class="cp-stu-lv">5 級</div></div>
+          </div>
+        </div>
+
+        <div class="cp-class-row past" onclick="toggleClass(this)">
+          <div class="cp-class-main">
+            <div class="cp-class-date">04/06<strong>日</strong></div>
+            <div class="cp-class-info">
+              <div class="cp-class-code">C 班 · A 時段</div>
+              <div class="cp-class-venue">大安游泳館</div>
+            </div>
+            <div class="cp-class-right">
+              <span class="chip chip-green">已完成</span>
+              <div class="cp-class-cnt">5 人 <span class="cp-expand-icon">▾</span></div>
+            </div>
+          </div>
+          <div class="cp-stu-list">
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">李</div><div class="cp-stu-name" onclick="openExamHistory('李建宏','1 級');event.stopPropagation()">李建宏</div><div class="cp-stu-lv">1 級</div></div>
+            <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">蔡</div><div class="cp-stu-name" onclick="openExamHistory('蔡宜蓁','1 級');event.stopPropagation()">蔡宜蓁</div><div class="cp-stu-lv">1 級</div></div>
+          </div>
+        </div>
+
+        <!-- 更早（預設隱藏） -->
+        <div id="older-classes" style="display:none;flex-direction:column;gap:6px">
+          <div class="cp-class-row past" onclick="toggleClass(this)">
+            <div class="cp-class-main">
+              <div class="cp-class-date">03/16<strong>日</strong></div>
+              <div class="cp-class-info">
+                <div class="cp-class-code">J 班 · B 時段</div>
+                <div class="cp-class-venue">信義游泳館</div>
+              </div>
+              <div class="cp-class-right">
+                <span class="chip chip-green">已完成</span>
+                <div class="cp-class-cnt">6 人 <span class="cp-expand-icon">▾</span></div>
+              </div>
+            </div>
+            <div class="cp-stu-list">
+              <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">林</div><div class="cp-stu-name" onclick="openExamHistory('林小美','3 級');event.stopPropagation()">林小美</div><div class="cp-stu-lv">3 級</div></div>
+            </div>
+          </div>
+          <div class="cp-class-row past" onclick="toggleClass(this)">
+            <div class="cp-class-main">
+              <div class="cp-class-date">02/23<strong>日</strong></div>
+              <div class="cp-class-info">
+                <div class="cp-class-code">U 班 · A 時段</div>
+                <div class="cp-class-venue">大安游泳館</div>
+              </div>
+              <div class="cp-class-right">
+                <span class="chip chip-green">已完成</span>
+                <div class="cp-class-cnt">4 人 <span class="cp-expand-icon">▾</span></div>
+              </div>
+            </div>
+            <div class="cp-stu-list">
+              <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">蔡</div><div class="cp-stu-name" onclick="openExamHistory('蔡宜蓁','1 級');event.stopPropagation()">蔡宜蓁</div><div class="cp-stu-lv">1 級</div></div>
+            </div>
+          </div>
+          <div class="cp-class-row past" onclick="toggleClass(this)">
+            <div class="cp-class-main">
+              <div class="cp-class-date">12/22<strong>日</strong></div>
+              <div class="cp-class-info">
+                <div class="cp-class-code">J 班 · B 時段</div>
+                <div class="cp-class-venue">信義游泳館</div>
+              </div>
+              <div class="cp-class-right">
+                <span class="chip chip-green">已完成</span>
+                <div class="cp-class-cnt">5 人 <span class="cp-expand-icon">▾</span></div>
+              </div>
+            </div>
+            <div class="cp-stu-list">
+              <div class="cp-stu-row"><div class="av av-stu" style="width:26px;height:26px;font-size:10px">王</div><div class="cp-stu-name" onclick="openExamHistory('王大志','4 級');event.stopPropagation()">王大志</div><div class="cp-stu-lv">4 級</div></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="cp-show-more" id="show-more-btn" onclick="toggleOlderClasses()">
+          <span id="show-more-icon">▾</span> 展開更早的紀錄（3 筆）
+        </button>
+
+      </div><!-- /class-list -->
+    </div><!-- /cp-body -->
+
+    <!-- Footer -->
+    <div class="cp-footer">
+      <button class="cp-btn cp-btn-ghost" onclick="alert('→ 開啟修改密碼')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        修改密碼
+      </button>
+      <button class="cp-btn cp-btn-danger" onclick="alert('→ 登出')">登出</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EXAM HISTORY SHEET ── -->
+<div class="eh-overlay hidden" id="eh-overlay" onclick="if(event.target===this)closeExamHistory()">
+  <div class="eh-panel">
+    <div class="eh-handle"></div>
+    <div class="eh-hd">
+      <div class="eh-hd-left">
+        <div class="av av-stu" style="width:40px;height:40px;font-size:15px" id="eh-av">林</div>
+        <div>
+          <div class="eh-stu-name" id="eh-name">林小美</div>
+          <div class="eh-stu-meta" id="eh-meta">3 級 · 教學教練：陳志明</div>
+        </div>
+      </div>
+      <button class="eh-close" onclick="closeExamHistory()">✕</button>
+    </div>
+    <div class="eh-body">
+      <!-- Summary -->
+      <div class="eh-summary">
+        <div class="eh-summary-card">
+          <div class="eh-summary-num" style="color:var(--ink)">6</div>
+          <div class="eh-summary-lbl">總考試次數</div>
+        </div>
+        <div class="eh-summary-card">
+          <div class="eh-summary-num" style="color:var(--green)">2</div>
+          <div class="eh-summary-lbl">通過</div>
+        </div>
+        <div class="eh-summary-card">
+          <div class="eh-summary-num" style="color:var(--red)">3</div>
+          <div class="eh-summary-lbl">未通過</div>
+        </div>
+        <div class="eh-summary-card">
+          <div class="eh-summary-num" style="color:var(--ink3)">1</div>
+          <div class="eh-summary-lbl">未出席</div>
+        </div>
+      </div>
+      <!-- Exam rows -->
+      <div class="eh-list">
+        <div class="eh-row">
+          <div class="eh-date">2026/04/10</div>
+          <div class="eh-lv">3 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">信義游泳館</div>
+            <div class="eh-note">打水節奏需加強，換氣還不穩定。</div>
+          </div>
+          <span class="chip chip-red">未通過</span>
+        </div>
+        <div class="eh-row">
+          <div class="eh-date">2026/02/15</div>
+          <div class="eh-lv">3 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">信義游泳館</div>
+            <div class="eh-note">手部動作有進步，腳部節奏仍不穩。</div>
+          </div>
+          <span class="chip chip-red">未通過</span>
+        </div>
+        <div class="eh-row">
+          <div class="eh-date">2025/12/08</div>
+          <div class="eh-lv">3 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">大安游泳館</div>
+            <div class="eh-note"></div>
+          </div>
+          <span class="chip chip-red">未通過</span>
+        </div>
+        <div class="eh-row">
+          <div class="eh-date">2025/10/19</div>
+          <div class="eh-lv">2 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">信義游泳館</div>
+            <div class="eh-note">表現穩定，順利通過！</div>
+          </div>
+          <span class="chip chip-green">通過</span>
+        </div>
+        <div class="eh-row">
+          <div class="eh-date">2025/09/07</div>
+          <div class="eh-lv">2 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">信義游泳館</div>
+            <div class="eh-note"></div>
+          </div>
+          <span class="chip chip-gray">未出席</span>
+        </div>
+        <div class="eh-row">
+          <div class="eh-date">2025/07/20</div>
+          <div class="eh-lv">1 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">大安游泳館</div>
+            <div class="eh-note">初次參加，整體表現不錯！</div>
+          </div>
+          <span class="chip chip-green">通過</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openCoachProfile() {
+  document.getElementById('cp-overlay').classList.remove('hidden');
+}
+function closeCoachProfile() {
+  document.getElementById('cp-overlay').classList.add('hidden');
+}
+function toggleClass(row) {
+  row.classList.toggle('open');
+}
+function toggleOlderClasses() {
+  const older = document.getElementById('older-classes');
+  const btn   = document.getElementById('show-more-btn');
+  const open  = older.style.display === 'flex';
+  if (open) {
+    older.style.display = 'none';
+    btn.innerHTML = '<span>▾</span> 展開更早的紀錄（3 筆）';
+  } else {
+    older.style.display = 'flex';
+    btn.innerHTML = '<span>▴</span> 收起';
+  }
+}
+function openExamHistory(name, meta) {
+  document.getElementById('eh-av').textContent   = name[0];
+  document.getElementById('eh-name').textContent = name;
+  document.getElementById('eh-meta').textContent = meta + ' · 教學教練：陳志明';
+  document.getElementById('eh-overlay').classList.remove('hidden');
+}
+function closeExamHistory() {
+  document.getElementById('eh-overlay').classList.add('hidden');
+}
+// 預設打開 drawer 方便預覽
+openCoachProfile();
+</script>
+</body>
+</html>

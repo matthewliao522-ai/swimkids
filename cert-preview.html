@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學習成就證書 UI 預覽</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#2680FF;--brand-dk:#1A6CE8;--brand-lt:#EBF4FF;--brand-100:#C8E2FF;
+  --n50:#F8F9FA;--n100:#F1F3F5;--n200:#E9ECEF;--n300:#DEE2E6;--n400:#ADB5BD;
+  --n500:#6C757D;--n600:#495057;--n700:#343A40;--n800:#212529;--n900:#16191C;
+  --bg:var(--n50);--white:#ffffff;
+  --ink:var(--n900);--ink2:var(--n600);--ink3:var(--n500);--ink4:var(--n400);
+  --line:var(--n200);--line2:var(--n300);
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
+  --green-dk:#047857;
+  --red:#C30017;--red-bg:#FFF0F0;--red-border:#fecaca;
+  --gold-dk:#E8900F;--gold-lt:#FFF8EC;--gold-100:#FFECC8;
+  --line-green:#06C755;--line-green-dk:#05A048;
+  --signal:#C30017;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Noto Sans TC',sans-serif;background:#e0e4e8;color:var(--ink);min-height:100vh;display:flex;align-items:flex-end;justify-content:center;-webkit-font-smoothing:antialiased}
+
+/* ── SHEET PANEL ── */
+.eh-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.eh-panel{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 -4px 40px rgba(0,0,0,.2)}
+.eh-handle{width:40px;height:5px;background:var(--line2);border-radius:3px;margin:12px auto 0;flex-shrink:0}
+.eh-hd{padding:14px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.eh-hd-left{display:flex;align-items:center;gap:12px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--brand-lt);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;font-family:'Noto Sans TC',sans-serif}
+.eh-stu-name{font-size:19px;font-weight:700;color:var(--ink)}
+.eh-stu-meta{font-size:14px;color:var(--ink3);margin-top:3px}
+.eh-close{background:none;border:none;cursor:pointer;color:var(--ink3);width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
+
+.eh-body{flex:1;overflow-y:auto;padding:18px 16px 26px}
+
+/* summary */
+.eh-summary{display:flex;gap:6px;margin-bottom:18px}
+.eh-summary-card{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 8px;text-align:center}
+.eh-summary-num{font-size:24px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+.eh-summary-lbl{font-size:13px;color:var(--ink3);margin-top:6px;font-weight:500}
+
+/* exam list */
+.eh-sec-title{font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;font-family:'JetBrains Mono',monospace;margin-bottom:10px}
+.eh-list{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:24px}
+.eh-row{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.eh-row:last-child{border-bottom:none}
+.eh-date{font-size:14px;font-family:'JetBrains Mono',monospace;color:var(--ink3);flex-shrink:0;width:80px;padding-top:2px}
+.eh-lv{font-size:16px;font-weight:700;color:var(--ink);flex-shrink:0;width:40px;padding-top:2px}
+.eh-venue{font-size:14px;color:var(--ink3)}
+.eh-note{font-size:13px;color:var(--ink3);margin-top:4px;line-height:1.5;font-style:italic}
+.pc-chip{display:inline-block;font-size:11px;padding:3px 9px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-weight:600;flex-shrink:0}
+.pc-chip-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.pc-chip-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.pc-chip-gray{background:var(--n100);color:var(--ink3);border:1px solid var(--line2)}
+
+/* ── CERT SECTION ── */
+.cert-section{margin-bottom:24px}
+.cert-grid{display:flex;flex-direction:column;gap:8px}
+.cert-card{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#f0fdf7 0%,#ecfdf5 100%);border:1px solid var(--green-border);border-radius:14px;padding:14px 16px}
+.cert-badge{width:52px;height:52px;border-radius:12px;background:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(5,150,105,.3)}
+.cert-badge-num{font-size:22px;font-weight:900;font-family:'JetBrains Mono',monospace;color:#fff;line-height:1}
+.cert-badge-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:.06em;margin-top:1px}
+.cert-info{flex:1;min-width:0}
+.cert-title{font-size:16px;font-weight:700;color:var(--green-dk)}
+.cert-sub{font-size:13px;color:var(--ink3);margin-top:3px}
+.cert-stamp{font-size:18px;flex-shrink:0}
+
+/* ── LINE NOTIFY ── */
+.line-notify-row{background:var(--white);border:1px solid #b2e4c5;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;cursor:pointer;transition:background .15s}
+.line-notify-row:hover{background:#f0fdf7}
+.line-icon{width:44px;height:44px;border-radius:12px;background:#06C755;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px}
+.line-notify-info{flex:1}
+.line-notify-title{font-size:16px;font-weight:700;color:var(--ink)}
+.line-notify-sub{font-size:13px;color:var(--ink3);margin-top:2px}
+.line-send-btn{background:#06C755;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:14px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0}
+
+/* section divider */
+.eh-divider{display:flex;align-items:center;gap:8px;margin:4px 0 16px}
+.eh-divider::before,.eh-divider::after{content:'';flex:1;height:1px;background:var(--line)}
+.eh-divider-lbl{font-size:11px;color:var(--ink4);white-space:nowrap;font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
+</style>
+</head>
+<body>
+
+<div class="eh-overlay">
+  <div class="eh-panel">
+    <div class="eh-handle"></div>
+    <div class="eh-hd">
+      <div class="eh-hd-left">
+        <div class="av">林</div>
+        <div>
+          <div class="eh-stu-name">林小明</div>
+          <div class="eh-stu-meta">目前 5 級 · 教學教練：陳教練</div>
+        </div>
+      </div>
+      <button class="eh-close">✕</button>
+    </div>
+
+    <div class="eh-body">
+
+      <!-- 統計 -->
+      <div class="eh-summary">
+        <div class="eh-summary-card">
+          <div class="eh-summary-num" style="color:var(--ink)">8</div>
+          <div class="eh-summary-lbl">總考試次數</div>
+        </div>
+        <div class="eh-summary-card">
+          <div class="eh-summary-num" style="color:var(--green)">4</div>
+          <div class="eh-summary-lbl">通過</div>
+        </div>
+        <div class="eh-summary-card">
+          <div class="eh-summary-num" style="color:var(--red)">3</div>
+          <div class="eh-summary-lbl">未通過</div>
+        </div>
+        <div class="eh-summary-card">
+          <div class="eh-summary-num" style="color:var(--ink3)">1</div>
+          <div class="eh-summary-lbl">未出席</div>
+        </div>
+      </div>
+
+      <!-- 考試紀錄 -->
+      <div class="eh-sec-title">考試紀錄</div>
+      <div class="eh-list">
+        <div class="eh-row">
+          <div class="eh-date">2025/11/10</div>
+          <div class="eh-lv">5 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">恆動力中壢館</div>
+            <div class="eh-note">換氣節奏、踢水力度</div>
+          </div>
+          <span class="pc-chip pc-chip-red">未通過</span>
+        </div>
+        <div class="eh-row">
+          <div class="eh-date">2025/09/14</div>
+          <div class="eh-lv">5 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">恆動力中壢館</div>
+          </div>
+          <span class="pc-chip pc-chip-red">未通過</span>
+        </div>
+        <div class="eh-row">
+          <div class="eh-date">2025/06/22</div>
+          <div class="eh-lv">4 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">恆動力中壢館</div>
+          </div>
+          <span class="pc-chip pc-chip-green">通過</span>
+        </div>
+        <div class="eh-row">
+          <div class="eh-date">2025/03/08</div>
+          <div class="eh-lv">4 級</div>
+          <div style="flex:1">
+            <div class="eh-venue">恆動力桃園館</div>
+            <div class="eh-note">手臂划水角度</div>
+          </div>
+          <span class="pc-chip pc-chip-red">未通過</span>
+        </div>
+      </div>
+
+      <!-- 學習成就證書 -->
+      <div class="eh-divider"><span class="eh-divider-lbl">學習成就</span></div>
+      <div class="cert-section">
+        <div class="cert-grid">
+          <div class="cert-card">
+            <div class="cert-badge">
+              <div class="cert-badge-num">4</div>
+              <div class="cert-badge-lbl">LEVEL</div>
+            </div>
+            <div class="cert-info">
+              <div class="cert-title">4 級通過證書</div>
+              <div class="cert-sub">2025/06/22 · 恆動力中壢館</div>
+            </div>
+            <div class="cert-stamp">🏅</div>
+          </div>
+          <div class="cert-card">
+            <div class="cert-badge">
+              <div class="cert-badge-num">3</div>
+              <div class="cert-badge-lbl">LEVEL</div>
+            </div>
+            <div class="cert-info">
+              <div class="cert-title">3 級通過證書</div>
+              <div class="cert-sub">2024/10/05 · 恆動力桃園館</div>
+            </div>
+            <div class="cert-stamp">🏅</div>
+          </div>
+          <div class="cert-card">
+            <div class="cert-badge">
+              <div class="cert-badge-num">2</div>
+              <div class="cert-badge-lbl">LEVEL</div>
+            </div>
+            <div class="cert-info">
+              <div class="cert-title">2 級通過證書</div>
+              <div class="cert-sub">2024/04/18 · 恆動力中壢館</div>
+            </div>
+            <div class="cert-stamp">🏅</div>
+          </div>
+          <div class="cert-card">
+            <div class="cert-badge">
+              <div class="cert-badge-num">1</div>
+              <div class="cert-badge-lbl">LEVEL</div>
+            </div>
+            <div class="cert-info">
+              <div class="cert-title">1 級通過證書</div>
+              <div class="cert-sub">2023/11/12 · 恆動力中壢館</div>
+            </div>
+            <div class="cert-stamp">🏅</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINE 通知 -->
+      <div class="eh-divider"><span class="eh-divider-lbl">家長通知</span></div>
+      <div class="line-notify-row">
+        <div class="line-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+        </div>
+        <div class="line-notify-info">
+          <div class="line-notify-title">傳送成就通知給家長</div>
+          <div class="line-notify-sub">通知 4 級通過，附上本次考試摘要</div>
+        </div>
+        <button class="line-send-btn">傳送</button>
+      </div>
+
+    </div><!-- /eh-body -->
+  </div>
+</div>
+
+</body>
+</html>
